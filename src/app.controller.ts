@@ -9,6 +9,7 @@ export class AppController {
   root(): Resource {
     return new Resource({
       self: { href: '/' },
+      related: [{ href: '/hello' }],
     });
   }
 }

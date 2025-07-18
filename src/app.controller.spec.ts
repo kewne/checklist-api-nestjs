@@ -14,9 +14,9 @@ describe('AppController', () => {
   });
 
   describe('root', () => {
-    it('should return resource with message "Hello World!"', () => {
+    it('should return resource with self link', () => {
       expect(appController.root().toJSON()).toEqual({
-        _links: { self: { href: '/' } },
+        _links: { self: { href: '/' }, related: [{ href: '/hello' }] },
       });
     });
   });
