@@ -47,4 +47,13 @@ describe('Resource', () => {
     });
     expect(resource).toBeInstanceOf(Resource);
   });
+
+  it('should construct Resource with only _links and no extra properties', () => {
+    const resource = new Resource({
+      _links: {
+        self: { href: '/resource/empty' }
+      }
+    });
+    expect(resource).toBeInstanceOf(Resource);
+  });
 });
