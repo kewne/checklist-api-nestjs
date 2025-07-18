@@ -14,8 +14,10 @@ describe('AppController', () => {
   });
 
   describe('root', () => {
-    it('should return "Hello World!"', () => {
-      expect(appController.getHello()).toBe('Hello World!');
+    it('should return resource with message "Hello World!"', () => {
+      expect(appController.root().toJSON()).toEqual({
+        _links: { self: { href: '/' } },
+      });
     });
   });
 });

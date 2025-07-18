@@ -1,11 +1,14 @@
 import { Controller, Get } from '@nestjs/common';
+import { Resource } from './hateoas';
 
 @Controller()
 export class AppController {
   constructor() {}
 
   @Get()
-  getHello(): string {
-    return 'Hello World!';
+  root(): Resource {
+    return new Resource({
+      self: { href: '/' },
+    });
   }
 }
