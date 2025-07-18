@@ -1,7 +1,8 @@
 type Wrapped = Record<string, any>;
 
+type LinkObject = { href: string };
 type JsonHal<T extends Wrapped> = T & {
-  _links: { [rel: string]: { href: string } };
+  _links: { [rel: string]: LinkObject | LinkObject[] };
   _embedded?: { [key: string]: any };
 };
 

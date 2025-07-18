@@ -36,4 +36,15 @@ describe('Resource', () => {
     });
     expect(resource).toBeInstanceOf(Resource);
   });
+
+  it('should construct Resource with an array of link objects', () => {
+    const resource = new Resource({
+      id: 99,
+      _links: {
+        self: [{ href: '/resource/99' }, { href: '/resource/99/alt' }],
+        related: { href: '/resource/related' }
+      }
+    });
+    expect(resource).toBeInstanceOf(Resource);
+  });
 });
