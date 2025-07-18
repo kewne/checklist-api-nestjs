@@ -3,7 +3,6 @@ type Wrapped = Record<string, any>;
 type LinkObject = { href: string };
 type JsonHal<T extends Wrapped> = T & {
   _links: { [rel: string]: LinkObject | LinkObject[] };
-  _embedded?: { [key: string]: any };
 };
 
 export class Resource<T extends Wrapped> {

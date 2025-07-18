@@ -11,21 +11,6 @@ describe('Resource', () => {
     expect(resource).toBeInstanceOf(Resource);
   });
 
-  it('should construct Resource with a HAL object containing _embedded', () => {
-    const resource = new Resource({
-      id: 7,
-      name: 'Example',
-      _links: {
-        self: { href: '/resource/7' },
-        related: { href: '/resource/related' }
-      },
-      _embedded: {
-        items: [{ id: 8 }]
-      }
-    });
-    expect(resource).toBeInstanceOf(Resource);
-  });
-
   it('should construct Resource with extra properties', () => {
     const resource = new Resource({
       foo: 'baz',
