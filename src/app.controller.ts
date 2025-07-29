@@ -1,18 +1,15 @@
 import { Controller, Get } from '@nestjs/common';
-import { Resource } from './hateoas';
+import { LinkRegistration, Resource, ResourceBuilder } from './hateoas';
 
 @Controller()
 export class AppController {
   constructor() {}
 
   @Get()
-  root(): Resource {
-    return new Resource({
-      self: { href: '/' },
-      related: [
-        { href: '/hello' },
-        { name: 'checklists', href: '/checklists' },
-      ],
-    });
+  root(@LinkRegistration() builder: ResourceBuilder): Resource {
+    return builder
+      .addLink('related', { href: '/hello' })
+      .addLink('related', { name: 'checklists', href: '/checklists' })
+      .toResource();
   }
 }

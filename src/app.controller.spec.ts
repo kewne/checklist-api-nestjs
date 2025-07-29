@@ -1,5 +1,6 @@
 import { Test, TestingModule } from '@nestjs/testing';
 import { AppController } from './app.controller';
+import { BaseUrlResourceBuilder } from './hateoas';
 
 describe('AppController', () => {
   let appController: AppController;
@@ -15,12 +16,12 @@ describe('AppController', () => {
 
   describe('root', () => {
     it('should return resource with self link', () => {
-      expect(appController.root().toJSON()).toEqual({
+      expect(appController.root(new BaseUrlResourceBuilder('http://example.com', '/')).toJSON()).toEqual({
         _links: {
-          self: { href: '/' },
+          self: { href: 'http://example.com/' },
           related: [
-            { href: '/hello' },
-            { name: 'checklists', href: '/checklists' },
+            { href: 'http://example.com/hello' },
+            { name: 'checklists', href: 'http://example.com/checklists' },
           ],
         },
       });
