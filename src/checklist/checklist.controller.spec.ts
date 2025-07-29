@@ -8,7 +8,12 @@ describe('ChecklistController', () => {
   beforeEach(async () => {
     const module: TestingModule = await Test.createTestingModule({
       controllers: [ChecklistController],
-      providers: [ChecklistService],
+      providers: [
+        {
+          provide: ChecklistService,
+          useValue: {},
+        },
+      ],
     }).compile();
 
     controller = module.get<ChecklistController>(ChecklistController);

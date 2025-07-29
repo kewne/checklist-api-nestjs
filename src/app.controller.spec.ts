@@ -16,7 +16,13 @@ describe('AppController', () => {
   describe('root', () => {
     it('should return resource with self link', () => {
       expect(appController.root().toJSON()).toEqual({
-        _links: { self: { href: '/' }, related: [{ href: '/hello' }] },
+        _links: {
+          self: { href: '/' },
+          related: [
+            { href: '/hello' },
+            { name: 'checklists', href: '/checklists' },
+          ],
+        },
       });
     });
   });
