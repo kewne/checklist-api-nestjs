@@ -16,11 +16,15 @@ describe('AppController', () => {
 
   describe('root', () => {
     it('should return resource with self link', () => {
-      expect(appController.root(new BaseUrlResourceBuilder('http://example.com', '/')).toJSON()).toEqual({
+      expect(
+        appController
+          .root(new BaseUrlResourceBuilder('http://example.com', '/'))
+          .toJSON(),
+      ).toEqual({
         _links: {
           self: { href: 'http://example.com/' },
           related: [
-            { href: 'http://example.com/hello' },
+            { href: 'http://example.com/hello/hello' },
             { name: 'checklists', href: 'http://example.com/checklists' },
           ],
         },

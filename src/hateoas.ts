@@ -1,5 +1,7 @@
-import { createParamDecorator, ExecutionContext } from '@nestjs/common';
+import { createParamDecorator, ExecutionContext, Type } from '@nestjs/common';
 import { Request } from 'express';
+import { Reflector } from '@nestjs/core';
+import { PATH_METADATA } from '@nestjs/common/constants';
 
 type Wrapped = Record<string, any>;
 
@@ -42,19 +44,21 @@ export class BaseUrlResourceBuilder implements ResourceBuilder {
     this.addLink('self', { href: self });
   }
   addLink(rel: string, link: LinkObject): this {
-    link = {
-      name: link?.name,
+    const absoluteLink: LinkObject = {
       href: new URL(link.href, this.baseUrl).toString(),
     };
+    if (link.name) {
+      absoluteLink.name = link.name;
+    }
     const current = this.links[rel];
     if (current) {
       if (Array.isArray(current)) {
         current.push(link);
       } else {
-        this.links[rel] = [current, link];
+        this.links[rel] = [current, absoluteLink];
       }
     } else {
-      this.links[rel] = link;
+      this.links[rel] = absoluteLink;
     }
     return this;
   }
@@ -69,3 +73,24 @@ export const LinkRegistration = createParamDecorator(
     return new BaseUrlResourceBuilder(`${req.protocol}://${req.host}`, req.url);
   },
 );
+
+export function extractRouteFromHandler(
+  controller: Type<any>,
+  // eslint-disable-next-line @typescript-eslint/no-unsafe-function-type
+  handler: Function,
+  reflector: Reflector,
+): string {
+  const controllerPath = reflector.get<string | undefined>(
+    PATH_METADATA,
+    controller,
+  );
+  const methodPath =
+    reflector.get<string | undefined>(PATH_METADATA, handler) ?? '';
+  if (!methodPath && !controllerPath) {
+    throw new Error('Could not find path');
+  }
+  if (controllerPath) {
+    return `${controllerPath}/${methodPath}`;
+  }
+  return methodPath;
+}
