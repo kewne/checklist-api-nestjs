@@ -66,6 +66,6 @@ export class BaseUrlResourceBuilder implements ResourceBuilder {
 export const LinkRegistration = createParamDecorator(
   (data: unknown, ctx: ExecutionContext): ResourceBuilder => {
     const req = ctx.switchToHttp().getRequest<Request>();
-    return new BaseUrlResourceBuilder(req.baseUrl, req.url);
+    return new BaseUrlResourceBuilder(`${req.protocol}://${req.host}`, req.url);
   },
 );

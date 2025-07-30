@@ -4,18 +4,11 @@
     // For more information, visit: https://go.microsoft.com/fwlink/?linkid=830387
     "version": "0.2.0",
     "configurations": [
-
         {
-            "type": "node",
+            "command": "pnpm start:dev",
+            "name": "Run",
             "request": "launch",
-            "name": "Launch",
-            "skipFiles": [
-                "<node_internals>/**"
-            ],
-            "program": "pnpm start:dev",
-            "outFiles": [
-                "${workspaceFolder}/dist/**/*.js"
-            ]
-        }
+            "type": "node-terminal"
+        },
     ]
 }
