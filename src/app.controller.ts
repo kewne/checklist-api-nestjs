@@ -1,13 +1,9 @@
 import { Controller, Get } from '@nestjs/common';
-import {
-  extractRouteFromHandler,
-  LinkRegistration,
-  Resource,
-  ResourceBuilder,
-} from './hateoas';
+import { extractRouteFromHandler, LinkRegistration } from './hateoas-nest';
 import { Reflector } from '@nestjs/core';
 import { HelloController } from './hello/hello.controller';
 import { ChecklistController } from './checklist/checklist.controller';
+import { ResourceBuilder, Resource } from './hateoas';
 
 @Controller()
 export class AppController {
