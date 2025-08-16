@@ -45,11 +45,9 @@ export class BaseUrlResourceBuilder implements ResourceBuilder {
   }
   addLink(rel: string, link: LinkObject): this {
     const absoluteLink: LinkObject = {
+      ...link,
       href: new URL(link.href, this.baseUrl).toString(),
     };
-    if (link.name) {
-      absoluteLink.name = link.name;
-    }
     const current = this.links[rel];
     if (current) {
       if (Array.isArray(current)) {
