@@ -29,7 +29,6 @@ export class Resource<T extends Wrapped = any> {
 }
 
 export interface ResourceBuilder {
-  addLink(rel: string, link: LinkObject): this;
   withRel(rel: string, ...links: LinkObject[]): this;
   toResource<T extends Wrapped>(): Resource<T>;
 }
@@ -42,7 +41,7 @@ export class BaseUrlResourceBuilder implements ResourceBuilder {
   ) {
     this.addLink('self', { href: self });
   }
-  addLink(rel: string, link: LinkObject): this {
+  protected addLink(rel: string, link: LinkObject): this {
     const absoluteLink: LinkObject = {
       ...link,
       href: new URL(link.href, this.baseUrl).toString(),
