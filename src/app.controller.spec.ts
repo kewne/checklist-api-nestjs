@@ -25,7 +25,7 @@ describe('AppController', () => {
           self: { href: 'http://example.com/' },
           related: [
             { href: 'http://example.com/hello/hello' },
-            { name: 'checklists', href: 'http://example.com/checklists' },
+            { name: 'checklists', href: 'http://example.com/checklists/' },
           ],
         },
       });

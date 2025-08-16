@@ -74,23 +74,32 @@ export const LinkRegistration = createParamDecorator(
   },
 );
 
-export function extractRouteFromHandler(
-  controller: Type<any>,
-  // eslint-disable-next-line @typescript-eslint/no-unsafe-function-type
-  handler: Function,
+type MaybeHandlerFunction<C> = {
+  [H in keyof C]-?: C[H] extends (...args: never) => unknown ? H : never;
+}[keyof C];
+
+export function extractRouteFromHandler<C>(
+  controller: Type<C>,
+  handler: MaybeHandlerFunction<C>,
   reflector: Reflector,
 ): string {
   const controllerPath = reflector.get<string | undefined>(
     PATH_METADATA,
     controller,
   );
-  const methodPath =
-    reflector.get<string | undefined>(PATH_METADATA, handler) ?? '';
-  if (!methodPath && !controllerPath) {
-    throw new Error('Could not find path');
+  if (controllerPath === undefined) {
+    throw new Error('Class is not a controller');
   }
-  if (controllerPath) {
-    return `${controllerPath}/${methodPath}`;
+  const methodPath = reflector.get<string | undefined>(
+    PATH_METADATA,
+    // eslint-disable-next-line @typescript-eslint/no-unsafe-argument, @typescript-eslint/no-unsafe-member-access
+    controller.prototype[handler],
+  );
+  if (methodPath === undefined) {
+    throw new Error('Method is not a handler method');
   }
-  return methodPath;
+  if (methodPath.startsWith('/')) {
+    return `${controllerPath}${methodPath}`;
+  }
+  return `${controllerPath}/${methodPath}`;
 }

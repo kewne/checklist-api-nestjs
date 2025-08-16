@@ -7,6 +7,7 @@ import {
 } from './hateoas';
 import { Reflector } from '@nestjs/core';
 import { HelloController } from './hello/hello.controller';
+import { ChecklistController } from './checklist/checklist.controller';
 
 @Controller()
 export class AppController {
@@ -16,13 +17,16 @@ export class AppController {
   root(@LinkRegistration() builder: ResourceBuilder): Resource {
     return builder
       .addLink('related', {
+        href: extractRouteFromHandler(HelloController, 'hello', this.reflector),
+      })
+      .addLink('related', {
+        name: 'checklists',
         href: extractRouteFromHandler(
-          HelloController,
-          HelloController.prototype.hello,
+          ChecklistController,
+          'findAll',
           this.reflector,
         ),
       })
-      .addLink('related', { name: 'checklists', href: '/checklists' })
       .toResource();
   }
 }
