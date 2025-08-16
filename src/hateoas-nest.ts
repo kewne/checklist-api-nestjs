@@ -2,12 +2,18 @@ import { createParamDecorator, ExecutionContext, Type } from '@nestjs/common';
 import { Request } from 'express';
 import { Reflector } from '@nestjs/core';
 import { PATH_METADATA } from '@nestjs/common/constants';
-import { BaseUrlResourceBuilder } from './hateoas';
+import { BaseUrlResourceBuilder, LinkObject } from './hateoas';
+import { REFLECTOR_KEY } from './hateoas/hateoas.interceptor';
 
 export const LinkRegistration = createParamDecorator(
   (data: unknown, ctx: ExecutionContext) => {
     const req = ctx.switchToHttp().getRequest<Request>();
-    return new BaseUrlResourceBuilder(`${req.protocol}://${req.host}`, req.url);
+    const reflector = req[REFLECTOR_KEY] as Reflector;
+    return new NestResourceBuilder(
+      `${req.protocol}://${req.host}`,
+      req.url,
+      reflector,
+    );
   },
 );
 
@@ -39,4 +45,30 @@ export function extractRouteFromHandler<C>(
     return `${controllerPath}${methodPath}`;
   }
   return `${controllerPath}/${methodPath}`;
+}
+
+export class NestResourceBuilder extends BaseUrlResourceBuilder {
+  constructor(
+    baseUrl: string,
+    selfUrl: string,
+    private reflector: Reflector,
+  ) {
+    super(baseUrl, selfUrl);
+  }
+
+  addLinkToHandler<C>(
+    rel: string,
+    options: Omit<LinkObject, 'href'> & {
+      controller: Type<C>;
+      handler: MaybeHandlerFunction<C>;
+    },
+  ): this {
+    const { controller, handler, ...linkProps } = options;
+    const href = extractRouteFromHandler(controller, handler, this.reflector);
+    const linkObj: LinkObject = {
+      ...linkProps,
+      href,
+    };
+    return this.addLink(rel, linkObj);
+  }
 }

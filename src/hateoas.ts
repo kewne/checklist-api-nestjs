@@ -5,7 +5,7 @@ import { PATH_METADATA } from '@nestjs/common/constants';
 
 type Wrapped = Record<string, any>;
 
-type LinkObject = { href: string; name?: string };
+export type LinkObject = { href: string; name?: string };
 type JsonHal<T extends Wrapped> = T & {
   _links: { [rel: string]: LinkObject | LinkObject[] };
 };

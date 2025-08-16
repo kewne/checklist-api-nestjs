@@ -4,6 +4,7 @@ import { HelloController } from './hello/hello.controller';
 import { ChecklistModule } from './checklist/checklist.module';
 import { TypeOrmModule } from '@nestjs/typeorm';
 import { Checklist } from './checklist/entities/checklist.entity';
+import { HateoasModule } from './hateoas/hateoas.module';
 
 @Module({
   imports: [
@@ -14,6 +15,7 @@ import { Checklist } from './checklist/entities/checklist.entity';
       synchronize: true,
       entities: [Checklist],
     }),
+    HateoasModule,
   ],
   controllers: [AppController, HelloController],
   providers: [],

@@ -1,9 +1,11 @@
 import { Test, TestingModule } from '@nestjs/testing';
 import { AppController } from './app.controller';
-import { BaseUrlResourceBuilder } from './hateoas';
+import { NestResourceBuilder } from './hateoas-nest';
+import { Reflector } from '@nestjs/core';
 
 describe('AppController', () => {
   let appController: AppController;
+  let reflector: Reflector;
 
   beforeEach(async () => {
     const app: TestingModule = await Test.createTestingModule({
@@ -11,14 +13,15 @@ describe('AppController', () => {
       providers: [],
     }).compile();
 
-    appController = app.get<AppController>(AppController);
+    appController = app.get(AppController);
+    reflector = app.get(Reflector);
   });
 
   describe('root', () => {
     it('should return resource with self link', () => {
       expect(
         appController
-          .root(new BaseUrlResourceBuilder('http://example.com', '/'))
+          .root(new NestResourceBuilder('http://example.com', '/', reflector))
           .toJSON(),
       ).toEqual({
         _links: {
