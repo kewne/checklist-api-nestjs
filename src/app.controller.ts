@@ -1,5 +1,9 @@
 import { Controller, Get } from '@nestjs/common';
-import { LinkRegistration, NestResourceBuilder } from './hateoas-nest';
+import {
+  LinkRegistration,
+  NestResourceBuilder,
+  toHandler,
+} from './hateoas-nest';
 import { Reflector } from '@nestjs/core';
 import { HelloController } from './hello/hello.controller';
 import { ChecklistController } from './checklist/checklist.controller';
@@ -12,15 +16,11 @@ export class AppController {
   @Get()
   root(@LinkRegistration() builder: NestResourceBuilder): Resource {
     return builder
-      .addLinkToHandler('related', {
-        controller: HelloController,
-        handler: 'hello',
-      })
-      .addLinkToHandler('related', {
-        name: 'checklists',
-        controller: ChecklistController,
-        handler: 'findAll',
-      })
+      .withRel(
+        'related',
+        toHandler(HelloController, 'hello'),
+        toHandler(ChecklistController, 'findAll', { name: 'checklists' }),
+      )
       .toResource();
   }
 }

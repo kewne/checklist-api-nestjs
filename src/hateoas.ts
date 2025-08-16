@@ -1,11 +1,9 @@
-import { createParamDecorator, ExecutionContext, Type } from '@nestjs/common';
-import { Request } from 'express';
-import { Reflector } from '@nestjs/core';
-import { PATH_METADATA } from '@nestjs/common/constants';
-
 type Wrapped = Record<string, any>;
 
-export type LinkObject = { href: string; name?: string };
+export type LinkObject = { href: string } & LinkOptions;
+export type LinkOptions = {
+  name?: string;
+};
 type JsonHal<T extends Wrapped> = T & {
   _links: { [rel: string]: LinkObject | LinkObject[] };
 };
@@ -32,6 +30,7 @@ export class Resource<T extends Wrapped = any> {
 
 export interface ResourceBuilder {
   addLink(rel: string, link: LinkObject): this;
+  withRel(rel: string, ...links: LinkObject[]): this;
   toResource<T extends Wrapped>(): Resource<T>;
 }
 
@@ -58,6 +57,10 @@ export class BaseUrlResourceBuilder implements ResourceBuilder {
     } else {
       this.links[rel] = absoluteLink;
     }
+    return this;
+  }
+  withRel(rel: string, ...links: LinkObject[]): this {
+    links.forEach((link) => this.addLink(rel, link));
     return this;
   }
   toResource<T extends Wrapped>(wrapped?: T): Resource<T> {

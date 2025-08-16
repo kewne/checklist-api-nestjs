@@ -2,7 +2,7 @@ import { createParamDecorator, ExecutionContext, Type } from '@nestjs/common';
 import { Request } from 'express';
 import { Reflector } from '@nestjs/core';
 import { PATH_METADATA } from '@nestjs/common/constants';
-import { BaseUrlResourceBuilder, LinkObject } from './hateoas';
+import { BaseUrlResourceBuilder, LinkObject, LinkOptions } from './hateoas';
 import { REFLECTOR_KEY } from './hateoas/hateoas.interceptor';
 
 export const LinkRegistration = createParamDecorator(
@@ -20,6 +20,11 @@ export const LinkRegistration = createParamDecorator(
 export type MaybeHandlerFunction<C> = {
   [H in keyof C]-?: C[H] extends (...args: never) => unknown ? H : never;
 }[keyof C];
+
+type HandlerLink<C> = Omit<LinkObject, 'href'> & {
+  controller: Type<C>;
+  handler: MaybeHandlerFunction<C>;
+};
 
 export function extractRouteFromHandler<C>(
   controller: Type<C>,
@@ -47,6 +52,18 @@ export function extractRouteFromHandler<C>(
   return `${controllerPath}/${methodPath}`;
 }
 
+export function toHandler<C>(
+  controller: Type<C>,
+  handler: MaybeHandlerFunction<C>,
+  options?: LinkOptions,
+): HandlerLink<C> {
+  return {
+    ...options,
+    controller,
+    handler,
+  };
+}
+
 export class NestResourceBuilder extends BaseUrlResourceBuilder {
   constructor(
     baseUrl: string,
@@ -56,13 +73,7 @@ export class NestResourceBuilder extends BaseUrlResourceBuilder {
     super(baseUrl, selfUrl);
   }
 
-  addLinkToHandler<C>(
-    rel: string,
-    options: Omit<LinkObject, 'href'> & {
-      controller: Type<C>;
-      handler: MaybeHandlerFunction<C>;
-    },
-  ): this {
+  private addLinkToHandler<C>(rel: string, options: HandlerLink<C>): this {
     const { controller, handler, ...linkProps } = options;
     const href = extractRouteFromHandler(controller, handler, this.reflector);
     const linkObj: LinkObject = {
@@ -70,5 +81,15 @@ export class NestResourceBuilder extends BaseUrlResourceBuilder {
       href,
     };
     return this.addLink(rel, linkObj);
+  }
+
+  withRel(rel: string, ...links: (LinkObject | HandlerLink<any>)[]): this {
+    links.forEach((link) => {
+      if ('href' in link) {
+        return super.addLink(rel, link);
+      }
+      return this.addLinkToHandler(rel, link);
+    });
+    return this;
   }
 }
