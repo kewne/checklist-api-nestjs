@@ -1,18 +1,23 @@
 import { createParamDecorator, ExecutionContext, Type } from '@nestjs/common';
+import { RoutePathFactory } from '@nestjs/core/router/route-path-factory';
 import { Request } from 'express';
-import { Reflector } from '@nestjs/core';
+import { ApplicationConfig, ModuleRef, Reflector } from '@nestjs/core';
 import { PATH_METADATA } from '@nestjs/common/constants';
 import { BaseUrlResourceBuilder, LinkObject, LinkOptions } from './hateoas';
-import { REFLECTOR_KEY } from './hateoas/hateoas.interceptor';
+import { MODULE_KEY, REFLECTOR_KEY } from './hateoas/hateoas.interceptor';
 
 export const LinkRegistration = createParamDecorator(
   (data: unknown, ctx: ExecutionContext) => {
     const req = ctx.switchToHttp().getRequest<Request>();
     const reflector = req[REFLECTOR_KEY] as Reflector;
+    const module = req[MODULE_KEY] as ModuleRef;
+    const config = module.get(ApplicationConfig);
+    const routePathFactory = new RoutePathFactory(config);
     return new NestResourceBuilder(
       `${req.protocol}://${req.host}`,
       req.url,
       reflector,
+      routePathFactory,
     );
   },
 );
@@ -69,16 +74,27 @@ export class NestResourceBuilder extends BaseUrlResourceBuilder {
     baseUrl: string,
     selfUrl: string,
     private reflector: Reflector,
+    private routePathFactory: RoutePathFactory,
   ) {
     super(baseUrl, selfUrl);
   }
 
   private addLinkToHandler<C>(rel: string, options: HandlerLink<C>): this {
     const { controller, handler, ...linkProps } = options;
-    const href = extractRouteFromHandler(controller, handler, this.reflector);
+    const href = this.routePathFactory.create({
+      ctrlPath: this.reflector.get<string | undefined>(
+        PATH_METADATA,
+        controller,
+      ),
+      methodPath: this.reflector.get<string | undefined>(
+        PATH_METADATA,
+        // eslint-disable-next-line @typescript-eslint/no-unsafe-argument, @typescript-eslint/no-unsafe-member-access
+        controller.prototype[handler],
+      ),
+    });
     const linkObj: LinkObject = {
       ...linkProps,
-      href,
+      href: href[0],
     };
     return this.addLink(rel, linkObj);
   }
