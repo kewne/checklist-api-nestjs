@@ -6,5 +6,5 @@ export class Checklist {
   id: number;
 
   @Column()
-  name: string;
+  title: string;
 }

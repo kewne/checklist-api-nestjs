@@ -10,5 +10,24 @@
             "request": "launch",
             "type": "node-terminal"
         },
+        {
+            "type": "node",
+            "name": "vscode-jest-tests.v2.checklist-api-nestjs",
+            "request": "launch",
+            "args": [
+                "test",
+                "--",
+                "--runInBand",
+                "--watchAll=false",
+                "--testNamePattern",
+                "${jest.testNamePattern}",
+                "--runTestsByPath",
+                "${jest.testFile}"
+            ],
+            "cwd": "/workspaces/checklist-api-nestjs",
+            "console": "integratedTerminal",
+            "internalConsoleOptions": "neverOpen",
+            "runtimeExecutable": "npm"
+        }
     ]
 }
