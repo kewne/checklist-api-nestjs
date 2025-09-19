@@ -1,7 +1,7 @@
 import { Test, TestingModule } from '@nestjs/testing';
-import { ChecklistService } from './checklist.service';
 import { getRepositoryToken } from '@nestjs/typeorm';
-import { Checklist } from './entities/checklist.entity';
+import { Checklist } from './checklist.entity';
+import { ChecklistService } from './checklist.service';
 
 describe('ChecklistService', () => {
   let service: ChecklistService;

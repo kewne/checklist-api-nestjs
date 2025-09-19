@@ -1,9 +1,9 @@
 import { Injectable } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
+import { Checklist } from './checklist.entity';
 import { CreateChecklistDto } from './dto/create-checklist.dto';
 import { UpdateChecklistDto } from './dto/update-checklist.dto';
-import { Checklist } from './entities/checklist.entity';
 
 @Injectable()
 export class ChecklistService {
@@ -12,7 +12,7 @@ export class ChecklistService {
     private repository: Repository<Checklist>,
   ) { }
 
-  async create(createChecklistDto: CreateChecklistDto) {
+  async create(createChecklistDto: CreateChecklistDto): Promise<Checklist> {
     return this.repository.save(createChecklistDto);
   }
 

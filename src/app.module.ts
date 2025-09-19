@@ -1,10 +1,11 @@
-import { Module } from '@nestjs/common';
-import { AppController } from './app.controller';
-import { HelloController } from './hello/hello.controller';
-import { ChecklistModule } from './checklist/checklist.module';
+import { ClassSerializerInterceptor, Module } from '@nestjs/common';
+import { APP_INTERCEPTOR, Reflector } from '@nestjs/core';
 import { TypeOrmModule } from '@nestjs/typeorm';
-import { Checklist } from './checklist/entities/checklist.entity';
+import { AppController } from './app.controller';
+import { Checklist } from './checklist/checklist.entity';
+import { ChecklistModule } from './checklist/checklist.module';
 import { HateoasModule } from './hateoas/hateoas.module';
+import { HelloController } from './hello/hello.controller';
 
 @Module({
   imports: [
@@ -18,6 +19,14 @@ import { HateoasModule } from './hateoas/hateoas.module';
     HateoasModule,
   ],
   controllers: [AppController, HelloController],
-  providers: [],
+  providers: [
+    {
+      provide: APP_INTERCEPTOR,
+      useFactory: (reflector: Reflector) => {
+        return new ClassSerializerInterceptor(reflector, { excludeExtraneousValues: true })
+      },
+      inject: [Reflector]
+    }
+  ],
 })
-export class AppModule {}
+export class AppModule { }

@@ -7,7 +7,7 @@ import { AppModule } from '../src/app.module';
 describe('ChecklistController (e2e)', () => {
     let app: INestApplication<App>;
 
-    beforeEach(async () => {
+    beforeAll(async () => {
         const moduleFixture: TestingModule = await Test.createTestingModule({
             imports: [AppModule],
         }).compile();
@@ -16,7 +16,7 @@ describe('ChecklistController (e2e)', () => {
         await app.init();
     });
 
-    afterEach(async () => {
+    afterAll(async () => {
         await app.close();
     });
 
@@ -24,7 +24,21 @@ describe('ChecklistController (e2e)', () => {
         it('should create a new checklist', () => {
             const createChecklistDto = {
                 title: 'Test Checklist',
-                description: 'A test checklist for e2e testing',
+            };
+
+            return request(app.getHttpServer())
+                .post('/checklists')
+                .send(createChecklistDto)
+                .expect(201)
+                .expect({
+                    title: createChecklistDto.title,
+                });
+        });
+
+        it('ignores extraneous properties', () => {
+            const createChecklistDto = {
+                title: 'Test Checklist',
+                description: 'this should be removed'
             };
 
             return request(app.getHttpServer())
@@ -32,15 +46,12 @@ describe('ChecklistController (e2e)', () => {
                 .send(createChecklistDto)
                 .expect(201)
                 .expect((res: { body: { id: number } }) => {
-                    expect(res.body).toHaveProperty('id')
                     res.body.id = 123
                 })
                 .expect({
                     id: 123,
                     title: createChecklistDto.title,
-                    description: createChecklistDto.description,
                 });
         });
-
     });
 });

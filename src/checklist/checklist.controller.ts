@@ -1,21 +1,24 @@
 import {
-  Controller,
-  Get,
-  Post,
   Body,
-  Patch,
-  Param,
+  Controller,
   Delete,
+  Get,
+  Param,
+  Patch,
+  Post,
+  SerializeOptions,
 } from '@nestjs/common';
+import { Checklist } from './checklist.entity';
 import { ChecklistService } from './checklist.service';
 import { CreateChecklistDto } from './dto/create-checklist.dto';
 import { UpdateChecklistDto } from './dto/update-checklist.dto';
 
 @Controller('checklists')
 export class ChecklistController {
-  constructor(private readonly checklistService: ChecklistService) {}
+  constructor(private readonly checklistService: ChecklistService) { }
 
   @Post()
+  @SerializeOptions({ type: Checklist })
   create(@Body() createChecklistDto: CreateChecklistDto) {
     return this.checklistService.create(createChecklistDto);
   }
