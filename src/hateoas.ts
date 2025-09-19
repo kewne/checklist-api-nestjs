@@ -4,9 +4,6 @@ export type LinkObject = { href: string } & LinkOptions;
 export type LinkOptions = {
   name?: string;
 };
-type JsonHal<T extends Wrapped> = T & {
-  _links: { [rel: string]: LinkObject | LinkObject[] };
-};
 
 export class Resource<T extends Wrapped = any> {
   private wrapped?: T;

@@ -31,7 +31,7 @@ describe('ChecklistController (e2e)', () => {
                 .post('/checklists')
                 .send(createChecklistDto)
                 .expect(201)
-                .expect((res) => {
+                .expect((res: { body: { id: number } }) => {
                     expect(res.body).toHaveProperty('id')
                     res.body.id = 123
                 })
