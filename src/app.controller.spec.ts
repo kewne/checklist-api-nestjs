@@ -1,8 +1,8 @@
+import { ApplicationConfig, Reflector } from '@nestjs/core';
+import { RoutePathFactory } from '@nestjs/core/router/route-path-factory';
 import { Test, TestingModule } from '@nestjs/testing';
 import { AppController } from './app.controller';
 import { NestResourceBuilder } from './hateoas-nest';
-import { ApplicationConfig, Reflector } from '@nestjs/core';
-import { RoutePathFactory } from '@nestjs/core/router/route-path-factory';
 
 describe('AppController', () => {
   let appController: AppController;
@@ -35,10 +35,7 @@ describe('AppController', () => {
       ).toEqual({
         _links: {
           self: { href: 'http://example.com/' },
-          related: [
-            { href: 'http://example.com/hello/hello' },
-            { name: 'checklists', href: 'http://example.com/checklists' },
-          ],
+          related: { name: 'checklists', href: 'http://example.com/checklists' },
         },
       });
     });

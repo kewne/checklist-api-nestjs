@@ -5,7 +5,6 @@ import { AppController } from './app.controller';
 import { Checklist } from './checklist/checklist.entity';
 import { ChecklistModule } from './checklist/checklist.module';
 import { HateoasModule } from './hateoas/hateoas.module';
-import { HelloController } from './hello/hello.controller';
 
 @Module({
   imports: [
@@ -18,7 +17,7 @@ import { HelloController } from './hello/hello.controller';
     }),
     HateoasModule,
   ],
-  controllers: [AppController, HelloController],
+  controllers: [AppController],
   providers: [
     {
       provide: APP_INTERCEPTOR,
