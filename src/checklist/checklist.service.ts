@@ -16,20 +16,20 @@ export class ChecklistService {
     return this.repository.save(createChecklistDto);
   }
 
-  async findAll() {
+  async findAll(): Promise<Checklist[]> {
     return this.repository.find();
   }
 
-  findOne(id: number) {
-    return `This action returns a #${id} checklist`;
+  async findOne(id: number): Promise<Checklist | null> {
+    return this.repository.findOne({ where: { id } });
   }
 
-  // eslint-disable-next-line @typescript-eslint/no-unused-vars
-  update(id: number, updateChecklistDto: UpdateChecklistDto) {
-    return `This action updates a #${id} checklist`;
+  async update(id: number, updateChecklistDto: UpdateChecklistDto): Promise<Checklist | null> {
+    await this.repository.update(id, updateChecklistDto);
+    return this.findOne(id);
   }
 
-  remove(id: number) {
-    return `This action removes a #${id} checklist`;
+  async remove(id: number): Promise<void> {
+    await this.repository.delete(id);
   }
 }

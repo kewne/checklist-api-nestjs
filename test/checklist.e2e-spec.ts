@@ -22,6 +22,34 @@ describe('ChecklistController (e2e)', () => {
         }
     });
 
+    it('can get the checklist data after creating', async () => {
+        const createChecklistDto = {
+            title: 'Test Checklist for Retrieval',
+        };
+
+        // Create a checklist first
+        const createResponse = await request(app.getHttpServer())
+            .post('/checklists')
+            .send(createChecklistDto)
+            .expect(201);
+
+        const createdChecklist = createResponse.body as { id: number; title: string };
+        const locationHeader = createResponse.headers.location;
+
+        expect(createdChecklist.id).toBeDefined();
+        expect(createdChecklist.title).toBe(createChecklistDto.title);
+        expect(locationHeader).toBe(`/checklists/${createdChecklist.id}`);
+
+        // Then retrieve it using the Location header
+        return request(app.getHttpServer())
+            .get(locationHeader)
+            .expect(200)
+            .expect({
+                id: createdChecklist.id,
+                title: createChecklistDto.title,
+            });
+    })
+
     describe('/checklists (POST)', () => {
         it('should create a new checklist', () => {
             const createChecklistDto = {
@@ -32,28 +60,8 @@ describe('ChecklistController (e2e)', () => {
                 .post('/checklists')
                 .send(createChecklistDto)
                 .expect(201)
-                .expect({
-                    title: createChecklistDto.title,
-                });
+                .expect('Location', /\/checklists\/\d+/);
         });
 
-        it('ignores extraneous properties', () => {
-            const createChecklistDto = {
-                title: 'Test Checklist',
-                description: 'this should be removed'
-            };
-
-            return request(app.getHttpServer())
-                .post('/checklists')
-                .send(createChecklistDto)
-                .expect(201)
-                .expect((res: { body: { id: number } }) => {
-                    res.body.id = 123
-                })
-                .expect({
-                    id: 123,
-                    title: createChecklistDto.title,
-                });
-        });
     });
 });

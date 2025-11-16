@@ -3,10 +3,11 @@ import {
   Controller,
   Delete,
   Get,
+  HttpRedirectResponse,
   Param,
   Patch,
   Post,
-  SerializeOptions,
+  SerializeOptions
 } from '@nestjs/common';
 import { Checklist } from './checklist.entity';
 import { ChecklistService } from './checklist.service';
@@ -19,8 +20,11 @@ export class ChecklistController {
 
   @Post()
   @SerializeOptions({ type: Checklist })
-  create(@Body() createChecklistDto: CreateChecklistDto) {
-    return this.checklistService.create(createChecklistDto);
+  async create(
+    @Body() createChecklistDto: CreateChecklistDto,
+  ): Promise<HttpRedirectResponse> {
+    const checklist = await this.checklistService.create(createChecklistDto);
+    return { url: `/checklists/${checklist.id}`, statusCode: 201 };
   }
 
   @Get()
