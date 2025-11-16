@@ -6,21 +6,25 @@ import {
   Param,
   Patch,
   Post,
-  SerializeOptions,
+  Res,
 } from '@nestjs/common';
-import { Checklist } from './checklist.entity';
 import { ChecklistService } from './checklist.service';
 import { CreateChecklistDto } from './dto/create-checklist.dto';
 import { UpdateChecklistDto } from './dto/update-checklist.dto';
+import { Response } from 'express';
 
 @Controller('checklists')
 export class ChecklistController {
-  constructor(private readonly checklistService: ChecklistService) { }
+  constructor(private readonly checklistService: ChecklistService) {}
 
   @Post()
-  @SerializeOptions({ type: Checklist })
-  create(@Body() createChecklistDto: CreateChecklistDto) {
-    return this.checklistService.create(createChecklistDto);
+  // @SerializeOptions({ type: Checklist })
+  async create(
+    @Body() createChecklistDto: CreateChecklistDto,
+    @Res({ passthrough: true }) res: Response,
+  ) {
+    const checklist = await this.checklistService.create(createChecklistDto);
+    res.setHeader('location', `/checklists/${checklist.id}`);
   }
 
   @Get()

@@ -27,7 +27,7 @@ export class Resource<T extends Wrapped = any> {
 
 export interface ResourceBuilder {
   withRel(rel: string, ...links: LinkObject[]): this;
-  toResource<T extends Wrapped>(): Resource<T>;
+  toResource<T extends Wrapped>(wrapped: T): Resource<T>;
 }
 
 export class BaseUrlResourceBuilder implements ResourceBuilder {
