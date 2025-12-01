@@ -1,12 +1,21 @@
+import { Expose, instanceToPlain } from 'class-transformer';
+
 type Wrapped = Record<string, any>;
 
 export type LinkObject = { href: string } & LinkOptions;
 export type LinkOptions = {
   name?: string;
 };
+export type PlainResource = {
+  _links: {
+    [rel: string]: LinkObject | LinkObject[];
+  };
+  [p: string]: any;
+};
 
 export class Resource<T extends Wrapped = any> {
   private wrapped?: T;
+  @Expose({ name: '_links' })
   private links: { [rel: string]: LinkObject | LinkObject[] };
 
   constructor(
@@ -27,7 +36,7 @@ export class Resource<T extends Wrapped = any> {
 
 export interface ResourceBuilder {
   withRel(rel: string, ...links: LinkObject[]): this;
-  toResource<T extends Wrapped>(wrapped: T): Resource<T>;
+  toResource<T extends Wrapped>(wrapped: T): PlainResource;
 }
 
 export class BaseUrlResourceBuilder implements ResourceBuilder {
@@ -59,7 +68,10 @@ export class BaseUrlResourceBuilder implements ResourceBuilder {
     links.forEach((link) => this.addLink(rel, link));
     return this;
   }
-  toResource<T extends Wrapped>(wrapped?: T): Resource<T> {
-    return new Resource(this.links, wrapped);
+  toResource<T extends Wrapped>(wrapped?: T): PlainResource {
+    return {
+      ...instanceToPlain(wrapped, { strategy: 'excludeAll' }),
+      _links: this.links,
+    };
   }
 }

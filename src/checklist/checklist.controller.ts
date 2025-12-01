@@ -1,5 +1,6 @@
 import {
   Body,
+  ClassSerializerInterceptor,
   Controller,
   Delete,
   Get,
@@ -7,11 +8,13 @@ import {
   Patch,
   Post,
   Res,
+  UseInterceptors,
 } from '@nestjs/common';
 import { ChecklistService } from './checklist.service';
 import { CreateChecklistDto } from './dto/create-checklist.dto';
 import { UpdateChecklistDto } from './dto/update-checklist.dto';
 import { Response } from 'express';
+import { Resource } from '@app/hateoas';
 import { Hateoas, NestLinkFactory } from '@app/hateoas-nest';
 
 @Controller('checklists')
@@ -39,8 +42,16 @@ export class ChecklistController {
   }
 
   @Get(':id')
-  findOne(@Param('id') id: string) {
-    return this.checklistService.findOne(+id);
+  @UseInterceptors(ClassSerializerInterceptor)
+  async findOne(
+    @Param('id') id: string,
+    @Hateoas() linkFactory: NestLinkFactory,
+  ) {
+    const checklist = await this.checklistService.findOne(+id);
+    if (!checklist) {
+      return null;
+    }
+    return linkFactory.buildResource().toResource(checklist);
   }
 
   @Patch(':id')

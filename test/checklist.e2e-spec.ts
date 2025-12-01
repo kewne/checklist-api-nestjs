@@ -13,6 +13,15 @@ describe('ChecklistController (e2e)', () => {
       checklist.id = 123;
       return checklist;
     },
+    findOne(id: number): Checklist | null {
+      if (id === 123) {
+        const checklist = new Checklist();
+        checklist.id = 123;
+        checklist.title = 'Test Checklist for Retrieval';
+        return checklist;
+      }
+      return null;
+    },
   };
 
   beforeAll(async () => {
@@ -55,6 +64,24 @@ describe('ChecklistController (e2e)', () => {
       .expect({
         title: createChecklistDto.title,
       });
+  });
+
+  it('returns a Resource with HATEOAS links when getting a checklist by id', async () => {
+    const response = await request(app.getHttpServer())
+      .get('/checklists/123')
+      .expect(200);
+
+    expect(response.body).not.toHaveProperty('id');
+    expect(response.body).toHaveProperty(
+      'title',
+      'Test Checklist for Retrieval',
+    );
+    expect(response.body).toHaveProperty('_links');
+    expect(response.body._links).toHaveProperty('self');
+    expect(response.body._links.self).toHaveProperty('href');
+    expect(response.body._links.self.href).toMatch(
+      absoluteServerUrl('/checklists/123'),
+    );
   });
 });
 function absoluteServerUrl(relative: string): string | RegExp {
