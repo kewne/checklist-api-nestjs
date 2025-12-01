@@ -84,6 +84,6 @@ describe('ChecklistController (e2e)', () => {
     );
   });
 });
-function absoluteServerUrl(relative: string): string | RegExp {
+function absoluteServerUrl(relative: string): RegExp {
   return new RegExp(`^http://127\\.0\\.0\\.1:\\d+${RegExp.escape(relative)}$`);
 }
