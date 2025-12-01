@@ -6,22 +6,6 @@ import { PATH_METADATA } from '@nestjs/common/constants';
 import { BaseUrlResourceBuilder, LinkObject, LinkOptions } from './hateoas';
 import { MODULE_KEY, REFLECTOR_KEY } from './hateoas/hateoas.interceptor';
 
-export const LinkRegistration = createParamDecorator(
-  (data: unknown, ctx: ExecutionContext) => {
-    const req = ctx.switchToHttp().getRequest<Request>();
-    const reflector = req[REFLECTOR_KEY] as Reflector;
-    const module = req[MODULE_KEY] as ModuleRef;
-    const config = module.get(ApplicationConfig);
-    const routePathFactory = new RoutePathFactory(config);
-    return new NestResourceBuilder(
-      `${req.protocol}://${req.host}`,
-      req.url,
-      reflector,
-      routePathFactory,
-    );
-  },
-);
-
 export const Hateoas = createParamDecorator(
   (data: unknown, ctx: ExecutionContext) => {
     const req = ctx.switchToHttp().getRequest<Request>();
@@ -31,6 +15,7 @@ export const Hateoas = createParamDecorator(
     const routePathFactory = new RoutePathFactory(config);
     return new NestLinkFactory(
       `${req.protocol}://${req.host}`,
+      req.url,
       reflector,
       routePathFactory,
     );
@@ -40,9 +25,19 @@ export const Hateoas = createParamDecorator(
 export class NestLinkFactory {
   constructor(
     private baseUrl: string,
+    private selfUrl: string,
     private reflector: Reflector,
     private routePathFactory: RoutePathFactory,
   ) {}
+
+  public buildResource(): NestResourceBuilder {
+    return new NestResourceBuilder(
+      this.baseUrl,
+      this.selfUrl,
+      this.reflector,
+      this.routePathFactory,
+    );
+  }
 
   public toHandler<C>(
     controller: Type<C>,
