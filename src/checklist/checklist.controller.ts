@@ -12,19 +12,25 @@ import { ChecklistService } from './checklist.service';
 import { CreateChecklistDto } from './dto/create-checklist.dto';
 import { UpdateChecklistDto } from './dto/update-checklist.dto';
 import { Response } from 'express';
+import { Hateoas, NestLinkFactory } from '@app/hateoas-nest';
 
 @Controller('checklists')
 export class ChecklistController {
   constructor(private readonly checklistService: ChecklistService) {}
 
   @Post()
-  // @SerializeOptions({ type: Checklist })
   async create(
     @Body() createChecklistDto: CreateChecklistDto,
     @Res({ passthrough: true }) res: Response,
+    @Hateoas() linkFactory: NestLinkFactory,
   ) {
     const checklist = await this.checklistService.create(createChecklistDto);
-    res.setHeader('location', `/checklists/${checklist.id}`);
+    res.setHeader(
+      'location',
+      linkFactory.toHandler(ChecklistController, 'findOne', {
+        id: checklist.id,
+      }),
+    );
   }
 
   @Get()

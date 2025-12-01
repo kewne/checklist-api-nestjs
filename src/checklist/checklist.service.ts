@@ -12,9 +12,11 @@ export class ChecklistService {
     private repository: Repository<Checklist>,
   ) {}
 
-  async create(createChecklistDto: CreateChecklistDto) {
-    const result = await this.repository.insert(createChecklistDto);
-    return result.identifiers[0];
+  async create(
+    createChecklistDto: CreateChecklistDto,
+  ): Promise<Pick<Checklist, 'id'>> {
+    const result = await this.repository.save(createChecklistDto);
+    return result;
   }
 
   async findAll(): Promise<Checklist[]> {

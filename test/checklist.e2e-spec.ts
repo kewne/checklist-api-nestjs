@@ -1,14 +1,12 @@
-import { INestApplication } from '@nestjs/common';
 import { Test, TestingModule } from '@nestjs/testing';
 import * as request from 'supertest';
-import { App } from 'supertest/types';
 import { AppModule } from '@app/app.module';
 import { ChecklistService } from '@app/checklist/checklist.service';
 import { Checklist } from '@app/checklist/checklist.entity';
-import { title } from 'process';
+import { NestExpressApplication } from '@nestjs/platform-express';
 
 describe('ChecklistController (e2e)', () => {
-  let app: INestApplication<App>;
+  let app: NestExpressApplication;
   const service = {
     create(): Checklist {
       const checklist = new Checklist();
@@ -25,7 +23,7 @@ describe('ChecklistController (e2e)', () => {
       .useValue(service)
       .compile();
 
-    app = moduleFixture.createNestApplication();
+    app = moduleFixture.createNestApplication<NestExpressApplication>();
     await app.init();
   });
 
@@ -42,9 +40,13 @@ describe('ChecklistController (e2e)', () => {
 
     const createResponse = await request(app.getHttpServer())
       .post('/checklists')
-      .send(createChecklistDto)
-      .expect(201)
-      .expect('location', '/checklists/123');
+      .send(createChecklistDto);
+
+    expect(createResponse.statusCode).toBe(201);
+
+    expect(createResponse.headers['location']).toMatch(
+      absoluteServerUrl('/checklists/123'),
+    );
 
     request(app.getHttpServer())
       .get(createResponse.headers.location)
@@ -55,3 +57,6 @@ describe('ChecklistController (e2e)', () => {
       });
   });
 });
+function absoluteServerUrl(relative: string): string | RegExp {
+  return new RegExp(`^http://127\\.0\\.0\\.1:\\d+${RegExp.escape(relative)}$`);
+}
