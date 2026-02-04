@@ -14,7 +14,6 @@ import { ChecklistService } from './checklist.service';
 import { CreateChecklistDto } from './dto/create-checklist.dto';
 import { UpdateChecklistDto } from './dto/update-checklist.dto';
 import { Response } from 'express';
-import { Resource } from '@app/hateoas';
 import { Hateoas, NestLinkFactory } from '@app/hateoas-nest';
 
 @Controller('checklists')

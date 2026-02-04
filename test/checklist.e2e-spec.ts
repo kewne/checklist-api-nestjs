@@ -4,6 +4,7 @@ import { AppModule } from '@app/app.module';
 import { ChecklistService } from '@app/checklist/checklist.service';
 import { Checklist } from '@app/checklist/checklist.entity';
 import { NestExpressApplication } from '@nestjs/platform-express';
+import { LinkObject, PlainResource } from '@app/hateoas';
 
 describe('ChecklistController (e2e)', () => {
   let app: NestExpressApplication;
@@ -70,18 +71,19 @@ describe('ChecklistController (e2e)', () => {
     const response = await request(app.getHttpServer())
       .get('/checklists/123')
       .expect(200);
+    const responseJson = response.body as PlainResource;
 
-    expect(response.body).not.toHaveProperty('id');
-    expect(response.body).toHaveProperty(
+    expect(responseJson).not.toHaveProperty('id');
+    expect(responseJson).toHaveProperty(
       'title',
       'Test Checklist for Retrieval',
     );
     expect(response.body).toHaveProperty('_links');
-    expect(response.body._links).toHaveProperty('self');
-    expect(response.body._links.self).toHaveProperty('href');
-    expect(response.body._links.self.href).toMatch(
-      absoluteServerUrl('/checklists/123'),
-    );
+    expect(responseJson._links).toHaveProperty('self');
+    expect(Array.isArray(responseJson._links['self']));
+    const selfRel = responseJson._links['self'] as LinkObject;
+    expect(selfRel).toHaveProperty('href');
+    expect(selfRel.href).toMatch(absoluteServerUrl('/checklists/123'));
   });
 });
 function absoluteServerUrl(relative: string): RegExp {
