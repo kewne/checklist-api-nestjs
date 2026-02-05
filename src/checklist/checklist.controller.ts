@@ -14,7 +14,7 @@ import { ChecklistService } from './checklist.service';
 import { CreateChecklistDto } from './dto/create-checklist.dto';
 import { UpdateChecklistDto } from './dto/update-checklist.dto';
 import { Response } from 'express';
-import { Hateoas, NestLinkFactory } from '@app/hateoas-nest';
+import { Hateoas, NestLinkFactory, toHandler } from '@app/hateoas-nest';
 
 @Controller('checklists')
 export class ChecklistController {
@@ -50,7 +50,13 @@ export class ChecklistController {
     if (!checklist) {
       return null;
     }
-    return linkFactory.buildResource().toResource(checklist);
+    return linkFactory
+      .buildResource()
+      .withRel(
+        'instances',
+        linkFactory.toAbsolute(`/checklists/${id}/instances`),
+      )
+      .toResource(checklist);
   }
 
   @Patch(':id')

@@ -69,6 +69,12 @@ export class NestLinkFactory {
 
     return new URL(finalHref, this.baseUrl).toString();
   }
+
+  public toAbsolute(relativePath: string): LinkObject {
+    return {
+      href: new URL(relativePath, this.baseUrl).toString(),
+    };
+  }
 }
 
 export type MaybeHandlerFunction<C> = {
