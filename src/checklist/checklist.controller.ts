@@ -50,7 +50,13 @@ export class ChecklistController {
     if (!checklist) {
       return null;
     }
-    return linkFactory.buildResource().toResource(checklist);
+    return linkFactory
+      .buildResource()
+      .withRel(
+        'instances',
+        linkFactory.toAbsolute(`/checklists/${id}/instances`),
+      )
+      .toResource(checklist);
   }
 
   @Patch(':id')
