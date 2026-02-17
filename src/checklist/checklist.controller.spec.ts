@@ -7,7 +7,7 @@ import { UpdateChecklistDto } from './dto/update-checklist.dto';
 import { HateoasModule } from '../hateoas/hateoas.module';
 import { NestExpressApplication } from '@nestjs/platform-express';
 import * as request from 'supertest';
-import { PlainResource } from '@app/hateoas';
+import { PlainResource, LinkObject } from '@app/hateoas';
 
 describe('ChecklistController', () => {
   let app: NestExpressApplication;
@@ -107,7 +107,8 @@ describe('ChecklistController', () => {
       expect(resource._links).toHaveProperty('self');
       expect(resource._links).toHaveProperty('instances');
       expect(resource._links.instances).toHaveProperty('href');
-      expect(resource._links.instances.href).toMatch(
+      expect(Array.isArray(resource._links)).toBe(false);
+      expect((resource._links.instances as LinkObject).href).toMatch(
         /\/checklists\/123\/instances$/,
       );
     });
