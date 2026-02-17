@@ -1,5 +1,9 @@
 {
-    "editor.codeActionsOnSave": {},
-    "editor.formatOnSave": true,
-    "editor.defaultFormatter": "esbenp.prettier-vscode",
+  "editor.codeActionsOnSave": {
+    "source.fixAll.prettier": "explicit",
+    "source.removeUnused.ts": "explicit",
+    "source.sort.json": "explicit"
+  },
+  "editor.defaultFormatter": "esbenp.prettier-vscode",
+  "editor.formatOnSave": true
 }

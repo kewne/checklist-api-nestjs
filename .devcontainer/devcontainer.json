@@ -1,17 +1,18 @@
 // For format details, see https://aka.ms/devcontainer.json. For config options, see the
 // README at: https://github.com/devcontainers/templates/tree/main/src/typescript-node
 {
-  "name": "Node.js & TypeScript",
-  // Or use a Dockerfile or Docker Compose file. More info: https://containers.dev/guide/dockerfile
-  "image": "mcr.microsoft.com/devcontainers/typescript-node:24",
-  "features": {
-    "ghcr.io/devcontainers-extra/features/nestjs-cli:2": {}
-  },
   "customizations": {
     "vscode": {
       "extensions": ["esbenp.prettier-vscode", "Orta.vscode-jest"]
     }
   },
+  "features": {
+    "./features/gcloud-cli": {},
+    "ghcr.io/devcontainers-extra/features/nestjs-cli:2": {}
+  },
+  // Or use a Dockerfile or Docker Compose file. More info: https://containers.dev/guide/dockerfile
+  "image": "mcr.microsoft.com/devcontainers/typescript-node:24",
+  "name": "Checklists Development",
   // Features to add to the dev container. More info: https://containers.dev/features.
   // "features": {},
   // Use 'forwardPorts' to make a list of ports inside the container available locally.

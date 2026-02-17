@@ -1,0 +1,27 @@
+{
+  "id": "gcloud-cli",
+  "version": "1.0.0",
+  "name": "Google Cloud CLI",
+  "description": "Installs the Google Cloud CLI (gcloud) for managing Google Cloud resources",
+  "documentationURL": "https://docs.cloud.google.com/sdk/docs/install-sdk#deb",
+  "options": {
+    "version": {
+      "type": "string",
+      "proposals": ["latest"],
+      "default": "latest",
+      "description": "Version of the Google Cloud CLI to install. Use 'latest' for the most recent version."
+    },
+    "installComponents": {
+      "type": "string",
+      "proposals": [
+        "base",
+        "kubectl",
+        "google-cloud-cli-app-engine-python",
+        "kubectl google-cloud-cli-gke-gcloud-auth-plugin"
+      ],
+      "default": "base",
+      "description": "Space-separated list of package names to install. Use 'base' for gcloud CLI only, or specify actual package names like 'kubectl', 'google-cloud-cli-app-engine-python', etc."
+    }
+  },
+  "installsAfter": ["ghcr.io/devcontainers/features/common-utils"]
+}
