@@ -3,10 +3,10 @@ import { APP_INTERCEPTOR, Reflector } from '@nestjs/core';
 import { ConfigModule } from '@nestjs/config';
 import { TypeOrmModule } from '@nestjs/typeorm';
 import { AppController } from './app.controller';
+import { FirestoreModule } from './firestore.module';
 import { Checklist } from './checklist/checklist.entity';
 import { ChecklistModule } from './checklist/checklist.module';
 import { HateoasModule } from './hateoas/hateoas.module';
-import { FirestoreModule } from './firestore/firestore.module';
 import { ChecklistInstance } from './checklist/checklist-instance.entity';
 
 @Module({
