@@ -1,3 +1,7 @@
+# Structure
+
+Don't create barrel files unless I explicitly say so.
+
 # Testing Strategy
 
 Tests fall into the following categories:
