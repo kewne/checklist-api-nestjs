@@ -1,12 +1,15 @@
-import { Exclude, Expose } from 'class-transformer';
-import { Column, Entity, PrimaryGeneratedColumn } from 'typeorm';
+import { Expose } from 'class-transformer';
 
-@Entity()
 export class Checklist {
-  @PrimaryGeneratedColumn()
-  id: number;
+  @Expose()
+  id: string;
 
   @Expose()
-  @Column()
   title: string;
+
+  @Expose()
+  createdAt: Date;
+
+  @Expose()
+  updatedAt: Date;
 }

@@ -1,7 +1,6 @@
 import { Test, TestingModule } from '@nestjs/testing';
-import { getRepositoryToken } from '@nestjs/typeorm';
-import { Checklist } from './checklist.entity';
 import { ChecklistService } from './checklist.service';
+import { ChecklistRepository } from './checklist.repository';
 
 describe('ChecklistService', () => {
   let service: ChecklistService;
@@ -11,7 +10,7 @@ describe('ChecklistService', () => {
       providers: [
         ChecklistService,
         {
-          provide: getRepositoryToken(Checklist),
+          provide: ChecklistRepository,
           useValue: {},
         },
       ],

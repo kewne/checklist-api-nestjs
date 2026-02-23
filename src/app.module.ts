@@ -4,7 +4,6 @@ import { ConfigModule } from '@nestjs/config';
 import { TypeOrmModule } from '@nestjs/typeorm';
 import { AppController } from './app.controller';
 import { FirestoreModule } from './firestore.module';
-import { Checklist } from './checklist/checklist.entity';
 import { ChecklistModule } from './checklist/checklist.module';
 import { HateoasModule } from './hateoas/hateoas.module';
 import { ChecklistInstance } from './checklist/checklist-instance.entity';
@@ -20,7 +19,7 @@ import { ChecklistInstance } from './checklist/checklist-instance.entity';
       type: 'sqlite',
       database: 'checklist.db',
       synchronize: true,
-      entities: [Checklist, ChecklistInstance],
+      entities: [ChecklistInstance],
     }),
     HateoasModule,
   ],

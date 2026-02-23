@@ -17,7 +17,7 @@ export class InstanceService {
     checklistId: number,
     createInstanceDto: CreateChecklistInstanceDto,
   ): Promise<Pick<ChecklistInstance, 'id'>> {
-    const checklist = await this.checklistService.findOne(checklistId);
+    const checklist = await this.checklistService.findOne(checklistId.toString());
     if (!checklist) {
       throw new NotFoundException(`Checklist with id ${checklistId} not found`);
     }

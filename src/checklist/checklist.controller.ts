@@ -46,7 +46,7 @@ export class ChecklistController {
     @Param('id') id: string,
     @Hateoas() linkFactory: NestLinkFactory,
   ) {
-    const checklist = await this.checklistService.findOne(+id);
+    const checklist = await this.checklistService.findOne(id);
     if (!checklist) {
       return null;
     }
@@ -64,11 +64,11 @@ export class ChecklistController {
     @Param('id') id: string,
     @Body() updateChecklistDto: UpdateChecklistDto,
   ) {
-    return this.checklistService.update(+id, updateChecklistDto);
+    return this.checklistService.update(id, updateChecklistDto);
   }
 
   @Delete(':id')
   remove(@Param('id') id: string) {
-    return this.checklistService.remove(+id);
+    return this.checklistService.remove(id);
   }
 }

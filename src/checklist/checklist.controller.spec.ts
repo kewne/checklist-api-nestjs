@@ -48,7 +48,7 @@ describe('ChecklistController', () => {
       // Arrange
       const createDto: CreateChecklistDto = { title: 'Test Checklist' };
       const createdChecklist = new Checklist();
-      createdChecklist.id = 123;
+      createdChecklist.id = '123';
       createdChecklist.title = createDto.title;
 
       serviceMock.create.mockResolvedValue(createdChecklist);
@@ -87,7 +87,7 @@ describe('ChecklistController', () => {
     it('should return a checklist with HATEOAS links and 200 status when checklist exists', async () => {
       // Arrange
       const checklist = new Checklist();
-      checklist.id = 123;
+      checklist.id = '123';
       checklist.title = 'Test Checklist for Retrieval';
 
       (serviceMock.findOne as jest.Mock).mockResolvedValue(checklist);
@@ -97,7 +97,7 @@ describe('ChecklistController', () => {
         .get('/checklists/123')
         .expect(200);
 
-      expect(serviceMock.findOne).toHaveBeenCalledWith(123);
+      expect(serviceMock.findOne).toHaveBeenCalledWith('123');
       expect(response.body).toHaveProperty(
         'title',
         'Test Checklist for Retrieval',
@@ -122,7 +122,7 @@ describe('ChecklistController', () => {
         .get('/checklists/999')
         .expect(200);
 
-      expect(serviceMock.findOne).toHaveBeenCalledWith(999);
+      expect(serviceMock.findOne).toHaveBeenCalledWith('999');
       expect(response.body).toEqual({});
     });
   });
@@ -141,7 +141,7 @@ describe('ChecklistController', () => {
         .send(updateDto)
         .expect(200);
 
-      expect(serviceMock.update).toHaveBeenCalledWith(123, updateDto);
+      expect(serviceMock.update).toHaveBeenCalledWith('123', updateDto);
       expect(response.body).toEqual(updatedChecklist);
     });
   });
@@ -154,7 +154,7 @@ describe('ChecklistController', () => {
       // Act & Assert
       await request(app.getHttpServer()).delete('/checklists/123').expect(200);
 
-      expect(serviceMock.remove).toHaveBeenCalledWith(123);
+      expect(serviceMock.remove).toHaveBeenCalledWith('123');
     });
   });
 });

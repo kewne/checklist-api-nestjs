@@ -1,41 +1,34 @@
 import { Injectable } from '@nestjs/common';
-import { InjectRepository } from '@nestjs/typeorm';
-import { Repository } from 'typeorm';
-import { Checklist } from './checklist.entity';
 import { CreateChecklistDto } from './dto/create-checklist.dto';
 import { UpdateChecklistDto } from './dto/update-checklist.dto';
+import { ChecklistDocument, ChecklistRepository } from './checklist.repository';
 
 @Injectable()
 export class ChecklistService {
-  constructor(
-    @InjectRepository(Checklist)
-    private repository: Repository<Checklist>,
-  ) {}
+  constructor(private repository: ChecklistRepository) {}
 
   async create(
     createChecklistDto: CreateChecklistDto,
-  ): Promise<Pick<Checklist, 'id'>> {
-    const result = await this.repository.save(createChecklistDto);
-    return result;
+  ): Promise<ChecklistDocument> {
+    return this.repository.create(createChecklistDto);
   }
 
-  async findAll(): Promise<Checklist[]> {
-    return this.repository.find();
+  async findAll(): Promise<ChecklistDocument[]> {
+    return this.repository.findAll();
   }
 
-  async findOne(id: number): Promise<Checklist | null> {
-    return this.repository.findOne({ where: { id } });
+  async findOne(id: string): Promise<ChecklistDocument | null> {
+    return this.repository.findById(id);
   }
 
   async update(
-    id: number,
+    id: string,
     updateChecklistDto: UpdateChecklistDto,
-  ): Promise<Checklist | null> {
-    await this.repository.update(id, updateChecklistDto);
-    return this.findOne(id);
+  ): Promise<ChecklistDocument | null> {
+    return this.repository.update(id, updateChecklistDto);
   }
 
-  async remove(id: number): Promise<void> {
-    await this.repository.delete(id);
+  async remove(id: string): Promise<void> {
+    return this.repository.delete(id);
   }
 }
