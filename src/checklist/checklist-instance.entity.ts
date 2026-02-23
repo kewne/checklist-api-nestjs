@@ -1,20 +1,15 @@
 import { Expose } from 'class-transformer';
-import { Column, Entity, PrimaryGeneratedColumn, CreateDateColumn } from 'typeorm';
 
-@Entity()
 export class ChecklistInstance {
-  @PrimaryGeneratedColumn()
-  id: number;
+  @Expose()
+  id: string;
 
   @Expose()
-  @Column()
-  checklistId: number;
+  checklistId: string;
 
   @Expose()
-  @CreateDateColumn()
   createdAt: Date;
 
   @Expose()
-  @Column({ nullable: true })
   name?: string;
 }

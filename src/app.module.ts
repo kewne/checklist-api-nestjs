@@ -1,12 +1,10 @@
 import { ClassSerializerInterceptor, Module } from '@nestjs/common';
 import { APP_INTERCEPTOR, Reflector } from '@nestjs/core';
 import { ConfigModule } from '@nestjs/config';
-import { TypeOrmModule } from '@nestjs/typeorm';
 import { AppController } from './app.controller';
 import { FirestoreModule } from './firestore.module';
 import { ChecklistModule } from './checklist/checklist.module';
 import { HateoasModule } from './hateoas/hateoas.module';
-import { ChecklistInstance } from './checklist/checklist-instance.entity';
 
 @Module({
   imports: [
@@ -15,12 +13,6 @@ import { ChecklistInstance } from './checklist/checklist-instance.entity';
     }),
     FirestoreModule,
     ChecklistModule,
-    TypeOrmModule.forRoot({
-      type: 'sqlite',
-      database: 'checklist.db',
-      synchronize: true,
-      entities: [ChecklistInstance],
-    }),
     HateoasModule,
   ],
   controllers: [AppController],

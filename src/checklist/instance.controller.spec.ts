@@ -40,8 +40,8 @@ describe('InstanceController', () => {
     it('should create instance and return 201 with location header', async () => {
       const createDto: CreateChecklistInstanceDto = { name: 'Test Instance' };
       const createdInstance = new ChecklistInstance();
-      createdInstance.id = 456;
-      createdInstance.checklistId = 123;
+      createdInstance.id = '456';
+      createdInstance.checklistId = '123';
       createdInstance.name = 'Test Instance';
 
       service.createInstance.mockResolvedValue(createdInstance);
@@ -51,7 +51,7 @@ describe('InstanceController', () => {
         .send(createDto)
         .expect(201);
 
-      expect(service.createInstance).toHaveBeenCalledWith(123, createDto);
+      expect(service.createInstance).toHaveBeenCalledWith('123', createDto);
       expect(response.headers['location']).toMatch(
         /\/checklist-instances\/456$/,
       );
@@ -60,8 +60,8 @@ describe('InstanceController', () => {
     it('should create instance without name and return 201 with location header', async () => {
       const createDto: CreateChecklistInstanceDto = {};
       const createdInstance = new ChecklistInstance();
-      createdInstance.id = 456;
-      createdInstance.checklistId = 123;
+      createdInstance.id = '456';
+      createdInstance.checklistId = '123';
       createdInstance.name = undefined;
 
       service.createInstance.mockResolvedValue(createdInstance);
@@ -71,7 +71,8 @@ describe('InstanceController', () => {
         .send(createDto)
         .expect(201);
 
-      expect(service.createInstance).toHaveBeenCalledWith(123, createDto);
+      expect(service
+.createInstance).toHaveBeenCalledWith('123', createDto);
       expect(response.headers['location']).toMatch(
         /\/checklist-instances\/456$/,
       );
@@ -89,7 +90,7 @@ describe('InstanceController', () => {
         .send(createDto)
         .expect(404);
 
-      expect(service.createInstance).toHaveBeenCalledWith(999, createDto);
+      expect(service.createInstance).toHaveBeenCalledWith('999', createDto);
     });
   });
 });

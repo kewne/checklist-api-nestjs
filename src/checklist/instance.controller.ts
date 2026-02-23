@@ -16,7 +16,7 @@ export class InstanceController {
     @Hateoas() linkFactory: NestLinkFactory,
   ) {
     const instance = await this.instanceService.createInstance(
-      +checklistId,
+      checklistId,
       createInstanceDto,
     );
     res.setHeader(

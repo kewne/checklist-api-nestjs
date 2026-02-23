@@ -1,31 +1,24 @@
 import { Injectable, NotFoundException } from '@nestjs/common';
-import { InjectRepository } from '@nestjs/typeorm';
-import { Repository } from 'typeorm';
-import { ChecklistInstance } from './checklist-instance.entity';
 import { CreateChecklistInstanceDto } from './dto/create-checklist-instance.dto';
 import { ChecklistService } from './checklist.service';
+import { InstanceRepository, ChecklistInstanceDocument } from './instance.repository';
 
 @Injectable()
 export class InstanceService {
   constructor(
-    @InjectRepository(ChecklistInstance)
-    private instanceRepository: Repository<ChecklistInstance>,
+    private instanceRepository: InstanceRepository,
     private checklistService: ChecklistService,
   ) {}
 
   async createInstance(
-    checklistId: number,
+    checklistId: string,
     createInstanceDto: CreateChecklistInstanceDto,
-  ): Promise<Pick<ChecklistInstance, 'id'>> {
-    const checklist = await this.checklistService.findOne(checklistId.toString());
+  ): Promise<ChecklistInstanceDocument> {
+    const checklist = await this.checklistService.findOne(checklistId);
     if (!checklist) {
       throw new NotFoundException(`Checklist with id ${checklistId} not found`);
     }
 
-    const instance = await this.instanceRepository.save({
-      checklistId,
-      ...createInstanceDto,
-    });
-    return instance;
+    return this.instanceRepository.create(checklistId, createInstanceDto);
   }
 }
