@@ -8,18 +8,23 @@
   },
   "features": {
     "./features/gcloud-cli": {},
-    "ghcr.io/devcontainers-extra/features/nestjs-cli:2": {}
+    "ghcr.io/devcontainers-extra/features/firebase-cli:2": {},
+    "ghcr.io/devcontainers-extra/features/nestjs-cli:2": {},
+    "ghcr.io/devcontainers/features/java:1": {}
   },
-  // Or use a Dockerfile or Docker Compose file. More info: https://containers.dev/guide/dockerfile
-  "image": "mcr.microsoft.com/devcontainers/typescript-node:24",
-  "name": "Checklists Development",
   // Features to add to the dev container. More info: https://containers.dev/features.
   // "features": {},
   // Use 'forwardPorts' to make a list of ports inside the container available locally.
-  // "forwardPorts": [],
+  "forwardPorts": [4000, 8080],
+  // Or use a Dockerfile or Docker Compose file. More info: https://containers.dev/guide/dockerfile
+  "image": "mcr.microsoft.com/devcontainers/typescript-node:24",
+  "name": "Checklists Development",
   // Use 'postCreateCommand' to run commands after the container is created.
   "postCreateCommand": {
     "pnpm-install": "pnpm install"
+  },
+  "remoteEnv": {
+    "FIRESTORE_EMULATOR_HOST": "127.0.0.1:8080"
   }
   // Configure tool-specific properties.
   // "customizations": {},
