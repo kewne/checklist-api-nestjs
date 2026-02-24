@@ -2,8 +2,8 @@ import { Test, TestingModule } from '@nestjs/testing';
 import { Controller, Get, UseGuards } from '@nestjs/common';
 import { NestExpressApplication } from '@nestjs/platform-express';
 import * as request from 'supertest';
-import { AuthGuard } from './auth.guard';
-import { AuthService, AuthUser } from './auth.service';
+import { AuthGuard, AuthUser } from './auth.guard';
+import { Auth } from 'firebase-admin/auth';
 import { User } from './user.decorator';
 
 @Controller('test')
@@ -22,9 +22,8 @@ class TestController {
 
 describe('AuthGuard', () => {
   let app: NestExpressApplication;
-  const serviceMock = {
-    onModuleInit: jest.fn(),
-    verifyToken: jest.fn(),
+  const authMock = {
+    verifyIdToken: jest.fn(),
   };
 
   beforeEach(async () => {
@@ -32,8 +31,8 @@ describe('AuthGuard', () => {
       controllers: [TestController],
       providers: [
         {
-          provide: AuthService,
-          useValue: serviceMock,
+          provide: Auth,
+          useValue: authMock,
         },
         AuthGuard,
       ],
@@ -97,7 +96,7 @@ describe('AuthGuard', () => {
     });
 
     it('should return 401 when token verification fails', async () => {
-      serviceMock.verifyToken.mockRejectedValue(new Error('Invalid token'));
+      authMock.verifyIdToken.mockRejectedValue(new Error('Invalid token'));
 
       const response = await request(app.getHttpServer())
         .get('/test/protected')
@@ -105,18 +104,18 @@ describe('AuthGuard', () => {
         .expect(401);
 
       expect(response.body).toHaveProperty('message', 'Invalid token');
-      expect(serviceMock.verifyToken).toHaveBeenCalledWith('invalid-token');
+      expect(authMock.verifyIdToken).toHaveBeenCalledWith('invalid-token');
     });
 
     it('should return 200 and user data when token is valid', async () => {
-      const mockUser: AuthUser = {
+      const mockDecodedToken = {
         uid: 'test-uid',
         email: 'test@example.com',
-        name: 'Test User',
         email_verified: true,
+        // other Firebase token properties would be here
       };
 
-      serviceMock.verifyToken.mockResolvedValue(mockUser);
+      authMock.verifyIdToken.mockResolvedValue(mockDecodedToken);
 
       const response = await request(app.getHttpServer())
         .get('/test/protected')
@@ -128,7 +127,7 @@ describe('AuthGuard', () => {
         userId: 'test-uid',
         email: 'test@example.com',
       });
-      expect(serviceMock.verifyToken).toHaveBeenCalledWith('valid-token');
+      expect(authMock.verifyIdToken).toHaveBeenCalledWith('valid-token');
     });
   });
 
@@ -139,7 +138,7 @@ describe('AuthGuard', () => {
         .expect(200);
 
       expect(response.body).toEqual({ message: 'public' });
-      expect(serviceMock.verifyToken).not.toHaveBeenCalled();
+      expect(authMock.verifyIdToken).not.toHaveBeenCalled();
     });
   });
 });
