@@ -1,7 +1,6 @@
 import { Test, TestingModule } from '@nestjs/testing';
 import { InstanceController } from './instance.controller';
 import { InstanceService } from './instance.service';
-import { ChecklistInstance } from './checklist-instance.entity';
 import { CreateChecklistInstanceDto } from './dto/create-checklist-instance.dto';
 import { NotFoundException } from '@nestjs/common';
 import { HateoasModule } from '../hateoas/hateoas.module';
@@ -39,12 +38,12 @@ describe('InstanceController', () => {
   describe('POST /checklists/:id/instances', () => {
     it('should create instance and return 201 with location header', async () => {
       const createDto: CreateChecklistInstanceDto = { name: 'Test Instance' };
-      const createdInstance = new ChecklistInstance();
-      createdInstance.id = '456';
-      createdInstance.checklistId = '123';
-      createdInstance.name = 'Test Instance';
 
-      service.createInstance.mockResolvedValue(createdInstance);
+      service.createInstance.mockResolvedValue({
+        id: '456',
+        checklistId: '123',
+        name: 'Test Instance',
+      });
 
       const response = await request(app.getHttpServer())
         .post('/checklists/123/instances')
@@ -59,20 +58,18 @@ describe('InstanceController', () => {
 
     it('should create instance without name and return 201 with location header', async () => {
       const createDto: CreateChecklistInstanceDto = {};
-      const createdInstance = new ChecklistInstance();
-      createdInstance.id = '456';
-      createdInstance.checklistId = '123';
-      createdInstance.name = undefined;
 
-      service.createInstance.mockResolvedValue(createdInstance);
+      service.createInstance.mockResolvedValue({
+        id: '456',
+        checklistId: '123',
+      });
 
       const response = await request(app.getHttpServer())
         .post('/checklists/123/instances')
         .send(createDto)
         .expect(201);
 
-      expect(service
-.createInstance).toHaveBeenCalledWith('123', createDto);
+      expect(service.createInstance).toHaveBeenCalledWith('123', createDto);
       expect(response.headers['location']).toMatch(
         /\/checklist-instances\/456$/,
       );
