@@ -1,10 +1,8 @@
 rules_version = '2';
-// Basic Firestore security rules for development
-// Allow read/write access on all documents to any user
 service cloud.firestore {
   match /databases/{database}/documents {
     match /{document=**} {
-      allow read, write: if true;
+      allow read, write: if false;
     }
   }
 }
