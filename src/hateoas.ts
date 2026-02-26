@@ -1,4 +1,4 @@
-import { Expose, instanceToPlain } from 'class-transformer';
+import { Expose } from 'class-transformer';
 
 type Wrapped = Record<string, any>;
 
@@ -70,7 +70,7 @@ export class BaseUrlResourceBuilder implements ResourceBuilder {
   }
   toResource<T extends Wrapped>(wrapped?: T): PlainResource {
     return {
-      ...instanceToPlain(wrapped, { strategy: 'excludeAll' }),
+      ...wrapped,
       _links: this.links,
     };
   }

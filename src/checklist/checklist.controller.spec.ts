@@ -1,7 +1,6 @@
 import { Test, TestingModule } from '@nestjs/testing';
 import { ChecklistController } from './checklist.controller';
 import { ChecklistService } from './checklist.service';
-import { Checklist } from './checklist.entity';
 import { CreateChecklistDto } from './dto/create-checklist.dto';
 import { UpdateChecklistDto } from './dto/update-checklist.dto';
 import { HateoasModule } from '../hateoas/hateoas.module';
@@ -47,9 +46,12 @@ describe('ChecklistController', () => {
     it('should create a checklist and return 201 with location header', async () => {
       // Arrange
       const createDto: CreateChecklistDto = { title: 'Test Checklist' };
-      const createdChecklist = new Checklist();
-      createdChecklist.id = '123';
-      createdChecklist.title = createDto.title;
+      const createdChecklist = {
+        id: '123',
+        title: createDto.title,
+        createdAt: new Date(),
+        updatedAt: new Date()
+      };
 
       serviceMock.create.mockResolvedValue(createdChecklist);
 
@@ -86,9 +88,12 @@ describe('ChecklistController', () => {
   describe('GET /checklists/:id', () => {
     it('should return a checklist with HATEOAS links and 200 status when checklist exists', async () => {
       // Arrange
-      const checklist = new Checklist();
-      checklist.id = '123';
-      checklist.title = 'Test Checklist for Retrieval';
+      const checklist = {
+        id: '123',
+        title: 'Test Checklist for Retrieval',
+        createdAt: new Date(),
+        updatedAt: new Date()
+      };
 
       (serviceMock.findOne as jest.Mock).mockResolvedValue(checklist);
 
