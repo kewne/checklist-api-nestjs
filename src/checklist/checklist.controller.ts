@@ -34,8 +34,23 @@ export class ChecklistController {
   }
 
   @Get()
-  async findAll() {
-    return this.checklistService.findAll();
+  async findAll(@Hateoas() linkFactory: NestLinkFactory) {
+    const checklists = await this.checklistService.findAll();
+
+    const resource = linkFactory
+      .buildResource()
+      .withRel(
+        'items',
+        ...checklists.map((checklist) => ({
+          href: linkFactory.toHandler(ChecklistController, 'findOne', {
+            id: checklist.id,
+          }),
+          name: checklist.title,
+        })),
+      )
+      .toResource({});
+
+    return resource;
   }
 
   @Get(':id')

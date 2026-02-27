@@ -7,7 +7,7 @@ import { BaseUrlResourceBuilder, LinkObject, LinkOptions } from './hateoas';
 import { MODULE_KEY, REFLECTOR_KEY } from './hateoas/hateoas.interceptor';
 
 export const Hateoas = createParamDecorator(
-  (data: unknown, ctx: ExecutionContext) => {
+  (_data: unknown, ctx: ExecutionContext) => {
     const req = ctx.switchToHttp().getRequest<Request>();
     const reflector = req[REFLECTOR_KEY] as Reflector;
     const module = req[MODULE_KEY] as ModuleRef;

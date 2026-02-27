@@ -50,7 +50,7 @@ describe('ChecklistController', () => {
         id: '123',
         title: createDto.title,
         createdAt: new Date(),
-        updatedAt: new Date()
+        updatedAt: new Date(),
       };
 
       serviceMock.create.mockResolvedValue(createdChecklist);
@@ -67,11 +67,11 @@ describe('ChecklistController', () => {
   });
 
   describe('GET /checklists', () => {
-    it('should return all checklists with 200 status', async () => {
+    it('should return a resource with items rel containing links to each checklist', async () => {
       // Arrange
       const checklists = [
-        { id: 1, title: 'Checklist 1' },
-        { id: 2, title: 'Checklist 2' },
+        { id: '1', title: 'Checklist 1' },
+        { id: '2', title: 'Checklist 2' },
       ];
       (serviceMock.findAll as jest.Mock).mockResolvedValue(checklists);
 
@@ -81,7 +81,40 @@ describe('ChecklistController', () => {
         .expect(200);
 
       expect(serviceMock.findAll).toHaveBeenCalled();
-      expect(response.body).toEqual(checklists);
+
+      const resource = response.body as PlainResource;
+      expect(resource).toHaveProperty('_links');
+      expect(resource._links).toHaveProperty('items');
+
+      const items = resource._links.items;
+      expect(Array.isArray(items)).toBe(true);
+      expect(items).toHaveLength(2);
+
+      // Verify first item
+      expect(items[0]).toHaveProperty('href');
+      expect(items[0]).toHaveProperty('name', 'Checklist 1');
+      expect((items[0] as LinkObject).href).toMatch(/\/checklists\/1$/);
+
+      // Verify second item
+      expect(items[1]).toHaveProperty('href');
+      expect(items[1]).toHaveProperty('name', 'Checklist 2');
+      expect((items[1] as LinkObject).href).toMatch(/\/checklists\/2$/);
+    });
+
+    it('should return resource with items rel absent when no checklists exist', async () => {
+      // Arrange
+      (serviceMock.findAll as jest.Mock).mockResolvedValue([]);
+
+      // Act & Assert
+      const response = await request(app.getHttpServer())
+        .get('/checklists')
+        .expect(200);
+
+      expect(serviceMock.findAll).toHaveBeenCalled();
+
+      const resource = response.body as PlainResource;
+      expect(resource).toHaveProperty('_links');
+      expect(resource._links).not.toHaveProperty('items');
     });
   });
 
@@ -92,7 +125,7 @@ describe('ChecklistController', () => {
         id: '123',
         title: 'Test Checklist for Retrieval',
         createdAt: new Date(),
-        updatedAt: new Date()
+        updatedAt: new Date(),
       };
 
       (serviceMock.findOne as jest.Mock).mockResolvedValue(checklist);
