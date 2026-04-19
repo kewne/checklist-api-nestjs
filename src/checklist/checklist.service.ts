@@ -9,12 +9,17 @@ export class ChecklistService {
 
   async create(
     createChecklistDto: CreateChecklistDto,
+    createdByUserId: string,
   ): Promise<ChecklistDocument> {
-    return this.repository.create(createChecklistDto);
+    return this.repository.create(createChecklistDto, createdByUserId);
   }
 
   async findAll(): Promise<ChecklistDocument[]> {
     return this.repository.findAll();
+  }
+
+  async findAllByUser(userId: string): Promise<ChecklistDocument[]> {
+    return this.repository.findCreatedBy(userId);
   }
 
   async findOne(id: string): Promise<ChecklistDocument | null> {

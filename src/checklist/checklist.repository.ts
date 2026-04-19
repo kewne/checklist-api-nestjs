@@ -5,6 +5,7 @@ import { CreateChecklistDto } from './dto/create-checklist.dto';
 export interface ChecklistDocument {
   id: string;
   title: string;
+  createdBy: string;
   createdAt: Date;
   updatedAt: Date;
 }
@@ -17,10 +18,12 @@ export class ChecklistRepository {
 
   async create(
     createChecklistDto: CreateChecklistDto,
+    createdByUserId: string,
   ): Promise<ChecklistDocument> {
     const now = new Date();
     const checklistData = {
       title: createChecklistDto.title,
+      createdBy: createdByUserId,
       createdAt: now,
       updatedAt: now,
     };
@@ -50,6 +53,22 @@ export class ChecklistRepository {
 
   async findAll(): Promise<ChecklistDocument[]> {
     const snapshot = await this.firestore.collection(this.collection).get();
+
+    return snapshot.docs.map(
+      (doc) =>
+        ({
+          id: doc.id,
+          ...doc.data(),
+        }) as ChecklistDocument,
+    );
+  }
+
+  async findCreatedBy(userId: string): Promise<ChecklistDocument[]> {
+    const snapshot = await this.firestore
+      .collection(this.collection)
+      .where('createdBy', '==', userId)
+      .orderBy('createdAt', 'desc')
+      .get();
 
     return snapshot.docs.map(
       (doc) =>

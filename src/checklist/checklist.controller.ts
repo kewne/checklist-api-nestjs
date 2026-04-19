@@ -5,11 +5,8 @@ import {
   Get,
   Param,
   Patch,
-  Post,
-  Res,
 } from '@nestjs/common';
 import { ChecklistService } from './checklist.service';
-import { CreateChecklistDto } from './dto/create-checklist.dto';
 import { UpdateChecklistDto } from './dto/update-checklist.dto';
 import { Response } from 'express';
 import { Hateoas, NestLinkFactory } from '@app/hateoas-nest';
@@ -17,41 +14,6 @@ import { Hateoas, NestLinkFactory } from '@app/hateoas-nest';
 @Controller('checklists')
 export class ChecklistController {
   constructor(private readonly checklistService: ChecklistService) {}
-
-  @Post()
-  async create(
-    @Body() createChecklistDto: CreateChecklistDto,
-    @Res({ passthrough: true }) res: Response,
-    @Hateoas() linkFactory: NestLinkFactory,
-  ) {
-    const checklist = await this.checklistService.create(createChecklistDto);
-    res.setHeader(
-      'location',
-      linkFactory.toHandler(ChecklistController, 'findOne', {
-        id: checklist.id,
-      }),
-    );
-  }
-
-  @Get()
-  async findAll(@Hateoas() linkFactory: NestLinkFactory) {
-    const checklists = await this.checklistService.findAll();
-
-    const resource = linkFactory
-      .buildResource()
-      .withRel(
-        'items',
-        ...checklists.map((checklist) => ({
-          href: linkFactory.toHandler(ChecklistController, 'findOne', {
-            id: checklist.id,
-          }),
-          name: checklist.title,
-        })),
-      )
-      .toResource({});
-
-    return resource;
-  }
 
   @Get(':id')
   async findOne(
