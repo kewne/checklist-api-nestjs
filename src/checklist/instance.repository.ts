@@ -1,12 +1,14 @@
 import { Injectable } from '@nestjs/common';
 import { Firestore } from '@google-cloud/firestore';
-import { CreateChecklistInstanceDto } from './dto/create-checklist-instance.dto';
+import { Item } from './checklist.repository';
 
 export interface ChecklistInstanceDocument {
   id: string;
   checklistId: string;
+  createdBy: string;
   createdAt: Date;
-  name?: string;
+  title: string;
+  items: Item[];
 }
 
 @Injectable()
@@ -17,13 +19,17 @@ export class InstanceRepository {
 
   async create(
     checklistId: string,
-    createInstanceDto: CreateChecklistInstanceDto,
+    userId: string,
+    title: string,
+    items: Item[],
   ): Promise<ChecklistInstanceDocument> {
     const now = new Date();
     const instanceData = {
       checklistId,
+      createdBy: userId,
       createdAt: now,
-      name: createInstanceDto.name,
+      title,
+      items,
     };
 
     const docRef = await this.firestore
