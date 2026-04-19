@@ -1,14 +1,6 @@
-import {
-  Body,
-  Controller,
-  Delete,
-  Get,
-  Param,
-  Patch,
-} from '@nestjs/common';
+import { Body, Controller, Delete, Get, Param, Put, UsePipes, ValidationPipe } from '@nestjs/common';
 import { ChecklistService } from './checklist.service';
-import { UpdateChecklistDto } from './dto/update-checklist.dto';
-import { Response } from 'express';
+import { ReplaceChecklistDto } from './dto/update-checklist.dto';
 import { Hateoas, NestLinkFactory } from '@app/hateoas-nest';
 
 @Controller('checklists')
@@ -34,16 +26,14 @@ export class ChecklistController {
     return resource;
   }
 
-  @Patch(':id')
-  update(
-    @Param('id') id: string,
-    @Body() updateChecklistDto: UpdateChecklistDto,
-  ) {
-    return this.checklistService.update(id, updateChecklistDto);
-  }
-
   @Delete(':id')
   remove(@Param('id') id: string) {
     return this.checklistService.remove(id);
+  }
+
+  @Put(':id')
+  @UsePipes(new ValidationPipe({ transform: true }))
+  replace(@Param('id') id: string, @Body() body: ReplaceChecklistDto) {
+    return this.checklistService.replace(id, body);
   }
 }

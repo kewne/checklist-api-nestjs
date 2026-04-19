@@ -1,10 +1,19 @@
 import { Injectable } from '@nestjs/common';
 import { Firestore } from '@google-cloud/firestore';
+import { randomUUID } from 'crypto';
 import { CreateChecklistDto } from './dto/create-checklist.dto';
+import { ReplaceChecklistDto } from './dto/update-checklist.dto';
+
+export interface Item {
+  id: string;
+  title: string;
+  description?: string;
+}
 
 export interface ChecklistDocument {
   id: string;
   title: string;
+  items: Item[];
   createdBy: string;
   createdAt: Date;
   updatedAt: Date;
@@ -21,8 +30,15 @@ export class ChecklistRepository {
     createdByUserId: string,
   ): Promise<ChecklistDocument> {
     const now = new Date();
+
+    const items = (createChecklistDto.items ?? []).map((itemDto) => ({
+      ...itemDto,
+      id: randomUUID(),
+    }));
+
     const checklistData = {
       title: createChecklistDto.title,
+      items,
       createdBy: createdByUserId,
       createdAt: now,
       updatedAt: now,
@@ -79,23 +95,36 @@ export class ChecklistRepository {
     );
   }
 
-  async update(
-    id: string,
-    updateData: Partial<Omit<ChecklistDocument, 'id' | 'createdAt'>>,
-  ): Promise<ChecklistDocument | null> {
-    const docRef = this.firestore.collection(this.collection).doc(id);
-
-    const updateWithTimestamp = {
-      ...updateData,
-      updatedAt: new Date(),
-    };
-
-    await docRef.update(updateWithTimestamp);
-
-    return this.findById(id);
-  }
-
   async delete(id: string): Promise<void> {
     await this.firestore.collection(this.collection).doc(id).delete();
+  }
+
+  async replace(
+    id: string,
+    replaceChecklistDto: ReplaceChecklistDto,
+  ): Promise<ChecklistDocument | null> {
+    const docRef = this.firestore.collection(this.collection).doc(id);
+    const doc = await docRef.get();
+
+    if (!doc.exists) {
+      return null;
+    }
+
+    const items = (replaceChecklistDto.items ?? []).map((itemDto) => ({
+      title: itemDto.title,
+      ...(itemDto.description !== undefined && { description: itemDto.description }),
+      id: itemDto.id ?? randomUUID(),
+    }));
+
+    const updatedAt = new Date();
+    await docRef.update({ title: replaceChecklistDto.title, items, updatedAt });
+
+    return {
+      ...(doc.data() as Omit<ChecklistDocument, 'id' | 'title' | 'items' | 'updatedAt'>),
+      id,
+      title: replaceChecklistDto.title,
+      items,
+      updatedAt,
+    };
   }
 }

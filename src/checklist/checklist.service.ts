@@ -1,6 +1,6 @@
-import { Injectable } from '@nestjs/common';
+import { Injectable, NotFoundException } from '@nestjs/common';
 import { CreateChecklistDto } from './dto/create-checklist.dto';
-import { UpdateChecklistDto } from './dto/update-checklist.dto';
+import { ReplaceChecklistDto } from './dto/update-checklist.dto';
 import { ChecklistDocument, ChecklistRepository } from './checklist.repository';
 
 @Injectable()
@@ -26,14 +26,18 @@ export class ChecklistService {
     return this.repository.findById(id);
   }
 
-  async update(
-    id: string,
-    updateChecklistDto: UpdateChecklistDto,
-  ): Promise<ChecklistDocument | null> {
-    return this.repository.update(id, updateChecklistDto);
-  }
-
   async remove(id: string): Promise<void> {
     return this.repository.delete(id);
+  }
+
+  async replace(
+    id: string,
+    replaceChecklistDto: ReplaceChecklistDto,
+  ): Promise<ChecklistDocument> {
+    const result = await this.repository.replace(id, replaceChecklistDto);
+    if (!result) {
+      throw new NotFoundException(`Checklist ${id} not found`);
+    }
+    return result;
   }
 }

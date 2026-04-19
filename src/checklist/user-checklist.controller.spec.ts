@@ -19,8 +19,8 @@ describe('UserChecklistController', () => {
       findAll: jest.fn(),
       findAllByUser: jest.fn(),
       findOne: jest.fn(),
-      update: jest.fn(),
       remove: jest.fn(),
+      replace: jest.fn(),
     };
 
     const module: TestingModule = await Test.createTestingModule({
@@ -51,6 +51,7 @@ describe('UserChecklistController', () => {
       const createdChecklist = {
         id: '123',
         title: createDto.title,
+        items: [],
         createdBy: userId,
         createdAt: new Date(),
         updatedAt: new Date(),
@@ -76,6 +77,7 @@ describe('UserChecklistController', () => {
         {
           id: '1',
           title: 'Checklist 1',
+          items: [{ id: 'item-1', title: 'Item 1', description: 'Description 1' }],
           createdBy: userId,
           createdAt: new Date(),
           updatedAt: new Date(),
@@ -83,6 +85,7 @@ describe('UserChecklistController', () => {
         {
           id: '2',
           title: 'Checklist 2',
+          items: [],
           createdBy: userId,
           createdAt: new Date(),
           updatedAt: new Date(),
