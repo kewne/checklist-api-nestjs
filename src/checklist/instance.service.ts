@@ -24,4 +24,8 @@ export class InstanceService {
 
     return this.instanceRepository.create(checklistId, userId, resolvedTitle, checklist.items);
   }
+
+  async findCreatedBy(userId: string): Promise<ChecklistInstanceDocument[]> {
+    return this.instanceRepository.findCreatedBy(userId);
+  }
 }

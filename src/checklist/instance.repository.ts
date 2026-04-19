@@ -72,6 +72,22 @@ export class InstanceRepository {
     );
   }
 
+  async findCreatedBy(userId: string): Promise<ChecklistInstanceDocument[]> {
+    const snapshot = await this.firestore
+      .collection(this.collection)
+      .where('createdBy', '==', userId)
+      .orderBy('createdAt', 'asc')
+      .get();
+
+    return snapshot.docs.map(
+      (doc) =>
+        ({
+          id: doc.id,
+          ...doc.data(),
+        }) as ChecklistInstanceDocument,
+    );
+  }
+
   async delete(id: string): Promise<void> {
     await this.firestore.collection(this.collection).doc(id).delete();
   }
