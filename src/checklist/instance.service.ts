@@ -28,4 +28,12 @@ export class InstanceService {
   async findCreatedBy(userId: string): Promise<ChecklistInstanceDocument[]> {
     return this.instanceRepository.findCreatedBy(userId);
   }
+
+  async findOne(id: string): Promise<ChecklistInstanceDocument> {
+    const instance = await this.instanceRepository.findById(id);
+    if (!instance) {
+      throw new NotFoundException(`Checklist instance with id ${id} not found`);
+    }
+    return instance;
+  }
 }

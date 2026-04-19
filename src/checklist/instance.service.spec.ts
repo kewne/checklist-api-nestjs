@@ -1,4 +1,5 @@
 import { Test, TestingModule } from '@nestjs/testing';
+import { NotFoundException } from '@nestjs/common';
 import { InstanceService } from './instance.service';
 import {
   InstanceRepository,
@@ -146,6 +147,43 @@ describe('InstanceService', () => {
       expect(result[0].title).toBe('Oldest');
       expect(result[1].title).toBe('Middle');
       expect(result[2].title).toBe('Newest');
+    });
+  });
+
+  describe('findOne', () => {
+    it('should return instance when found', async () => {
+      // Arrange
+      const instanceId = 'instance-123';
+      const instance: ChecklistInstanceDocument = {
+        id: instanceId,
+        checklistId: 'checklist-456',
+        createdBy: 'user-789',
+        createdAt: new Date('2026-02-10T12:00:00Z'),
+        title: 'Test Instance',
+        items: [{ id: 'item-1', title: 'Item 1', description: 'Desc' }],
+      };
+      repositoryMock.findById.mockResolvedValue(instance);
+
+      // Act
+      const result = await service.findOne(instanceId);
+
+      // Assert
+      expect(repositoryMock.findById).toHaveBeenCalledWith(instanceId);
+      expect(result).toEqual(instance);
+      expect(result.id).toBe(instanceId);
+      expect(result.title).toBe('Test Instance');
+    });
+
+    it('should throw NotFoundException when instance not found', async () => {
+      // Arrange
+      const instanceId = 'non-existent-id';
+      repositoryMock.findById.mockResolvedValue(null);
+
+      // Act & Assert
+      await expect(service.findOne(instanceId)).rejects.toThrow(
+        NotFoundException as unknown as string,
+      );
+      expect(repositoryMock.findById).toHaveBeenCalledWith(instanceId);
     });
   });
 });

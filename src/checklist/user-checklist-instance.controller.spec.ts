@@ -17,6 +17,7 @@ describe('UserChecklistInstanceController', () => {
     serviceMock = {
       createInstance: jest.fn(),
       findCreatedBy: jest.fn(),
+      findOne: jest.fn(),
     };
 
     const module: TestingModule = await Test.createTestingModule({
