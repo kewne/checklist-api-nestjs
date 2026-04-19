@@ -1,8 +1,8 @@
 {
+  "fieldOverrides": [],
   "indexes": [
     {
       "collectionGroup": "checklists",
-      "queryScope": "Collection",
       "fields": [
         {
           "fieldPath": "createdBy",
@@ -12,8 +12,8 @@
           "fieldPath": "createdAt",
           "order": "DESCENDING"
         }
-      ]
+      ],
+      "queryScope": "COLLECTION"
     }
-  ],
-  "fieldOverrides": []
+  ]
 }
