@@ -36,4 +36,17 @@ export class InstanceService {
     }
     return instance;
   }
+
+  async completeItem(
+    instanceId: string,
+    itemId: string,
+    note?: string,
+  ): Promise<void> {
+    await this.instanceRepository.completeItem(
+      instanceId,
+      itemId,
+      new Date().toISOString(),
+      note,
+    );
+  }
 }

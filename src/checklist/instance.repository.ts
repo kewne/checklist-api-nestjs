@@ -1,4 +1,4 @@
-import { Injectable } from '@nestjs/common';
+import { Injectable, ConflictException, NotFoundException } from '@nestjs/common';
 import { Firestore } from '@google-cloud/firestore';
 import { Item } from './checklist.repository';
 
@@ -90,5 +90,46 @@ export class InstanceRepository {
 
   async delete(id: string): Promise<void> {
     await this.firestore.collection(this.collection).doc(id).delete();
+  }
+
+  async completeItem(
+    instanceId: string,
+    itemId: string,
+    completedAt: string,
+    note?: string | null,
+  ): Promise<void> {
+    const docRef = this.firestore.collection(this.collection).doc(instanceId);
+    const doc = await docRef.get();
+
+    if (!doc.exists) {
+      throw new NotFoundException(
+        `Checklist instance with id ${instanceId} not found`,
+      );
+    }
+
+    const data = doc.data() as { items: Item[] };
+    const itemIndex = data.items.findIndex((item) => item.id === itemId);
+
+    if (itemIndex === -1) {
+      throw new NotFoundException(`Item with id ${itemId} not found`);
+    }
+
+    if (data.items[itemIndex].completed) {
+      throw new ConflictException(`Item with id ${itemId} is already completed`);
+    }
+
+    const updatedItems = data.items.map((item, index) =>
+      index === itemIndex
+        ? {
+            ...item,
+            completed: {
+              completed_at: completedAt,
+              ...(note != null && { note }),
+            },
+          }
+        : item,
+    );
+
+    await docRef.update({ items: updatedItems });
   }
 }

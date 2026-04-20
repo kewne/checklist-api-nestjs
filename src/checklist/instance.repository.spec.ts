@@ -1,6 +1,7 @@
 import { Test, TestingModule } from '@nestjs/testing';
 import { InstanceRepository } from './instance.repository';
 import { Firestore } from '@google-cloud/firestore';
+import { ConflictException, NotFoundException } from '@nestjs/common';
 
 describe('InstanceRepository', () => {
   let repository: InstanceRepository;
@@ -147,6 +148,104 @@ describe('InstanceRepository', () => {
       expect(instance.createdAt).toEqual(createdAtDate);
       expect(instance.title).toBe('Test Instance');
       expect(instance.items).toHaveLength(1);
+    });
+  });
+
+  describe('completeItem', () => {
+    const buildDocMock = (exists: boolean, items: object[]) => {
+      const mockDoc = {
+        exists,
+        data: () => ({ items }),
+      };
+      const mockUpdate = jest.fn().mockResolvedValue(undefined);
+      const mockGet = jest.fn().mockResolvedValue(mockDoc);
+      const mockDocRef = { get: mockGet, update: mockUpdate };
+      const mockDoc2 = jest.fn().mockReturnValue(mockDocRef);
+      const mockCollection = jest.fn().mockReturnValue({ doc: mockDoc2 });
+      firestoreMock.collection = mockCollection;
+      return { mockUpdate, mockGet, mockDocRef };
+    };
+
+    it('should throw NotFoundException when instance does not exist', async () => {
+      buildDocMock(false, []);
+
+      await expect(
+        repository.completeItem('non-existent', 'item-1', '2026-04-20T12:00:00.000Z'),
+      ).rejects.toThrow(NotFoundException);
+    });
+
+    it('should throw NotFoundException when item does not exist in instance', async () => {
+      buildDocMock(true, [
+        { id: 'other-item', title: 'Other', description: 'desc' },
+      ]);
+
+      await expect(
+        repository.completeItem('instance-1', 'missing-item', '2026-04-20T12:00:00.000Z'),
+      ).rejects.toThrow(NotFoundException);
+    });
+
+    it('should throw ConflictException when item is already completed', async () => {
+      buildDocMock(true, [
+        {
+          id: 'item-1',
+          title: 'Item 1',
+          completed: { completed_at: '2026-04-19T10:00:00.000Z' },
+        },
+      ]);
+
+      await expect(
+        repository.completeItem('instance-1', 'item-1', '2026-04-20T12:00:00.000Z'),
+      ).rejects.toThrow(ConflictException);
+    });
+
+    it('should update the item with completed_at and return void', async () => {
+      const { mockUpdate } = buildDocMock(true, [
+        { id: 'item-1', title: 'Item 1', description: 'desc' },
+        { id: 'item-2', title: 'Item 2', description: 'desc2' },
+      ]);
+
+      const result = await repository.completeItem(
+        'instance-1',
+        'item-1',
+        '2026-04-20T12:00:00.000Z',
+      );
+
+      expect(result).toBeUndefined();
+      expect(mockUpdate).toHaveBeenCalledWith({
+        items: [
+          {
+            id: 'item-1',
+            title: 'Item 1',
+            description: 'desc',
+            completed: { completed_at: '2026-04-20T12:00:00.000Z' },
+          },
+          { id: 'item-2', title: 'Item 2', description: 'desc2' },
+        ],
+      });
+    });
+
+    it('should include note in completed when provided', async () => {
+      const { mockUpdate } = buildDocMock(true, [
+        { id: 'item-1', title: 'Item 1', description: 'desc' },
+      ]);
+
+      await repository.completeItem(
+        'instance-1',
+        'item-1',
+        '2026-04-20T12:00:00.000Z',
+        'Great work',
+      );
+
+      expect(mockUpdate).toHaveBeenCalledWith({
+        items: [
+          {
+            id: 'item-1',
+            title: 'Item 1',
+            description: 'desc',
+            completed: { completed_at: '2026-04-20T12:00:00.000Z', note: 'Great work' },
+          },
+        ],
+      });
     });
   });
 });

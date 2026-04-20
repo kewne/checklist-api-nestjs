@@ -1,7 +1,7 @@
 import { Test, TestingModule } from '@nestjs/testing';
 import { ChecklistInstanceController } from './checklist-instance.controller';
 import { InstanceService } from './instance.service';
-import { NotFoundException } from '@nestjs/common';
+import { ConflictException, NotFoundException } from '@nestjs/common';
 import { HateoasModule } from '../hateoas/hateoas.module';
 import { NestExpressApplication } from '@nestjs/platform-express';
 import * as request from 'supertest';
@@ -10,6 +10,7 @@ describe('ChecklistInstanceController', () => {
   let app: NestExpressApplication;
   const service = {
     findOne: jest.fn(),
+    completeItem: jest.fn(),
   };
 
   beforeEach(async () => {
@@ -76,6 +77,62 @@ describe('ChecklistInstanceController', () => {
         .expect(404);
 
       expect(service.findOne).toHaveBeenCalledWith('non-existent');
+    });
+  });
+
+  describe('POST /checklist-instances/:instanceId/item/:itemId/complete', () => {
+    it('should return 303 with location header pointing to instance', async () => {
+      service.completeItem.mockResolvedValue(undefined);
+
+      const response = await request(app.getHttpServer())
+        .post('/checklist-instances/456/item/item-1/complete')
+        .send({})
+        .expect(303);
+
+      expect(service.completeItem).toHaveBeenCalledWith('456', 'item-1', undefined);
+      expect(response.headers['location']).toMatch(/\/checklist-instances\/456$/);
+    });
+
+    it('should pass note to service when provided', async () => {
+      service.completeItem.mockResolvedValue(undefined);
+
+      await request(app.getHttpServer())
+        .post('/checklist-instances/456/item/item-1/complete')
+        .send({ note: 'Well done' })
+        .expect(303);
+
+      expect(service.completeItem).toHaveBeenCalledWith('456', 'item-1', 'Well done');
+    });
+
+    it('should return 409 when item is already completed', async () => {
+      service.completeItem.mockRejectedValue(
+        new ConflictException('Item already completed'),
+      );
+
+      await request(app.getHttpServer())
+        .post('/checklist-instances/456/item/item-1/complete')
+        .send({})
+        .expect(409);
+    });
+
+    it('should return 404 when instance or item is not found', async () => {
+      service.completeItem.mockRejectedValue(
+        new NotFoundException('Instance not found'),
+      );
+
+      await request(app.getHttpServer())
+        .post('/checklist-instances/456/item/item-1/complete')
+        .send({})
+        .expect(404);
+    });
+
+    it('should return 400 when note exceeds 500 characters', async () => {
+      await request(app.getHttpServer())
+        .post('/checklist-instances/456/item/item-1/complete')
+        .send({ note: 'a'.repeat(501) })
+        .expect(400);
+
+      expect(service.completeItem).not.toHaveBeenCalled();
     });
   });
 });

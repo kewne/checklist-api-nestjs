@@ -1,5 +1,5 @@
 import { Test, TestingModule } from '@nestjs/testing';
-import { NotFoundException } from '@nestjs/common';
+import { ConflictException, NotFoundException } from '@nestjs/common';
 import { InstanceService } from './instance.service';
 import {
   InstanceRepository,
@@ -15,6 +15,7 @@ describe('InstanceService', () => {
     findByChecklistId: jest.Mock;
     findCreatedBy: jest.Mock;
     delete: jest.Mock;
+    completeItem: jest.Mock;
   };
   let checklistServiceMock: {
     create: jest.Mock;
@@ -32,6 +33,7 @@ describe('InstanceService', () => {
       findByChecklistId: jest.fn(),
       findCreatedBy: jest.fn(),
       delete: jest.fn(),
+      completeItem: jest.fn(),
     };
 
     checklistServiceMock = {
@@ -184,6 +186,54 @@ describe('InstanceService', () => {
         NotFoundException as unknown as string,
       );
       expect(repositoryMock.findById).toHaveBeenCalledWith(instanceId);
+    });
+  });
+
+  describe('completeItem', () => {
+    it('should call repository with instanceId, itemId, ISO timestamp, and note', async () => {
+      repositoryMock.completeItem.mockResolvedValue(undefined);
+
+      await service.completeItem('instance-1', 'item-1', 'Good job');
+
+      expect(repositoryMock.completeItem).toHaveBeenCalledWith(
+        'instance-1',
+        'item-1',
+        expect.stringMatching(/^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}\.\d{3}Z$/),
+        'Good job',
+      );
+    });
+
+    it('should call repository without note when not provided', async () => {
+      repositoryMock.completeItem.mockResolvedValue(undefined);
+
+      await service.completeItem('instance-1', 'item-1');
+
+      expect(repositoryMock.completeItem).toHaveBeenCalledWith(
+        'instance-1',
+        'item-1',
+        expect.any(String),
+        undefined,
+      );
+    });
+
+    it('should propagate NotFoundException from repository', async () => {
+      repositoryMock.completeItem.mockRejectedValue(
+        new NotFoundException('instance not found'),
+      );
+
+      await expect(
+        service.completeItem('non-existent', 'item-1'),
+      ).rejects.toThrow(NotFoundException);
+    });
+
+    it('should propagate ConflictException from repository', async () => {
+      repositoryMock.completeItem.mockRejectedValue(
+        new ConflictException('already completed'),
+      );
+
+      await expect(
+        service.completeItem('instance-1', 'item-1'),
+      ).rejects.toThrow(ConflictException);
     });
   });
 });

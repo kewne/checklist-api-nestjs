@@ -18,6 +18,7 @@ describe('UserChecklistInstanceController', () => {
       createInstance: jest.fn(),
       findCreatedBy: jest.fn(),
       findOne: jest.fn(),
+      completeItem: jest.fn(),
     };
 
     const module: TestingModule = await Test.createTestingModule({

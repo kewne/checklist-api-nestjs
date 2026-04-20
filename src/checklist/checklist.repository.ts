@@ -4,10 +4,16 @@ import { randomUUID } from 'crypto';
 import { CreateChecklistDto } from './dto/create-checklist.dto';
 import { ReplaceChecklistDto } from './dto/update-checklist.dto';
 
+export interface ItemCompleted {
+  completed_at: string;
+  note?: string | null;
+}
+
 export interface Item {
   id: string;
   title: string;
   description?: string;
+  completed?: ItemCompleted;
 }
 
 export interface ChecklistDocument {

@@ -5,6 +5,7 @@ type Wrapped = Record<string, any>;
 export type LinkObject = { href: string } & LinkOptions;
 export type LinkOptions = {
   name?: string;
+  title?: string;
 };
 export type PlainResource = {
   _links: {
