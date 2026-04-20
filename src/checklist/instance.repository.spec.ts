@@ -248,4 +248,70 @@ describe('InstanceRepository', () => {
       });
     });
   });
+
+  describe('markItemIncomplete', () => {
+    const buildDocMock = (exists: boolean, items: object[]) => {
+      const mockDoc = {
+        exists,
+        data: () => ({ items }),
+      };
+      const mockUpdate = jest.fn().mockResolvedValue(undefined);
+      const mockGet = jest.fn().mockResolvedValue(mockDoc);
+      const mockDocRef = { get: mockGet, update: mockUpdate };
+      const mockDoc2 = jest.fn().mockReturnValue(mockDocRef);
+      const mockCollection = jest.fn().mockReturnValue({ doc: mockDoc2 });
+      firestoreMock.collection = mockCollection;
+      return { mockUpdate, mockGet, mockDocRef };
+    };
+
+    it('should throw NotFoundException when instance does not exist', async () => {
+      buildDocMock(false, []);
+
+      await expect(
+        repository.markItemIncomplete('non-existent', 'item-1'),
+      ).rejects.toThrow(NotFoundException);
+    });
+
+    it('should throw NotFoundException when item does not exist in instance', async () => {
+      buildDocMock(true, [
+        { id: 'other-item', title: 'Other', description: 'desc' },
+      ]);
+
+      await expect(
+        repository.markItemIncomplete('instance-1', 'missing-item'),
+      ).rejects.toThrow(NotFoundException);
+    });
+
+    it('should throw ConflictException when item is not completed', async () => {
+      buildDocMock(true, [
+        { id: 'item-1', title: 'Item 1', description: 'desc' },
+      ]);
+
+      await expect(
+        repository.markItemIncomplete('instance-1', 'item-1'),
+      ).rejects.toThrow(ConflictException);
+    });
+
+    it('should remove completed status from item and update', async () => {
+      const { mockUpdate } = buildDocMock(true, [
+        {
+          id: 'item-1',
+          title: 'Item 1',
+          description: 'desc',
+          completed: { completed_at: '2026-04-19T10:00:00.000Z' },
+        },
+        { id: 'item-2', title: 'Item 2', description: 'desc2' },
+      ]);
+
+      const result = await repository.markItemIncomplete('instance-1', 'item-1');
+
+      expect(result).toBeUndefined();
+      expect(mockUpdate).toHaveBeenCalledWith({
+        items: [
+          { id: 'item-1', title: 'Item 1', description: 'desc' },
+          { id: 'item-2', title: 'Item 2', description: 'desc2' },
+        ],
+      });
+    });
+  });
 });

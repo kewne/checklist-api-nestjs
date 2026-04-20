@@ -12,6 +12,7 @@ import { InstanceService } from './instance.service';
 import { Hateoas, NestLinkFactory, toHandler } from '@app/hateoas-nest';
 import { Response } from 'express';
 import { CompleteItemDto } from './dto/complete-item.dto';
+import { IncompleteItemDto } from './dto/incomplete-item.dto';
 
 @Controller('checklist-instances')
 export class ChecklistInstanceController {
@@ -45,6 +46,20 @@ export class ChecklistInstanceController {
       );
     }
 
+    const completedItems = instance.items.filter((item) => item.completed);
+    if (completedItems.length > 0) {
+      resource.withRel(
+        'mark-incomplete-item',
+        ...completedItems.map((item) =>
+          toHandler(ChecklistInstanceController, 'markItemIncomplete', {
+            name: item.id,
+            title: item.title,
+            params: { instanceId, itemId: item.id },
+          }),
+        ),
+      );
+    }
+
     const transformedInstance = {
       ...instance,
       items: instance.items.map(({ id, ...rest }) => ({
@@ -56,7 +71,7 @@ export class ChecklistInstanceController {
     return resource.toResource(transformedInstance);
   }
 
-  @Post(':instanceId/item/:itemId/complete')
+  @Post(':instanceId/items/:itemId/complete')
   @UsePipes(new ValidationPipe({ transform: true }))
   async completeItem(
     @Param('instanceId') instanceId: string,
@@ -66,6 +81,23 @@ export class ChecklistInstanceController {
     @Hateoas() linkFactory: NestLinkFactory,
   ) {
     await this.instanceService.completeItem(instanceId, itemId, dto.note);
+    res.statusCode = 303;
+    res.setHeader(
+      'location',
+      linkFactory.toAbsolute(`/checklist-instances/${instanceId}`).href,
+    );
+  }
+
+  @Post(':instanceId/items/:itemId/incomplete')
+  @UsePipes(new ValidationPipe({ transform: true }))
+  async markItemIncomplete(
+    @Param('instanceId') instanceId: string,
+    @Param('itemId') itemId: string,
+    @Body() _dto: IncompleteItemDto,
+    @Res({ passthrough: true }) res: Response,
+    @Hateoas() linkFactory: NestLinkFactory,
+  ) {
+    await this.instanceService.markItemIncomplete(instanceId, itemId);
     res.statusCode = 303;
     res.setHeader(
       'location',

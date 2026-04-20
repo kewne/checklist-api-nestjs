@@ -1,4 +1,8 @@
-import { Injectable, ConflictException, NotFoundException } from '@nestjs/common';
+import {
+  Injectable,
+  ConflictException,
+  NotFoundException,
+} from '@nestjs/common';
 import { Firestore } from '@google-cloud/firestore';
 import { Item } from './checklist.repository';
 
@@ -108,28 +112,48 @@ export class InstanceRepository {
     }
 
     const data = doc.data() as { items: Item[] };
-    const itemIndex = data.items.findIndex((item) => item.id === itemId);
+    const item = data.items.find((item) => item.id === itemId);
 
-    if (itemIndex === -1) {
+    if (item === undefined) {
       throw new NotFoundException(`Item with id ${itemId} not found`);
     }
 
-    if (data.items[itemIndex].completed) {
-      throw new ConflictException(`Item with id ${itemId} is already completed`);
+    if (item.completed) {
+      throw new ConflictException(
+        `Item with id ${itemId} is already completed`,
+      );
+    }
+    item.completed = {
+      completed_at: completedAt,
+      ...(note != null && { note }),
+    };
+
+    await docRef.update({ items: data.items });
+  }
+
+  async markItemIncomplete(instanceId: string, itemId: string): Promise<void> {
+    const docRef = this.firestore.collection(this.collection).doc(instanceId);
+    const doc = await docRef.get();
+
+    if (!doc.exists) {
+      throw new NotFoundException(
+        `Checklist instance with id ${instanceId} not found`,
+      );
     }
 
-    const updatedItems = data.items.map((item, index) =>
-      index === itemIndex
-        ? {
-            ...item,
-            completed: {
-              completed_at: completedAt,
-              ...(note != null && { note }),
-            },
-          }
-        : item,
-    );
+    const data = doc.data() as { items: Item[] };
+    const item = data.items.find((item) => item.id === itemId);
 
-    await docRef.update({ items: updatedItems });
+    if (item === undefined) {
+      throw new NotFoundException(`Item with id ${itemId} not found`);
+    }
+
+    if (!item.completed) {
+      throw new ConflictException(`Item with id ${itemId} is not completed`);
+    }
+
+    item.completed = undefined;
+
+    await docRef.update({ items: data.items });
   }
 }

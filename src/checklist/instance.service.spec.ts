@@ -16,6 +16,7 @@ describe('InstanceService', () => {
     findCreatedBy: jest.Mock;
     delete: jest.Mock;
     completeItem: jest.Mock;
+    markItemIncomplete: jest.Mock;
   };
   let checklistServiceMock: {
     create: jest.Mock;
@@ -34,6 +35,7 @@ describe('InstanceService', () => {
       findCreatedBy: jest.fn(),
       delete: jest.fn(),
       completeItem: jest.fn(),
+      markItemIncomplete: jest.fn(),
     };
 
     checklistServiceMock = {
@@ -233,6 +235,39 @@ describe('InstanceService', () => {
 
       await expect(
         service.completeItem('instance-1', 'item-1'),
+      ).rejects.toThrow(ConflictException);
+    });
+  });
+
+  describe('markItemIncomplete', () => {
+    it('should call repository with instanceId and itemId', async () => {
+      repositoryMock.markItemIncomplete.mockResolvedValue(undefined);
+
+      await service.markItemIncomplete('instance-1', 'item-1');
+
+      expect(repositoryMock.markItemIncomplete).toHaveBeenCalledWith(
+        'instance-1',
+        'item-1',
+      );
+    });
+
+    it('should propagate NotFoundException from repository', async () => {
+      repositoryMock.markItemIncomplete.mockRejectedValue(
+        new NotFoundException('instance not found'),
+      );
+
+      await expect(
+        service.markItemIncomplete('non-existent', 'item-1'),
+      ).rejects.toThrow(NotFoundException);
+    });
+
+    it('should propagate ConflictException from repository', async () => {
+      repositoryMock.markItemIncomplete.mockRejectedValue(
+        new ConflictException('item is not completed'),
+      );
+
+      await expect(
+        service.markItemIncomplete('instance-1', 'item-1'),
       ).rejects.toThrow(ConflictException);
     });
   });

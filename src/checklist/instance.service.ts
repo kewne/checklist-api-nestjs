@@ -49,4 +49,8 @@ export class InstanceService {
       note,
     );
   }
+
+  async markItemIncomplete(instanceId: string, itemId: string): Promise<void> {
+    await this.instanceRepository.markItemIncomplete(instanceId, itemId);
+  }
 }
