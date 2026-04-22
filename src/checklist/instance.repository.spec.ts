@@ -170,7 +170,11 @@ describe('InstanceRepository', () => {
       buildDocMock(false, []);
 
       await expect(
-        repository.completeItem('non-existent', 'item-1', '2026-04-20T12:00:00.000Z'),
+        repository.completeItem(
+          'non-existent',
+          'item-1',
+          '2026-04-20T12:00:00.000Z',
+        ),
       ).rejects.toThrow(NotFoundException);
     });
 
@@ -180,7 +184,11 @@ describe('InstanceRepository', () => {
       ]);
 
       await expect(
-        repository.completeItem('instance-1', 'missing-item', '2026-04-20T12:00:00.000Z'),
+        repository.completeItem(
+          'instance-1',
+          'missing-item',
+          '2026-04-20T12:00:00.000Z',
+        ),
       ).rejects.toThrow(NotFoundException);
     });
 
@@ -194,7 +202,11 @@ describe('InstanceRepository', () => {
       ]);
 
       await expect(
-        repository.completeItem('instance-1', 'item-1', '2026-04-20T12:00:00.000Z'),
+        repository.completeItem(
+          'instance-1',
+          'item-1',
+          '2026-04-20T12:00:00.000Z',
+        ),
       ).rejects.toThrow(ConflictException);
     });
 
@@ -242,7 +254,10 @@ describe('InstanceRepository', () => {
             id: 'item-1',
             title: 'Item 1',
             description: 'desc',
-            completed: { completed_at: '2026-04-20T12:00:00.000Z', note: 'Great work' },
+            completed: {
+              completed_at: '2026-04-20T12:00:00.000Z',
+              note: 'Great work',
+            },
           },
         ],
       });
@@ -303,13 +318,24 @@ describe('InstanceRepository', () => {
         { id: 'item-2', title: 'Item 2', description: 'desc2' },
       ]);
 
-      const result = await repository.markItemIncomplete('instance-1', 'item-1');
+      const result = await repository.markItemIncomplete(
+        'instance-1',
+        'item-1',
+      );
 
       expect(result).toBeUndefined();
       expect(mockUpdate).toHaveBeenCalledWith({
         items: [
-          { id: 'item-1', title: 'Item 1', description: 'desc' },
-          { id: 'item-2', title: 'Item 2', description: 'desc2' },
+          {
+            id: 'item-1',
+            title: 'Item 1',
+            description: 'desc',
+          },
+          {
+            id: 'item-2',
+            title: 'Item 2',
+            description: 'desc2',
+          },
         ],
       });
     });

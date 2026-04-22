@@ -4,7 +4,11 @@ import {
   NotFoundException,
 } from '@nestjs/common';
 import { Firestore } from '@google-cloud/firestore';
-import { Item } from './checklist.repository';
+import { Item, ItemCompleted } from './checklist.repository';
+
+export interface InstanceItem extends Item {
+  completed: ItemCompleted | null;
+}
 
 export interface ChecklistInstanceDocument {
   id: string;
@@ -12,7 +16,7 @@ export interface ChecklistInstanceDocument {
   createdBy: string;
   createdAt: Date;
   title: string;
-  items: Item[];
+  items: InstanceItem[];
 }
 
 @Injectable()
@@ -33,7 +37,7 @@ export class InstanceRepository {
       createdBy: userId,
       createdAt: now,
       title,
-      items,
+      items: items.map((item) => ({ completed: null, ...item })),
     };
 
     const docRef = await this.firestore
@@ -111,7 +115,7 @@ export class InstanceRepository {
       );
     }
 
-    const data = doc.data() as { items: Item[] };
+    const data = doc.data() as { items: InstanceItem[] };
     const item = data.items.find((item) => item.id === itemId);
 
     if (item === undefined) {
@@ -141,7 +145,7 @@ export class InstanceRepository {
       );
     }
 
-    const data = doc.data() as { items: Item[] };
+    const data = doc.data() as { items: InstanceItem[] };
     const item = data.items.find((item) => item.id === itemId);
 
     if (item === undefined) {
@@ -152,7 +156,7 @@ export class InstanceRepository {
       throw new ConflictException(`Item with id ${itemId} is not completed`);
     }
 
-    item.completed = undefined;
+    item.completed = null;
 
     await docRef.update({ items: data.items });
   }
