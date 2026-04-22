@@ -1,6 +1,7 @@
 import {
   Body,
   Controller,
+  Delete,
   Get,
   Param,
   Post,
@@ -103,5 +104,10 @@ export class ChecklistInstanceController {
       'location',
       linkFactory.toAbsolute(`/checklist-instances/${instanceId}`).href,
     );
+  }
+
+  @Delete(':instanceId')
+  remove(@Param('instanceId') instanceId: string) {
+    return this.instanceService.remove(instanceId);
   }
 }

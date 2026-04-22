@@ -1,9 +1,9 @@
+import { Firestore } from '@google-cloud/firestore';
 import {
-  Injectable,
   ConflictException,
+  Injectable,
   NotFoundException,
 } from '@nestjs/common';
-import { Firestore } from '@google-cloud/firestore';
 import { Item, ItemCompleted } from './checklist.repository';
 
 export interface InstanceItem extends Item {

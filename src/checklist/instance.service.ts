@@ -1,13 +1,16 @@
 import { Injectable, NotFoundException } from '@nestjs/common';
 import { ChecklistService } from './checklist.service';
-import { InstanceRepository, ChecklistInstanceDocument } from './instance.repository';
+import {
+  ChecklistInstanceDocument,
+  InstanceRepository,
+} from './instance.repository';
 
 @Injectable()
 export class InstanceService {
   constructor(
     private instanceRepository: InstanceRepository,
     private checklistService: ChecklistService,
-  ) {}
+  ) { }
 
   async createInstance(
     checklistId: string,
@@ -22,7 +25,12 @@ export class InstanceService {
     const now = new Date();
     const resolvedTitle = title ?? `${checklist.title} - ${now.toISOString()}`;
 
-    return this.instanceRepository.create(checklistId, userId, resolvedTitle, checklist.items);
+    return this.instanceRepository.create(
+      checklistId,
+      userId,
+      resolvedTitle,
+      checklist.items,
+    );
   }
 
   async findCreatedBy(userId: string): Promise<ChecklistInstanceDocument[]> {
@@ -52,5 +60,13 @@ export class InstanceService {
 
   async markItemIncomplete(instanceId: string, itemId: string): Promise<void> {
     await this.instanceRepository.markItemIncomplete(instanceId, itemId);
+  }
+
+  async remove(id: string): Promise<void> {
+    const instance = await this.instanceRepository.findById(id);
+    if (!instance) {
+      throw new NotFoundException(`Checklist instance with id ${id} not found`);
+    }
+    await this.instanceRepository.delete(id);
   }
 }

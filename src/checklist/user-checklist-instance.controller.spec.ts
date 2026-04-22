@@ -1,10 +1,10 @@
-import { Test, TestingModule } from '@nestjs/testing';
-import { UserChecklistInstanceController } from './user-checklist-instance.controller';
-import { InstanceService } from './instance.service';
-import { HateoasModule } from '../hateoas/hateoas.module';
+import { LinkObject, PlainResource } from '@app/hateoas';
 import { NestExpressApplication } from '@nestjs/platform-express';
+import { Test, TestingModule } from '@nestjs/testing';
 import * as request from 'supertest';
-import { PlainResource, LinkObject } from '@app/hateoas';
+import { HateoasModule } from '../hateoas/hateoas.module';
+import { InstanceService } from './instance.service';
+import { UserChecklistInstanceController } from './user-checklist-instance.controller';
 
 describe('UserChecklistInstanceController', () => {
   let app: NestExpressApplication;
@@ -20,6 +20,7 @@ describe('UserChecklistInstanceController', () => {
       findOne: jest.fn(),
       completeItem: jest.fn(),
       markItemIncomplete: jest.fn(),
+      remove: jest.fn(),
     };
 
     const module: TestingModule = await Test.createTestingModule({

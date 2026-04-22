@@ -12,6 +12,7 @@ describe('ChecklistInstanceController', () => {
     findOne: jest.fn(),
     completeItem: jest.fn(),
     markItemIncomplete: jest.fn(),
+    remove: jest.fn(),
   };
 
   beforeEach(async () => {
@@ -197,6 +198,30 @@ describe('ChecklistInstanceController', () => {
         .post('/checklist-instances/456/items/item-1/incomplete')
         .send({})
         .expect(404);
+    });
+  });
+
+  describe('DELETE /checklist-instances/:instanceId', () => {
+    it('should remove instance and return 200 status', async () => {
+      service.remove.mockResolvedValue(undefined);
+
+      await request(app.getHttpServer())
+        .delete('/checklist-instances/456')
+        .expect(200);
+
+      expect(service.remove).toHaveBeenCalledWith('456');
+    });
+
+    it('should return 404 when instance not found', async () => {
+      service.remove.mockRejectedValue(
+        new NotFoundException('Checklist instance not found'),
+      );
+
+      await request(app.getHttpServer())
+        .delete('/checklist-instances/non-existent')
+        .expect(404);
+
+      expect(service.remove).toHaveBeenCalledWith('non-existent');
     });
   });
 });
