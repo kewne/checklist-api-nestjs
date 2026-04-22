@@ -1,9 +1,9 @@
+import { Firestore } from '@google-cloud/firestore';
 import {
-  Injectable,
   ConflictException,
+  Injectable,
   NotFoundException,
 } from '@nestjs/common';
-import { Firestore } from '@google-cloud/firestore';
 import { Item } from './checklist.repository';
 
 export interface ChecklistInstanceDocument {
@@ -19,7 +19,7 @@ export interface ChecklistInstanceDocument {
 export class InstanceRepository {
   private readonly collection = 'checklistInstances';
 
-  constructor(private readonly firestore: Firestore) {}
+  constructor(private readonly firestore: Firestore) { }
 
   async create(
     checklistId: string,

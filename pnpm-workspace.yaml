@@ -2,5 +2,6 @@ onlyBuiltDependencies:
   - '@firebase/util'
   - '@nestjs/core'
   - '@swc/core'
+  - esbuild
   - protobufjs
   - sqlite3
