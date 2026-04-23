@@ -13,7 +13,6 @@ export interface Item {
   id: string;
   title: string;
   description?: string;
-  completed?: ItemCompleted;
 }
 
 export interface ChecklistDocument {
@@ -118,7 +117,9 @@ export class ChecklistRepository {
 
     const items = (replaceChecklistDto.items ?? []).map((itemDto) => ({
       title: itemDto.title,
-      ...(itemDto.description !== undefined && { description: itemDto.description }),
+      ...(itemDto.description !== undefined && {
+        description: itemDto.description,
+      }),
       id: itemDto.id ?? randomUUID(),
     }));
 
@@ -126,7 +127,10 @@ export class ChecklistRepository {
     await docRef.update({ title: replaceChecklistDto.title, items, updatedAt });
 
     return {
-      ...(doc.data() as Omit<ChecklistDocument, 'id' | 'title' | 'items' | 'updatedAt'>),
+      ...(doc.data() as Omit<
+        ChecklistDocument,
+        'id' | 'title' | 'items' | 'updatedAt'
+      >),
       id,
       title: replaceChecklistDto.title,
       items,

@@ -164,7 +164,14 @@ describe('InstanceService', () => {
         createdBy: 'user-789',
         createdAt: new Date('2026-02-10T12:00:00Z'),
         title: 'Test Instance',
-        items: [{ id: 'item-1', title: 'Item 1', description: 'Desc' }],
+        items: [
+          {
+            id: 'item-1',
+            title: 'Item 1',
+            description: 'Desc',
+            completed: null,
+          },
+        ],
       };
       repositoryMock.findById.mockResolvedValue(instance);
 
