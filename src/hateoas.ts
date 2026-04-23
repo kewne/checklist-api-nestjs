@@ -56,7 +56,7 @@ export class BaseUrlResourceBuilder implements ResourceBuilder {
     const current = this.links[rel];
     if (current) {
       if (Array.isArray(current)) {
-        current.push(link);
+        current.push(absoluteLink);
       } else {
         this.links[rel] = [current, absoluteLink];
       }
