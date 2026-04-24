@@ -6,6 +6,7 @@ const config: Config = {
   collectCoverageFrom: ['**/*.spec.(t|j)s'],
   coverageDirectory: '../coverage',
   testEnvironment: 'node',
+  setupFiles: ['<rootDir>/src/setup-env.ts'],
   ...createJsWithTsPreset(),
   moduleNameMapper: {
     '^@app/(.*)$': '<rootDir>/src/$1',

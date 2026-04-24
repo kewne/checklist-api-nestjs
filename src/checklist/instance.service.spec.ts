@@ -1,280 +1,228 @@
-import { Test, TestingModule } from '@nestjs/testing';
 import { ConflictException, NotFoundException } from '@nestjs/common';
-import { InstanceService } from './instance.service';
-import {
-  InstanceRepository,
-  ChecklistInstanceDocument,
-} from './instance.repository';
+import { ConfigModule } from '@nestjs/config';
+import { Test, TestingModule } from '@nestjs/testing';
+import { FirestoreModule } from '../firestore.module';
+import { ChecklistRepository } from './checklist.repository';
 import { ChecklistService } from './checklist.service';
+import { InstanceRepository } from './instance.repository';
+import { InstanceService } from './instance.service';
+
+const EMULATOR_BASE =
+  'http://127.0.0.1:8080/emulator/v1/projects/demo-test/databases/(default)/documents';
 
 describe('InstanceService', () => {
   let service: InstanceService;
-  let repositoryMock: {
-    create: jest.Mock;
-    findById: jest.Mock;
-    findByChecklistId: jest.Mock;
-    findCreatedBy: jest.Mock;
-    delete: jest.Mock;
-    completeItem: jest.Mock;
-    markItemIncomplete: jest.Mock;
-  };
-  let checklistServiceMock: {
-    create: jest.Mock;
-    findAll: jest.Mock;
-    findAllByUser: jest.Mock;
-    findOne: jest.Mock;
-    replace: jest.Mock;
-    remove: jest.Mock;
-  };
+  let instanceRepository: InstanceRepository;
+  let checklistRepository: ChecklistRepository;
 
-  beforeEach(async () => {
-    repositoryMock = {
-      create: jest.fn(),
-      findById: jest.fn(),
-      findByChecklistId: jest.fn(),
-      findCreatedBy: jest.fn(),
-      delete: jest.fn(),
-      completeItem: jest.fn(),
-      markItemIncomplete: jest.fn(),
-    };
-
-    checklistServiceMock = {
-      create: jest.fn(),
-      findAll: jest.fn(),
-      findAllByUser: jest.fn(),
-      findOne: jest.fn(),
-      replace: jest.fn(),
-      remove: jest.fn(),
-    };
-
+  beforeAll(async () => {
     const module: TestingModule = await Test.createTestingModule({
+      imports: [ConfigModule.forRoot({ ignoreEnvFile: true }), FirestoreModule],
       providers: [
+        ChecklistRepository,
+        ChecklistService,
+        InstanceRepository,
         InstanceService,
-        {
-          provide: InstanceRepository,
-          useValue: repositoryMock,
-        },
-        {
-          provide: ChecklistService,
-          useValue: checklistServiceMock,
-        },
       ],
     }).compile();
 
     service = module.get<InstanceService>(InstanceService);
+    instanceRepository = module.get<InstanceRepository>(InstanceRepository);
+    checklistRepository = module.get<ChecklistRepository>(ChecklistRepository);
+  });
+
+  afterEach(async () => {
+    await fetch(EMULATOR_BASE, { method: 'DELETE' });
+  });
+
+  describe('createInstance', () => {
+    it('should create an instance with items from the checklist', async () => {
+      const checklist = await checklistRepository.create(
+        {
+          title: 'My Checklist',
+          items: [{ title: 'Step 1', description: 'Do step 1' }],
+        },
+        'user-1',
+      );
+
+      const instance = await service.createInstance(checklist.id, 'user-1');
+
+      expect(instance.checklistId).toBe(checklist.id);
+      expect(instance.createdBy).toBe('user-1');
+      expect(instance.items).toHaveLength(1);
+      expect(instance.items[0].title).toBe('Step 1');
+      expect(instance.items[0].completed).toBeNull();
+    });
+
+    it('should throw NotFoundException for unknown checklist', async () => {
+      await expect(
+        service.createInstance('non-existent-checklist', 'user-1'),
+      ).rejects.toThrow(NotFoundException);
+    });
   });
 
   describe('findCreatedBy', () => {
-    it('should call repository with correct userId and return instances', async () => {
-      // Arrange
-      const userId = 'test-user-id';
-      const instances: ChecklistInstanceDocument[] = [
-        {
-          id: 'instance-1',
-          checklistId: 'checklist-1',
-          createdBy: userId,
-          createdAt: new Date('2026-01-01T10:00:00Z'),
-          title: 'First Instance',
-          items: [],
-        },
-        {
-          id: 'instance-2',
-          checklistId: 'checklist-2',
-          createdBy: userId,
-          createdAt: new Date('2026-03-15T14:30:00Z'),
-          title: 'Second Instance',
-          items: [],
-        },
-      ];
-      repositoryMock.findCreatedBy.mockResolvedValue(instances);
+    it('should return instances sorted by createdAt ascending', async () => {
+      const checklist = await checklistRepository.create(
+        { title: 'CL', items: [] },
+        'user-1',
+      );
 
-      // Act
-      const result = await service.findCreatedBy(userId);
+      const items = await Promise.all([
+        instanceRepository.create(checklist.id, 'user-1', 'Oldest', []),
+        instanceRepository.create(checklist.id, 'user-1', 'Middle', []),
+        instanceRepository.create(checklist.id, 'user-1', 'Newest', []),
+      ]);
 
-      // Assert
-      expect(repositoryMock.findCreatedBy).toHaveBeenCalledWith(userId);
-      expect(result).toEqual(instances);
-      expect(result).toHaveLength(2);
-      expect(result[0].createdAt.getTime()).toBeLessThan(
-        result[1].createdAt.getTime(),
+      const result = await service.findCreatedBy('user-1');
+
+      expect(result).toEqual(
+        items.map((item) => ({
+          id: item.id,
+          title: item.title,
+        })),
       );
     });
 
     it('should return empty array when user has no instances', async () => {
-      // Arrange
-      const userId = 'test-user-id';
-      repositoryMock.findCreatedBy.mockResolvedValue([]);
-
-      // Act
-      const result = await service.findCreatedBy(userId);
-
-      // Assert
-      expect(repositoryMock.findCreatedBy).toHaveBeenCalledWith(userId);
+      const result = await service.findCreatedBy('user-with-no-instances');
       expect(result).toEqual([]);
-    });
-
-    it('should return instances sorted by creation date in ascending order', async () => {
-      // Arrange
-      const userId = 'test-user-id';
-      const instances: ChecklistInstanceDocument[] = [
-        {
-          id: 'instance-1',
-          checklistId: 'checklist-1',
-          createdBy: userId,
-          createdAt: new Date('2026-01-01T10:00:00Z'),
-          title: 'Oldest',
-          items: [],
-        },
-        {
-          id: 'instance-2',
-          checklistId: 'checklist-2',
-          createdBy: userId,
-          createdAt: new Date('2026-02-15T09:00:00Z'),
-          title: 'Middle',
-          items: [],
-        },
-        {
-          id: 'instance-3',
-          checklistId: 'checklist-3',
-          createdBy: userId,
-          createdAt: new Date('2026-03-20T15:00:00Z'),
-          title: 'Newest',
-          items: [],
-        },
-      ];
-      repositoryMock.findCreatedBy.mockResolvedValue(instances);
-
-      // Act
-      const result = await service.findCreatedBy(userId);
-
-      // Assert
-      expect(result[0].title).toBe('Oldest');
-      expect(result[1].title).toBe('Middle');
-      expect(result[2].title).toBe('Newest');
     });
   });
 
   describe('findOne', () => {
-    it('should return instance when found', async () => {
-      // Arrange
-      const instanceId = 'instance-123';
-      const instance: ChecklistInstanceDocument = {
-        id: instanceId,
-        checklistId: 'checklist-456',
-        createdBy: 'user-789',
-        createdAt: new Date('2026-02-10T12:00:00Z'),
-        title: 'Test Instance',
-        items: [
-          {
-            id: 'item-1',
-            title: 'Item 1',
-            description: 'Desc',
-            completed: null,
-          },
-        ],
-      };
-      repositoryMock.findById.mockResolvedValue(instance);
+    it('should return the instance when found', async () => {
+      const checklist = await checklistRepository.create(
+        {
+          title: 'CL',
+          items: [{ title: 'Item A', description: 'Item A description' }],
+        },
+        'user-1',
+      );
+      const created = await instanceRepository.create(
+        checklist.id,
+        'user-1',
+        'My Instance',
+        checklist.items,
+      );
 
-      // Act
-      const result = await service.findOne(instanceId);
+      const result = await service.findOne(created.id);
 
-      // Assert
-      expect(repositoryMock.findById).toHaveBeenCalledWith(instanceId);
-      expect(result).toEqual(instance);
-      expect(result.id).toBe(instanceId);
-      expect(result.title).toBe('Test Instance');
+      expect(result.id).toBe(created.id);
+      expect(result.title).toBe('My Instance');
+      expect(result.items).toHaveLength(1);
     });
 
-    it('should throw NotFoundException when instance not found', async () => {
-      // Arrange
-      const instanceId = 'non-existent-id';
-      repositoryMock.findById.mockResolvedValue(null);
-
-      // Act & Assert
-      await expect(service.findOne(instanceId)).rejects.toThrow(
-        NotFoundException as unknown as string,
+    it('should throw NotFoundException when instance does not exist', async () => {
+      await expect(service.findOne('non-existent-id')).rejects.toThrow(
+        NotFoundException,
       );
-      expect(repositoryMock.findById).toHaveBeenCalledWith(instanceId);
     });
   });
 
   describe('completeItem', () => {
-    it('should call repository with instanceId, itemId, ISO timestamp, and note', async () => {
-      repositoryMock.completeItem.mockResolvedValue(undefined);
-
-      await service.completeItem('instance-1', 'item-1', 'Good job');
-
-      expect(repositoryMock.completeItem).toHaveBeenCalledWith(
-        'instance-1',
-        'item-1',
-        expect.stringMatching(/^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}\.\d{3}Z$/),
-        'Good job',
+    async function seedInstanceWithItem() {
+      const checklist = await checklistRepository.create(
+        { title: 'CL', items: [{ title: 'Task 1', description: 'Do it' }] },
+        'user-1',
       );
+      const instance = await instanceRepository.create(
+        checklist.id,
+        'user-1',
+        'Test Instance',
+        checklist.items,
+      );
+      return { instance, itemId: instance.items[0].id };
+    }
+
+    it('should mark item as completed with a note', async () => {
+      const { instance, itemId } = await seedInstanceWithItem();
+
+      await service.completeItem(instance.id, itemId, 'Great job');
+
+      const updated = await service.findOne(instance.id);
+      const item = updated.items.find((i) => i.id === itemId)!;
+      expect(item.completed).not.toBeNull();
+      expect(item.completed!.completed_at).toMatch(
+        /^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}\.\d{3}Z$/,
+      );
+      expect(item.completed!.note).toBe('Great job');
     });
 
-    it('should call repository without note when not provided', async () => {
-      repositoryMock.completeItem.mockResolvedValue(undefined);
+    it('should mark item as completed without a note', async () => {
+      const { instance, itemId } = await seedInstanceWithItem();
 
-      await service.completeItem('instance-1', 'item-1');
+      await service.completeItem(instance.id, itemId);
 
-      expect(repositoryMock.completeItem).toHaveBeenCalledWith(
-        'instance-1',
-        'item-1',
-        expect.any(String),
-        undefined,
-      );
+      const updated = await service.findOne(instance.id);
+      const item = updated.items.find((i) => i.id === itemId)!;
+      expect(item.completed).not.toBeNull();
+      expect(item.completed).not.toHaveProperty('note');
     });
 
-    it('should propagate NotFoundException from repository', async () => {
-      repositoryMock.completeItem.mockRejectedValue(
-        new NotFoundException('instance not found'),
-      );
-
+    it('should throw NotFoundException for unknown instance', async () => {
       await expect(
-        service.completeItem('non-existent', 'item-1'),
+        service.completeItem('non-existent-instance', 'item-1'),
       ).rejects.toThrow(NotFoundException);
     });
 
-    it('should propagate ConflictException from repository', async () => {
-      repositoryMock.completeItem.mockRejectedValue(
-        new ConflictException('already completed'),
-      );
+    it('should throw ConflictException when item is already completed', async () => {
+      const { instance, itemId } = await seedInstanceWithItem();
+      await service.completeItem(instance.id, itemId);
 
-      await expect(
-        service.completeItem('instance-1', 'item-1'),
-      ).rejects.toThrow(ConflictException);
+      await expect(service.completeItem(instance.id, itemId)).rejects.toThrow(
+        ConflictException,
+      );
     });
   });
 
   describe('markItemIncomplete', () => {
-    it('should call repository with instanceId and itemId', async () => {
-      repositoryMock.markItemIncomplete.mockResolvedValue(undefined);
-
-      await service.markItemIncomplete('instance-1', 'item-1');
-
-      expect(repositoryMock.markItemIncomplete).toHaveBeenCalledWith(
-        'instance-1',
-        'item-1',
+    async function seedCompletedItem() {
+      const checklist = await checklistRepository.create(
+        { title: 'CL', items: [{ title: 'Task 1', description: 'Do task 1' }] },
+        'user-1',
       );
+      const instance = await instanceRepository.create(
+        checklist.id,
+        'user-1',
+        'Test Instance',
+        checklist.items,
+      );
+      const itemId = instance.items[0].id;
+      await service.completeItem(instance.id, itemId);
+      return { instance, itemId };
+    }
+
+    it('should mark a completed item as incomplete', async () => {
+      const { instance, itemId } = await seedCompletedItem();
+
+      await service.markItemIncomplete(instance.id, itemId);
+
+      const updated = await service.findOne(instance.id);
+      const item = updated.items.find((i) => i.id === itemId)!;
+      expect(item.completed).toBeNull();
     });
 
-    it('should propagate NotFoundException from repository', async () => {
-      repositoryMock.markItemIncomplete.mockRejectedValue(
-        new NotFoundException('instance not found'),
-      );
-
+    it('should throw NotFoundException for unknown instance', async () => {
       await expect(
-        service.markItemIncomplete('non-existent', 'item-1'),
+        service.markItemIncomplete('non-existent-instance', 'item-1'),
       ).rejects.toThrow(NotFoundException);
     });
 
-    it('should propagate ConflictException from repository', async () => {
-      repositoryMock.markItemIncomplete.mockRejectedValue(
-        new ConflictException('item is not completed'),
+    it('should throw ConflictException when item is not completed', async () => {
+      const checklist = await checklistRepository.create(
+        { title: 'CL', items: [{ title: 'Task 1', description: 'Do task 1' }] },
+        'user-1',
+      );
+      const instance = await instanceRepository.create(
+        checklist.id,
+        'user-1',
+        'Test Instance',
+        checklist.items,
       );
 
       await expect(
-        service.markItemIncomplete('instance-1', 'item-1'),
+        service.markItemIncomplete(instance.id, instance.items[0].id),
       ).rejects.toThrow(ConflictException);
     });
   });

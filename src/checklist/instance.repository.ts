@@ -19,11 +19,16 @@ export interface ChecklistInstanceDocument {
   items: InstanceItem[];
 }
 
+export interface ChecklistListItem {
+  id: string;
+  title: string;
+}
+
 @Injectable()
 export class InstanceRepository {
   private readonly collection = 'checklistInstances';
 
-  constructor(private readonly firestore: Firestore) {}
+  constructor(private readonly firestore: Firestore) { }
 
   async create(
     checklistId: string,
@@ -80,20 +85,17 @@ export class InstanceRepository {
     );
   }
 
-  async findCreatedBy(userId: string): Promise<ChecklistInstanceDocument[]> {
+  async findCreatedBy(userId: string): Promise<ChecklistListItem[]> {
     const snapshot = await this.firestore
       .collection(this.collection)
       .where('createdBy', '==', userId)
       .orderBy('createdAt', 'asc')
       .get();
 
-    return snapshot.docs.map(
-      (doc) =>
-        ({
-          id: doc.id,
-          ...doc.data(),
-        }) as ChecklistInstanceDocument,
-    );
+    return snapshot.docs.map((doc) => ({
+      id: doc.id,
+      title: doc.get('title') as string,
+    }));
   }
 
   async delete(id: string): Promise<void> {

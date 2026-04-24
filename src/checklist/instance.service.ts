@@ -2,6 +2,7 @@ import { Injectable, NotFoundException } from '@nestjs/common';
 import { ChecklistService } from './checklist.service';
 import {
   ChecklistInstanceDocument,
+  ChecklistListItem,
   InstanceRepository,
 } from './instance.repository';
 
@@ -33,7 +34,7 @@ export class InstanceService {
     );
   }
 
-  async findCreatedBy(userId: string): Promise<ChecklistInstanceDocument[]> {
+  async findCreatedBy(userId: string): Promise<ChecklistListItem[]> {
     return this.instanceRepository.findCreatedBy(userId);
   }
 
