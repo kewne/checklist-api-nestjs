@@ -13,6 +13,7 @@ describe('ChecklistInstanceController', () => {
     completeItem: jest.fn(),
     markItemIncomplete: jest.fn(),
     remove: jest.fn(),
+    replace: jest.fn(),
   };
 
   beforeEach(async () => {
@@ -91,7 +92,10 @@ describe('ChecklistInstanceController', () => {
         .get('/checklist-instances/456')
         .expect(200);
 
-      const links = (response.body as Record<string, unknown>)._links as Record<string, unknown>;
+      const links = (response.body as Record<string, unknown>)._links as Record<
+        string,
+        unknown
+      >;
       expect(links['complete-item']).toBeDefined();
       expect(links['mark-incomplete-item']).toBeDefined();
     });
@@ -118,8 +122,14 @@ describe('ChecklistInstanceController', () => {
         .send({})
         .expect(303);
 
-      expect(service.completeItem).toHaveBeenCalledWith('456', 'item-1', undefined);
-      expect(response.headers['location']).toMatch(/\/checklist-instances\/456$/);
+      expect(service.completeItem).toHaveBeenCalledWith(
+        '456',
+        'item-1',
+        undefined,
+      );
+      expect(response.headers['location']).toMatch(
+        /\/checklist-instances\/456$/,
+      );
     });
 
     it('should pass note to service when provided', async () => {
@@ -130,7 +140,11 @@ describe('ChecklistInstanceController', () => {
         .send({ note: 'Well done' })
         .expect(303);
 
-      expect(service.completeItem).toHaveBeenCalledWith('456', 'item-1', 'Well done');
+      expect(service.completeItem).toHaveBeenCalledWith(
+        '456',
+        'item-1',
+        'Well done',
+      );
     });
 
     it('should return 409 when item is already completed', async () => {
@@ -175,7 +189,9 @@ describe('ChecklistInstanceController', () => {
         .expect(303);
 
       expect(service.markItemIncomplete).toHaveBeenCalledWith('456', 'item-1');
-      expect(response.headers['location']).toMatch(/\/checklist-instances\/456$/);
+      expect(response.headers['location']).toMatch(
+        /\/checklist-instances\/456$/,
+      );
     });
 
     it('should return 409 when item is not completed', async () => {
@@ -198,6 +214,61 @@ describe('ChecklistInstanceController', () => {
         .post('/checklist-instances/456/items/item-1/incomplete')
         .send({})
         .expect(404);
+    });
+  });
+
+  describe('PUT /checklist-instances/:instanceId', () => {
+    it('should return 204 with no response body on success', async () => {
+      service.replace.mockResolvedValue(undefined);
+
+      const response = await request(app.getHttpServer())
+        .put('/checklist-instances/456')
+        .send({ title: 'Updated Title', items: [{ title: 'Updated Item' }] })
+        .expect(204);
+
+      expect(service.replace).toHaveBeenCalledWith('456', {
+        title: 'Updated Title',
+        items: [{ title: 'Updated Item' }],
+      });
+      expect(response.body).toEqual({});
+    });
+
+    it('should return 404 when instance not found', async () => {
+      service.replace.mockRejectedValue(
+        new NotFoundException('Checklist instance not found'),
+      );
+
+      await request(app.getHttpServer())
+        .put('/checklist-instances/non-existent')
+        .send({ title: 'Title', items: [] })
+        .expect(404);
+    });
+
+    it('should return 400 when title is missing', async () => {
+      await request(app.getHttpServer())
+        .put('/checklist-instances/456')
+        .send({ items: [] })
+        .expect(400);
+
+      expect(service.replace).not.toHaveBeenCalled();
+    });
+
+    it('should return 400 when items is missing', async () => {
+      await request(app.getHttpServer())
+        .put('/checklist-instances/456')
+        .send({ title: 'Title' })
+        .expect(400);
+
+      expect(service.replace).not.toHaveBeenCalled();
+    });
+
+    it('should return 400 when an item title is missing', async () => {
+      await request(app.getHttpServer())
+        .put('/checklist-instances/456')
+        .send({ title: 'Title', items: [{ id: 'item-1' }] })
+        .expect(400);
+
+      expect(service.replace).not.toHaveBeenCalled();
     });
   });
 

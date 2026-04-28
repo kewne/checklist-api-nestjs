@@ -5,13 +5,14 @@ import {
   ChecklistListItem,
   InstanceRepository,
 } from './instance.repository';
+import { ReplaceChecklistInstanceDto } from './dto/replace-checklist-instance.dto';
 
 @Injectable()
 export class InstanceService {
   constructor(
     private instanceRepository: InstanceRepository,
     private checklistService: ChecklistService,
-  ) { }
+  ) {}
 
   async createInstance(
     checklistId: string,
@@ -69,5 +70,18 @@ export class InstanceService {
       throw new NotFoundException(`Checklist instance with id ${id} not found`);
     }
     await this.instanceRepository.delete(id);
+  }
+
+  async replace(
+    instanceId: string,
+    dto: ReplaceChecklistInstanceDto,
+  ): Promise<ChecklistInstanceDocument> {
+    const instance = await this.instanceRepository.replace(instanceId, dto);
+    if (!instance) {
+      throw new NotFoundException(
+        `Checklist instance with id ${instanceId} not found`,
+      );
+    }
+    return instance;
   }
 }

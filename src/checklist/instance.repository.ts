@@ -4,7 +4,9 @@ import {
   Injectable,
   NotFoundException,
 } from '@nestjs/common';
+import { randomUUID } from 'crypto';
 import { Item, ItemCompleted } from './checklist.repository';
+import { ReplaceChecklistInstanceDto } from './dto/replace-checklist-instance.dto';
 
 export interface InstanceItem extends Item {
   completed: ItemCompleted | null;
@@ -28,7 +30,7 @@ export interface ChecklistListItem {
 export class InstanceRepository {
   private readonly collection = 'checklistInstances';
 
-  constructor(private readonly firestore: Firestore) { }
+  constructor(private readonly firestore: Firestore) {}
 
   async create(
     checklistId: string,
@@ -100,6 +102,48 @@ export class InstanceRepository {
 
   async delete(id: string): Promise<void> {
     await this.firestore.collection(this.collection).doc(id).delete();
+  }
+
+  async replace(
+    id: string,
+    dto: ReplaceChecklistInstanceDto,
+  ): Promise<ChecklistInstanceDocument | null> {
+    const docRef = this.firestore.collection(this.collection).doc(id);
+
+    return await this.firestore.runTransaction(async (transaction) => {
+      const doc = await transaction.get(docRef);
+
+      if (!doc.exists) {
+        return null;
+      }
+
+      const existing = doc.data() as Omit<ChecklistInstanceDocument, 'id'>;
+
+      const items: InstanceItem[] = dto.items.map((itemDto) => {
+        const itemId = itemDto.id ?? randomUUID();
+        const existingItem = existing.items.find((i) => i.id === itemId);
+        return {
+          id: itemId,
+          title: itemDto.title,
+          completed: existingItem?.completed ?? null,
+        };
+      });
+
+      const newData = {
+        title: dto.title,
+        items,
+      };
+
+      transaction.update(docRef, newData);
+
+      return {
+        id,
+        checklistId: existing.checklistId,
+        createdBy: existing.createdBy,
+        createdAt: existing.createdAt,
+        ...newData,
+      };
+    });
   }
 
   async completeItem(

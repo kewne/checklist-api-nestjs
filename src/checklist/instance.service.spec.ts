@@ -1,4 +1,5 @@
 import { ConflictException, NotFoundException } from '@nestjs/common';
+import { randomUUID } from 'crypto';
 import { ConfigModule } from '@nestjs/config';
 import { Test, TestingModule } from '@nestjs/testing';
 import { FirestoreModule } from '../firestore.module';
@@ -37,18 +38,19 @@ describe('InstanceService', () => {
 
   describe('createInstance', () => {
     it('should create an instance with items from the checklist', async () => {
+      const userId = randomUUID();
       const checklist = await checklistRepository.create(
         {
           title: 'My Checklist',
           items: [{ title: 'Step 1', description: 'Do step 1' }],
         },
-        'user-1',
+        userId,
       );
 
-      const instance = await service.createInstance(checklist.id, 'user-1');
+      const instance = await service.createInstance(checklist.id, userId);
 
       expect(instance.checklistId).toBe(checklist.id);
-      expect(instance.createdBy).toBe('user-1');
+      expect(instance.createdBy).toBe(userId);
       expect(instance.items).toHaveLength(1);
       expect(instance.items[0].title).toBe('Step 1');
       expect(instance.items[0].completed).toBeNull();
@@ -56,25 +58,26 @@ describe('InstanceService', () => {
 
     it('should throw NotFoundException for unknown checklist', async () => {
       await expect(
-        service.createInstance('non-existent-checklist', 'user-1'),
+        service.createInstance('non-existent-checklist', randomUUID()),
       ).rejects.toThrow(NotFoundException);
     });
   });
 
   describe('findCreatedBy', () => {
     it('should return instances sorted by createdAt ascending', async () => {
+      const userId = randomUUID();
       const checklist = await checklistRepository.create(
         { title: 'CL', items: [] },
-        'user-1',
+        userId,
       );
 
-      const items = await Promise.all([
-        instanceRepository.create(checklist.id, 'user-1', 'Oldest', []),
-        instanceRepository.create(checklist.id, 'user-1', 'Middle', []),
-        instanceRepository.create(checklist.id, 'user-1', 'Newest', []),
-      ]);
+      const items = [
+        await instanceRepository.create(checklist.id, userId, 'Oldest', []),
+        await instanceRepository.create(checklist.id, userId, 'Middle', []),
+        await instanceRepository.create(checklist.id, userId, 'Newest', []),
+      ];
 
-      const result = await service.findCreatedBy('user-1');
+      const result = await service.findCreatedBy(userId);
 
       expect(result).toEqual(
         items.map((item) => ({
@@ -92,16 +95,17 @@ describe('InstanceService', () => {
 
   describe('findOne', () => {
     it('should return the instance when found', async () => {
+      const userId = randomUUID();
       const checklist = await checklistRepository.create(
         {
           title: 'CL',
           items: [{ title: 'Item A', description: 'Item A description' }],
         },
-        'user-1',
+        userId,
       );
       const created = await instanceRepository.create(
         checklist.id,
-        'user-1',
+        userId,
         'My Instance',
         checklist.items,
       );
@@ -122,13 +126,14 @@ describe('InstanceService', () => {
 
   describe('completeItem', () => {
     async function seedInstanceWithItem() {
+      const userId = randomUUID();
       const checklist = await checklistRepository.create(
         { title: 'CL', items: [{ title: 'Task 1', description: 'Do it' }] },
-        'user-1',
+        userId,
       );
       const instance = await instanceRepository.create(
         checklist.id,
-        'user-1',
+        userId,
         'Test Instance',
         checklist.items,
       );
@@ -178,13 +183,14 @@ describe('InstanceService', () => {
 
   describe('markItemIncomplete', () => {
     async function seedCompletedItem() {
+      const userId = randomUUID();
       const checklist = await checklistRepository.create(
         { title: 'CL', items: [{ title: 'Task 1', description: 'Do task 1' }] },
-        'user-1',
+        userId,
       );
       const instance = await instanceRepository.create(
         checklist.id,
-        'user-1',
+        userId,
         'Test Instance',
         checklist.items,
       );
@@ -210,13 +216,14 @@ describe('InstanceService', () => {
     });
 
     it('should throw ConflictException when item is not completed', async () => {
+      const userId = randomUUID();
       const checklist = await checklistRepository.create(
         { title: 'CL', items: [{ title: 'Task 1', description: 'Do task 1' }] },
-        'user-1',
+        userId,
       );
       const instance = await instanceRepository.create(
         checklist.id,
-        'user-1',
+        userId,
         'Test Instance',
         checklist.items,
       );
@@ -224,6 +231,100 @@ describe('InstanceService', () => {
       await expect(
         service.markItemIncomplete(instance.id, instance.items[0].id),
       ).rejects.toThrow(ConflictException);
+    });
+  });
+
+  describe('replace', () => {
+    it('should replace title and items while preserving completion status for matched items', async () => {
+      const userId = randomUUID();
+      const checklist = await checklistRepository.create(
+        {
+          title: 'CL',
+          items: [
+            { title: 'Task 1', description: 'Do task 1' },
+            { title: 'Task 2', description: 'Do task 2' },
+          ],
+        },
+        userId,
+      );
+      const original = await instanceRepository.create(
+        checklist.id,
+        userId,
+        'Original Title',
+        checklist.items,
+      );
+      const [item1, item2] = original.items;
+      await service.completeItem(original.id, item1.id, 'done');
+
+      const result = await service.replace(original.id, {
+        title: 'New Title',
+        items: [
+          { id: item1.id, title: 'Renamed Task 1' },
+          { id: item2.id, title: 'Renamed Task 2' },
+        ],
+      });
+
+      expect(result).toEqual({
+        id: original.id,
+        checklistId: original.checklistId,
+        createdBy: original.createdBy,
+        createdAt: expect.any(Object) as string,
+        title: 'New Title',
+        items: [
+          {
+            id: item1.id,
+            title: 'Renamed Task 1',
+            completed: expect.objectContaining({
+              completed_at: expect.any(String) as string,
+            }) as object,
+          },
+          {
+            id: item2.id,
+            title: 'Renamed Task 2',
+            completed: null,
+          },
+        ],
+      });
+    });
+
+    it('should assign null completion to new items without an id', async () => {
+      const userId = randomUUID();
+      const checklist = await checklistRepository.create(
+        { title: 'CL', items: [{ title: 'Task 1', description: 'Do task 1' }] },
+        userId,
+      );
+      const instance = await instanceRepository.create(
+        checklist.id,
+        userId,
+        'Original Title',
+        checklist.items,
+      );
+
+      const result = await service.replace(instance.id, {
+        title: 'New Title',
+        items: [{ title: 'Brand New Item' }],
+      });
+
+      expect(result).toEqual({
+        id: instance.id,
+        checklistId: instance.checklistId,
+        createdBy: instance.createdBy,
+        createdAt: expect.any(Object),
+        title: 'New Title',
+        items: [
+          {
+            id: expect.any(String),
+            title: 'Brand New Item',
+            completed: null,
+          },
+        ],
+      });
+    });
+
+    it('should throw NotFoundException for unknown instance', async () => {
+      await expect(
+        service.replace('non-existent-id', { title: 'Title', items: [] }),
+      ).rejects.toThrow(NotFoundException);
     });
   });
 });

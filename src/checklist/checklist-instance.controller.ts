@@ -3,8 +3,10 @@ import {
   Controller,
   Delete,
   Get,
+  HttpCode,
   Param,
   Post,
+  Put,
   Res,
   UsePipes,
   ValidationPipe,
@@ -14,6 +16,7 @@ import { Hateoas, NestLinkFactory, toHandler } from '@app/hateoas-nest';
 import { Response } from 'express';
 import { CompleteItemDto } from './dto/complete-item.dto';
 import { IncompleteItemDto } from './dto/incomplete-item.dto';
+import { ReplaceChecklistInstanceDto } from './dto/replace-checklist-instance.dto';
 
 @Controller('checklist-instances')
 export class ChecklistInstanceController {
@@ -104,6 +107,16 @@ export class ChecklistInstanceController {
       'location',
       linkFactory.toAbsolute(`/checklist-instances/${instanceId}`).href,
     );
+  }
+
+  @Put(':instanceId')
+  @HttpCode(204)
+  @UsePipes(new ValidationPipe({ transform: true }))
+  async replace(
+    @Param('instanceId') instanceId: string,
+    @Body() dto: ReplaceChecklistInstanceDto,
+  ): Promise<void> {
+    await this.instanceService.replace(instanceId, dto);
   }
 
   @Delete(':instanceId')
