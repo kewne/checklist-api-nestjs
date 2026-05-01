@@ -1,13 +1,14 @@
 import { ClassSerializerInterceptor, Module } from '@nestjs/common';
-import { APP_GUARD, APP_INTERCEPTOR, Reflector } from '@nestjs/core';
 import { ConfigModule } from '@nestjs/config';
+import { APP_GUARD, APP_INTERCEPTOR, Reflector } from '@nestjs/core';
 import { AppController } from './app.controller';
+import { AuthGuard } from './auth/auth.guard';
+import { AuthModule } from './auth/auth.module';
+import { CaslModule } from './casl/casl.module';
+import { ChecklistModule } from './checklist/checklist.module';
 import { FirebaseAdminModule } from './firebase-admin.module';
 import { FirestoreModule } from './firestore.module';
-import { ChecklistModule } from './checklist/checklist.module';
 import { HateoasModule } from './hateoas/hateoas.module';
-import { AuthModule } from './auth/auth.module';
-import { AuthGuard } from './auth/auth.guard';
 
 @Module({
   imports: [
@@ -19,6 +20,7 @@ import { AuthGuard } from './auth/auth.guard';
     ChecklistModule,
     HateoasModule,
     AuthModule,
+    CaslModule,
   ],
   controllers: [AppController],
   providers: [

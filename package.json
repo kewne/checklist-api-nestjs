@@ -20,6 +20,7 @@
     "test:e2e": "jest --config ./test/jest-e2e.json"
   },
   "dependencies": {
+    "@casl/ability": "^6.8.1",
     "@google-cloud/firestore": "^8.3.0",
     "@nestjs/common": "^11.1.5",
     "@nestjs/config": "^4.0.3",

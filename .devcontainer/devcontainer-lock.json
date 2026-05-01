@@ -1,0 +1,19 @@
+{
+  "features": {
+    "ghcr.io/devcontainers-extra/features/firebase-cli:2": {
+      "version": "2.0.16",
+      "resolved": "ghcr.io/devcontainers-extra/features/firebase-cli@sha256:6912e0e1c88d9130890711bc9a553a40af17909f02f33b36b1a8ce992e2bce3d",
+      "integrity": "sha256:6912e0e1c88d9130890711bc9a553a40af17909f02f33b36b1a8ce992e2bce3d"
+    },
+    "ghcr.io/devcontainers-extra/features/nestjs-cli:2": {
+      "version": "2.0.16",
+      "resolved": "ghcr.io/devcontainers-extra/features/nestjs-cli@sha256:ab4c5c5064288e2d1d51081e3429fabb3394fdfc575305c768328d5ab167f8b6",
+      "integrity": "sha256:ab4c5c5064288e2d1d51081e3429fabb3394fdfc575305c768328d5ab167f8b6"
+    },
+    "ghcr.io/devcontainers/features/java:1": {
+      "version": "1.8.0",
+      "resolved": "ghcr.io/devcontainers/features/java@sha256:9663ce0219ff85786e87901ce5f0a59f488edd5f99b46015192cda48468b233a",
+      "integrity": "sha256:9663ce0219ff85786e87901ce5f0a59f488edd5f99b46015192cda48468b233a"
+    }
+  }
+}

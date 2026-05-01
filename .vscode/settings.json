@@ -1,4 +1,7 @@
 {
+  "[typescript]": {
+    "editor.defaultFormatter": "esbenp.prettier-vscode"
+  },
   "editor.codeActionsOnSave": {
     "source.fixAll.prettier": "explicit",
     "source.removeUnused.ts": "explicit",
