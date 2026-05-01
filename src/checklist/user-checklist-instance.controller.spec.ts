@@ -5,6 +5,9 @@ import * as request from 'supertest';
 import { HateoasModule } from '../hateoas/hateoas.module';
 import { InstanceService } from './instance.service';
 import { UserChecklistInstanceController } from './user-checklist-instance.controller';
+import { USER_AUTH_KEY } from '@app/auth/auth.constants';
+import { AuthUser } from '@app/auth/auth.guard';
+import { Request, Response, NextFunction } from 'express';
 
 describe('UserChecklistInstanceController', () => {
   let app: NestExpressApplication;
@@ -12,10 +15,12 @@ describe('UserChecklistInstanceController', () => {
     Omit<InstanceService, 'checklistService' | 'instanceRepository'>
   >;
   const userId = 'test-user-id';
+  const mockUser: AuthUser = { uid: userId };
 
   beforeEach(async () => {
     serviceMock = {
       createInstance: jest.fn(),
+      createFromData: jest.fn(),
       findCreatedBy: jest.fn(),
       findOne: jest.fn(),
       completeItem: jest.fn(),
@@ -36,6 +41,18 @@ describe('UserChecklistInstanceController', () => {
     }).compile();
 
     app = module.createNestApplication<NestExpressApplication>();
+
+    app.use(
+      (
+        req: Request & { [USER_AUTH_KEY]: AuthUser },
+        _res: Response,
+        next: NextFunction,
+      ) => {
+        req[USER_AUTH_KEY] = mockUser;
+        next();
+      },
+    );
+
     await app.init();
   });
 
@@ -113,6 +130,35 @@ describe('UserChecklistInstanceController', () => {
 
       const resource = response.body as PlainResource;
       expect(resource._links.items ?? []).toEqual([]);
+    });
+  });
+
+  describe('POST /users/:userId/checklist-instances', () => {
+    it('should create an instance and return 201 with location header', async () => {
+      // Arrange
+      const dto = {
+        title: 'My Instance',
+        items: [{ title: 'Item 1' }],
+      };
+      serviceMock.createFromData.mockResolvedValue({
+        id: 'new-instance-id',
+        checklistId: null,
+        createdBy: userId,
+        createdAt: new Date(),
+        title: 'My Instance',
+        items: [{ id: 'item-uuid', title: 'Item 1', completed: null }],
+      });
+
+      // Act & Assert
+      const response = await request(app.getHttpServer())
+        .post(`/users/${userId}/checklist-instances`)
+        .send(dto)
+        .expect(201);
+
+      expect(serviceMock.createFromData).toHaveBeenCalledWith(userId, dto);
+      expect(response.headers['location']).toMatch(
+        /\/checklist-instances\/new-instance-id$/,
+      );
     });
   });
 });

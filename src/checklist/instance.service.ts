@@ -5,6 +5,7 @@ import {
   ChecklistListItem,
   InstanceRepository,
 } from './instance.repository';
+import { CreateChecklistInstanceFromDataDto } from './dto/create-checklist-instance-from-data.dto';
 import { ReplaceChecklistInstanceDto } from './dto/replace-checklist-instance.dto';
 
 @Injectable()
@@ -33,6 +34,13 @@ export class InstanceService {
       resolvedTitle,
       checklist.items,
     );
+  }
+
+  async createFromData(
+    userId: string,
+    dto: CreateChecklistInstanceFromDataDto,
+  ): Promise<ChecklistInstanceDocument> {
+    return this.instanceRepository.createFromData(userId, dto.title, dto.items);
   }
 
   async findCreatedBy(userId: string): Promise<ChecklistListItem[]> {

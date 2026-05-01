@@ -6,6 +6,7 @@ import {
 } from '@nestjs/common';
 import { randomUUID } from 'crypto';
 import { Item, ItemCompleted } from './checklist.repository';
+import { CreateInstanceItemFromDataDto } from './dto/create-checklist-instance-from-data.dto';
 import { ReplaceChecklistInstanceDto } from './dto/replace-checklist-instance.dto';
 
 export interface InstanceItem extends Item {
@@ -14,7 +15,7 @@ export interface InstanceItem extends Item {
 
 export interface ChecklistInstanceDocument {
   id: string;
-  checklistId: string;
+  checklistId: string | null;
   createdBy: string;
   createdAt: Date;
   title: string;
@@ -45,6 +46,37 @@ export class InstanceRepository {
       createdAt: now,
       title,
       items: items.map((item) => ({ completed: null, ...item })),
+    };
+
+    const docRef = await this.firestore
+      .collection(this.collection)
+      .add(instanceData);
+
+    return {
+      id: docRef.id,
+      ...instanceData,
+    };
+  }
+
+  async createFromData(
+    userId: string,
+    title: string,
+    items: CreateInstanceItemFromDataDto[],
+  ): Promise<ChecklistInstanceDocument> {
+    const now = new Date();
+    const instanceData = {
+      checklistId: null,
+      createdBy: userId,
+      createdAt: now,
+      title,
+      items: items.map((item) => ({
+        id: randomUUID(),
+        title: item.title,
+        ...(item.description !== undefined && {
+          description: item.description,
+        }),
+        completed: null,
+      })),
     };
 
     const docRef = await this.firestore

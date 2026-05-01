@@ -1,7 +1,7 @@
 import { ConflictException, NotFoundException } from '@nestjs/common';
-import { randomUUID } from 'crypto';
 import { ConfigModule } from '@nestjs/config';
 import { Test, TestingModule } from '@nestjs/testing';
+import { randomUUID } from 'crypto';
 import { FirestoreModule } from '../firestore.module';
 import { ChecklistRepository } from './checklist.repository';
 import { ChecklistService } from './checklist.service';
@@ -34,6 +34,31 @@ describe('InstanceService', () => {
 
   afterEach(async () => {
     await fetch(EMULATOR_BASE, { method: 'DELETE' });
+  });
+
+  describe('createFromData', () => {
+    it('should create an instance with items and descriptions from the given data', async () => {
+      const userId = randomUUID();
+
+      const instance = await service.createFromData(userId, {
+        title: 'My Instance',
+        items: [
+          { title: 'Step 1', description: 'Do step 1' },
+          { title: 'Step 2' },
+        ],
+      });
+
+      expect(instance.checklistId).toBeNull();
+      expect(instance.createdBy).toBe(userId);
+      expect(instance.title).toBe('My Instance');
+      expect(instance.items).toHaveLength(2);
+      expect(instance.items[0].title).toBe('Step 1');
+      expect(instance.items[0].description).toBe('Do step 1');
+      expect(instance.items[0].completed).toBeNull();
+      expect(instance.items[1].title).toBe('Step 2');
+      expect(instance.items[1].description).toBeUndefined();
+      expect(instance.items[1].completed).toBeNull();
+    });
   });
 
   describe('createInstance', () => {
