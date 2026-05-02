@@ -17,6 +17,7 @@ import { Response } from 'express';
 import { CompleteItemDto } from './dto/complete-item.dto';
 import { IncompleteItemDto } from './dto/incomplete-item.dto';
 import { ReplaceChecklistInstanceDto } from './dto/replace-checklist-instance.dto';
+import { ChecklistController } from './checklist.controller';
 
 @Controller('checklist-instances')
 export class ChecklistInstanceController {
@@ -29,12 +30,17 @@ export class ChecklistInstanceController {
   ) {
     const instance = await this.instanceService.findOne(instanceId);
 
-    const resource = linkFactory
-      .buildResource()
-      .withRel(
-        'checklist',
-        linkFactory.toAbsolute(`/checklists/${instance.checklistId}`),
+    const resource = linkFactory.buildResource();
+    if (instance.checklistId) {
+      resource.withRel(
+        'related',
+        toHandler(ChecklistController, 'findOne', {
+          name: 'checklist',
+          title: instance.checklistId,
+          params: { id: instance.checklistId },
+        }),
       );
+    }
 
     const incompleteItems = instance.items.filter((item) => !item.completed);
     if (incompleteItems.length > 0) {
