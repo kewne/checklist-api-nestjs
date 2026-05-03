@@ -18,6 +18,9 @@ import { CompleteItemDto } from './dto/complete-item.dto';
 import { IncompleteItemDto } from './dto/incomplete-item.dto';
 import { ReplaceChecklistInstanceDto } from './dto/replace-checklist-instance.dto';
 import { ChecklistController } from './checklist.controller';
+import { User } from '@app/auth/user.decorator';
+import { AuthUser } from '@app/auth/auth.guard';
+import { UserChecklistInstanceController } from './user-checklist-instance.controller';
 
 @Controller('checklist-instances')
 export class ChecklistInstanceController {
@@ -26,6 +29,7 @@ export class ChecklistInstanceController {
   @Get(':instanceId')
   async findOne(
     @Param('instanceId') instanceId: string,
+    @User() user: AuthUser,
     @Hateoas() linkFactory: NestLinkFactory,
   ) {
     const instance = await this.instanceService.findOne(instanceId);
@@ -41,6 +45,18 @@ export class ChecklistInstanceController {
         }),
       );
     }
+
+    resource.withRel(
+      'create-from',
+      toHandler(
+        UserChecklistInstanceController,
+        'createChecklistFromInstance',
+        {
+          name: 'checklist',
+          params: { userId: user.uid, instanceId },
+        },
+      ),
+    );
 
     const incompleteItems = instance.items.filter((item) => !item.completed);
     if (incompleteItems.length > 0) {

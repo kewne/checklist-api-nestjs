@@ -77,7 +77,9 @@ describe('UserChecklistController', () => {
         {
           id: '1',
           title: 'Checklist 1',
-          items: [{ id: 'item-1', title: 'Item 1', description: 'Description 1' }],
+          items: [
+            { id: 'item-1', title: 'Item 1', description: 'Description 1' },
+          ],
           createdBy: userId,
           createdAt: new Date(),
           updatedAt: new Date(),

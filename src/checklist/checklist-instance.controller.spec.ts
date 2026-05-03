@@ -5,6 +5,8 @@ import { ConflictException, NotFoundException } from '@nestjs/common';
 import { HateoasModule } from '../hateoas/hateoas.module';
 import { NestExpressApplication } from '@nestjs/platform-express';
 import * as request from 'supertest';
+import { APP_GUARD } from '@nestjs/core';
+import { MockAuthGuard } from '../auth/auth.guard.mock';
 
 describe('ChecklistInstanceController', () => {
   let app: NestExpressApplication;
@@ -24,6 +26,10 @@ describe('ChecklistInstanceController', () => {
         {
           provide: InstanceService,
           useValue: service,
+        },
+        {
+          provide: APP_GUARD,
+          useValue: new MockAuthGuard(() => ({ uid: 'test-user-id' })),
         },
       ],
     }).compile();
@@ -65,9 +71,12 @@ describe('ChecklistInstanceController', () => {
         unknown
       >;
       expect(links.self).toBeDefined();
-      expect(links.checklist).toBeDefined();
-      const checklistLink = links.checklist as Record<string, unknown>;
-      expect(checklistLink.href as string).toMatch(/\/checklists\/123$/);
+      expect(links['create-from']).toBeDefined();
+      const createFromLink = links['create-from'] as Record<string, unknown>;
+      expect(createFromLink.name).toBe('checklist');
+      expect(createFromLink.href as string).toMatch(
+        /\/checklist-instances\/.*\/create-checklist/,
+      );
     });
 
     it('should include mark-incomplete-item links for completed items', async () => {
