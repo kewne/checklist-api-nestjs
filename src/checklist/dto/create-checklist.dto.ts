@@ -1,4 +1,10 @@
-import { IsNotEmpty, IsString, IsArray, ValidateNested, IsOptional } from 'class-validator';
+import {
+  IsNotEmpty,
+  IsString,
+  IsArray,
+  ValidateNested,
+  IsOptional,
+} from 'class-validator';
 import { Type } from 'class-transformer';
 
 export class CreateItemDto {
@@ -6,7 +12,6 @@ export class CreateItemDto {
   @IsString()
   title: string;
 
-  @IsNotEmpty()
   @IsString()
   description: string;
 }
