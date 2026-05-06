@@ -1,7 +1,17 @@
-import { Body, Controller, Delete, Get, Param, Put, UsePipes, ValidationPipe } from '@nestjs/common';
+import {
+  Body,
+  Controller,
+  Delete,
+  Get,
+  Param,
+  Put,
+  UsePipes,
+  ValidationPipe,
+} from '@nestjs/common';
 import { ChecklistService } from './checklist.service';
 import { ReplaceChecklistDto } from './dto/update-checklist.dto';
-import { Hateoas, NestLinkFactory } from '@app/hateoas-nest';
+import { Hateoas, NestLinkFactory, toHandler } from '@app/hateoas-nest';
+import { CreateInstanceController } from './create-instance.controller';
 
 @Controller('checklists')
 export class ChecklistController {
@@ -19,8 +29,13 @@ export class ChecklistController {
     const resource = linkFactory
       .buildResource()
       .withRel(
-        'instances',
-        linkFactory.toAbsolute(`/checklists/${id}/instances`),
+        'create-from',
+        toHandler(CreateInstanceController, 'createInstance', {
+          name: 'instance',
+          params: {
+            id: checklist.id,
+          },
+        }),
       )
       .toResource(checklist);
     return resource;

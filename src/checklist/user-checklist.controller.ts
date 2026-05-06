@@ -13,7 +13,7 @@ import { validate } from 'class-validator';
 import { ChecklistService } from './checklist.service';
 import { CreateChecklistDto } from './dto/create-checklist.dto';
 import { Response } from 'express';
-import { Hateoas, NestLinkFactory } from '@app/hateoas-nest';
+import { Hateoas, NestLinkFactory, toHandler } from '@app/hateoas-nest';
 import { ChecklistController } from './checklist.controller';
 import { DecodeBase64JsonPipe } from '@app/common/pipes';
 
@@ -66,12 +66,14 @@ export class UserChecklistController {
       .buildResource()
       .withRel(
         'items',
-        ...checklists.map((checklist) => ({
-          href: linkFactory.toHandler(ChecklistController, 'findOne', {
-            id: checklist.id,
+        ...checklists.map((checklist) =>
+          toHandler(ChecklistController, 'findOne', {
+            name: checklist.title,
+            params: {
+              id: checklist.id,
+            },
           }),
-          name: checklist.title,
-        })),
+        ),
       )
       .toResource({});
 

@@ -9,10 +9,10 @@ import {
 export class DecodeBase64JsonPipe<T>
   implements PipeTransform<string | undefined, T | undefined>
 {
-  // eslint-disable-next-line @typescript-eslint/no-unused-vars
   transform(
     value: string | undefined,
-    metadata: ArgumentMetadata,
+    // eslint-disable-next-line @typescript-eslint/no-unused-vars
+    _: ArgumentMetadata,
   ): T | undefined {
     // If no value provided, return undefined
     if (!value) {
