@@ -13,12 +13,12 @@ export class UserChecklistInstanceController {
 
   @Post()
   async createInstance(
-    @User() user: AuthUser,
+    @Param('userId') userId: string,
     @Body() dto: CreateChecklistInstanceFromDataDto,
     @Res({ passthrough: true }) res: Response,
     @Hateoas() linkFactory: NestLinkFactory,
   ) {
-    const instance = await this.instanceService.createFromData(user.uid, dto);
+    const instance = await this.instanceService.createFromData(userId, dto);
     res
       .status(201)
       .setHeader(
