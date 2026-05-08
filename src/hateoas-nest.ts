@@ -1,8 +1,8 @@
 import { createParamDecorator, ExecutionContext, Type } from '@nestjs/common';
+import { PATH_METADATA } from '@nestjs/common/constants';
+import { ApplicationConfig, ModuleRef, Reflector } from '@nestjs/core';
 import { RoutePathFactory } from '@nestjs/core/router/route-path-factory';
 import { Request } from 'express';
-import { ApplicationConfig, ModuleRef, Reflector } from '@nestjs/core';
-import { PATH_METADATA } from '@nestjs/common/constants';
 import { BaseUrlResourceBuilder, LinkObject, LinkOptions } from './hateoas';
 import { MODULE_KEY, REFLECTOR_KEY } from './hateoas/hateoas.interceptor';
 
@@ -42,8 +42,12 @@ export class NestLinkFactory {
   public toHandler<C>(
     controller: Type<C>,
     handler: MaybeHandlerFunction<C>,
-    params?: Record<string, string | number>,
+    options?: {
+      params?: Record<string, string | number>;
+      query?: Record<string, string>;
+    },
   ): string {
+    const { params, query } = options ?? {};
     const [href] = this.routePathFactory.create({
       ctrlPath: this.reflector.get<string | undefined>(
         PATH_METADATA,
@@ -67,7 +71,14 @@ export class NestLinkFactory {
       });
     }
 
-    return new URL(finalHref, this.baseUrl).toString();
+    const url = new URL(finalHref, this.baseUrl);
+    if (query) {
+      Object.entries(query).forEach(([key, value]) => {
+        url.searchParams.set(key, value);
+      });
+    }
+
+    return url.toString();
   }
 
   public toAbsolute(relativePath: string): LinkObject {
@@ -85,12 +96,16 @@ type HandlerLink<C> = Omit<LinkObject, 'href'> & {
   controller: Type<C>;
   handler: MaybeHandlerFunction<C>;
   params?: Record<string, string | number>;
+  query?: Record<string, string>;
 };
 
 export function toHandler<C>(
   controller: Type<C>,
   handler: MaybeHandlerFunction<C>,
-  options?: LinkOptions & { params?: Record<string, string | number> },
+  options?: LinkOptions & {
+    params?: Record<string, string | number>;
+    query?: Record<string, string>;
+  },
 ): HandlerLink<C> {
   return {
     ...options,
@@ -110,7 +125,7 @@ export class NestResourceBuilder extends BaseUrlResourceBuilder {
   }
 
   private addLinkToHandler<C>(rel: string, options: HandlerLink<C>): this {
-    const { controller, handler, params, ...linkProps } = options;
+    const { controller, handler, params, query, ...linkProps } = options;
     const [href] = this.routePathFactory.create({
       ctrlPath: this.reflector.get<string | undefined>(
         PATH_METADATA,
@@ -129,6 +144,11 @@ export class NestResourceBuilder extends BaseUrlResourceBuilder {
       Object.entries(params).forEach(([key, value]) => {
         finalHref = finalHref.replace(`:${key}`, String(value));
       });
+    }
+
+    if (query) {
+      const queryStr = new URLSearchParams(query).toString();
+      finalHref = finalHref + (queryStr ? '?' + queryStr : '');
     }
 
     const linkObj: LinkObject = {

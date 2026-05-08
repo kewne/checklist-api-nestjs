@@ -334,10 +334,12 @@ describe('InstanceService', () => {
         id: instance.id,
         checklistId: instance.checklistId,
         createdBy: instance.createdBy,
+        // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
         createdAt: expect.any(Object),
         title: 'New Title',
         items: [
           {
+            // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
             id: expect.any(String),
             title: 'Brand New Item',
             completed: null,

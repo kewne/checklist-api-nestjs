@@ -50,7 +50,7 @@ export class UserChecklistController {
     res.setHeader(
       'location',
       linkFactory.toHandler(ChecklistController, 'findOne', {
-        id: checklist.id,
+        params: { id: checklist.id },
       }),
     );
   }
@@ -68,7 +68,7 @@ export class UserChecklistController {
         'items',
         ...checklists.map((checklist) => ({
           href: linkFactory.toHandler(ChecklistController, 'findOne', {
-            id: checklist.id,
+            params: { id: checklist.id },
           }),
           name: checklist.title,
         })),

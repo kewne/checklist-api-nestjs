@@ -1,10 +1,10 @@
-import { Body, Controller, Get, Param, Post, Res } from '@nestjs/common';
-import { InstanceService } from './instance.service';
-import { Hateoas, NestLinkFactory } from '@app/hateoas-nest';
-import { User } from '@app/auth/user.decorator';
 import { AuthUser } from '@app/auth/auth.guard';
-import { CreateChecklistInstanceFromDataDto } from './dto/create-checklist-instance-from-data.dto';
+import { User } from '@app/auth/user.decorator';
+import { Hateoas, NestLinkFactory } from '@app/hateoas-nest';
+import { Body, Controller, Get, Param, Post, Res } from '@nestjs/common';
 import { Response } from 'express';
+import { CreateChecklistInstanceFromDataDto } from './dto/create-checklist-instance-from-data.dto';
+import { InstanceService } from './instance.service';
 import { UserChecklistController } from './user-checklist.controller';
 
 @Controller('users/:userId/checklist-instances')
@@ -56,31 +56,28 @@ export class UserChecklistInstanceController {
     @Res({ passthrough: true }) res: Response,
     @Hateoas() linkFactory: NestLinkFactory,
   ) {
-    // Fetch the instance
     const instance = await this.instanceService.findOne(instanceId);
 
-    // Transform instance items to CreateItemDto format
     const items = instance.items.map((item) => ({
       title: item.title,
       description: item.description || '',
     }));
 
-    // Create the base DTO
     const baseDto = {
       title: `${instance.title} (snapshot)`,
       items,
     };
 
-    // Encode to base64
-    const encoded = Buffer.from(JSON.stringify(baseDto)).toString('base64');
-
-    // Redirect to create endpoint with base param using toHandler
     const createLink = linkFactory.toHandler(
       UserChecklistController,
       'create',
       {
-        userId: user.uid,
-        base: encoded,
+        params: {
+          userId: user.uid,
+        },
+        query: {
+          base: Buffer.from(JSON.stringify(baseDto)).toString('base64'),
+        },
       },
     );
     res.statusCode = 307;
