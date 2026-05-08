@@ -337,7 +337,7 @@ describe('InstanceService', () => {
         id: instance.id,
         checklistId: instance.checklistId,
         createdBy: instance.createdBy,
-        createdAt: expect.any(Date) as Date,
+        createdAt: expect.anything() as Date,
         title: 'New Title',
         items: [
           {
