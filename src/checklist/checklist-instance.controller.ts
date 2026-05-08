@@ -110,7 +110,9 @@ export class ChecklistInstanceController {
     res.statusCode = 303;
     res.setHeader(
       'location',
-      linkFactory.toAbsolute(`/checklist-instances/${instanceId}`).href,
+      linkFactory.toHandler(ChecklistInstanceController, 'findOne', {
+        params: { instanceId },
+      }),
     );
   }
 
@@ -127,7 +129,9 @@ export class ChecklistInstanceController {
     res.statusCode = 303;
     res.setHeader(
       'location',
-      linkFactory.toAbsolute(`/checklist-instances/${instanceId}`).href,
+      linkFactory.toHandler(ChecklistInstanceController, 'findOne', {
+        params: { instanceId },
+      }),
     );
   }
 
