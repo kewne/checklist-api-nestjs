@@ -72,7 +72,7 @@ describe('CreateInstanceController', () => {
         'test-user-id',
         'My Title',
       );
-      expect(response.headers['location']).toMatch(
+      expect(response.headers.location).toMatch(
         /\/checklist-instances\/456$/,
       );
     });
@@ -96,7 +96,7 @@ describe('CreateInstanceController', () => {
         'test-user-id',
         undefined,
       );
-      expect(response.headers['location']).toMatch(
+      expect(response.headers.location).toMatch(
         /\/checklist-instances\/456$/,
       );
     });

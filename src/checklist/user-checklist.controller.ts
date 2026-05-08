@@ -41,7 +41,7 @@ export class UserChecklistController {
     const errors = await validate(instance);
     if (errors.length > 0) {
       const errorMessages = errors
-        .flatMap((e) => Object.values(e.constraints || {}))
+        .flatMap((e) => Object.values(e.constraints ?? {}))
         .join(', ');
       throw new BadRequestException(`Validation failed: ${errorMessages}`);
     }

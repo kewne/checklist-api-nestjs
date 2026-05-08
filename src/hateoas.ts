@@ -1,28 +1,23 @@
 import { Expose } from 'class-transformer';
 
-type Wrapped = Record<string, any>;
+type Wrapped = object | void;
 
 export type LinkObject = { href: string } & LinkOptions;
-export type LinkOptions = {
+export interface LinkOptions {
   name?: string;
   title?: string;
-};
-export type PlainResource = {
-  _links: {
-    [rel: string]: LinkObject | LinkObject[];
-  };
-  [p: string]: any;
-};
+}
+export interface PlainResource {
+  _links: Record<string, LinkObject | LinkObject[]>;
+  [p: string]: unknown;
+}
 
-export class Resource<T extends Wrapped = any> {
+export class Resource<T extends Wrapped = void> {
   private wrapped?: T;
   @Expose({ name: '_links' })
-  private links: { [rel: string]: LinkObject | LinkObject[] };
+  private links: Record<string, LinkObject | LinkObject[]>;
 
-  constructor(
-    links: { [rel: string]: LinkObject | LinkObject[] },
-    wrapped?: T,
-  ) {
+  constructor(links: Record<string, LinkObject | LinkObject[]>, wrapped?: T) {
     this.wrapped = wrapped;
     this.links = links;
   }
@@ -41,7 +36,7 @@ export interface ResourceBuilder {
 }
 
 export class BaseUrlResourceBuilder implements ResourceBuilder {
-  private links: { [rel: string]: LinkObject | LinkObject[] } = {};
+  private links: Record<string, LinkObject | LinkObject[]> = {};
   public constructor(
     private baseUrl: string,
     self: string,

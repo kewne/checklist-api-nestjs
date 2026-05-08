@@ -1,31 +1,20 @@
-import {
-  ArgumentMetadata,
-  BadRequestException,
-  Injectable,
-  PipeTransform,
-} from '@nestjs/common';
+import { BadRequestException, Injectable, PipeTransform } from '@nestjs/common';
 
 @Injectable()
 export class DecodeBase64JsonPipe<T>
   implements PipeTransform<string | undefined, T | undefined>
 {
-  transform(value: string | undefined, _: ArgumentMetadata): T | undefined {
-    // If no value provided, return undefined
+  transform(value: string | undefined): T | undefined {
     if (!value) {
       return undefined;
     }
 
-    // Only process strings
     if (typeof value !== 'string') {
       throw new BadRequestException('Base64 value must be a string');
     }
 
     try {
-      // Decode base64 string
       const decoded = Buffer.from(value, 'base64').toString('utf-8');
-
-      // Parse JSON
-
       const parsed = JSON.parse(decoded) as T;
 
       return parsed;

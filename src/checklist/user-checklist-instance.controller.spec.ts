@@ -156,7 +156,7 @@ describe('UserChecklistInstanceController', () => {
         .expect(201);
 
       expect(serviceMock.createFromData).toHaveBeenCalledWith(userId, dto);
-      expect(response.headers['location']).toMatch(
+      expect(response.headers.location).toMatch(
         /\/checklist-instances\/new-instance-id$/,
       );
     });

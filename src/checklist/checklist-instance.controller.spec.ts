@@ -136,7 +136,7 @@ describe('ChecklistInstanceController', () => {
         'item-1',
         undefined,
       );
-      expect(response.headers['location']).toMatch(
+      expect(response.headers.location).toMatch(
         /\/checklist-instances\/456$/,
       );
     });
@@ -198,7 +198,7 @@ describe('ChecklistInstanceController', () => {
         .expect(303);
 
       expect(service.markItemIncomplete).toHaveBeenCalledWith('456', 'item-1');
-      expect(response.headers['location']).toMatch(
+      expect(response.headers.location).toMatch(
         /\/checklist-instances\/456$/,
       );
     });

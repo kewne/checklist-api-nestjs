@@ -66,7 +66,7 @@ describe('UserChecklistController', () => {
         .expect(201);
 
       expect(serviceMock.create).toHaveBeenCalledWith(createDto, userId);
-      expect(response.headers['location']).toMatch(/\/checklists\/123$/);
+      expect(response.headers.location).toMatch(/\/checklists\/123$/);
     });
   });
 

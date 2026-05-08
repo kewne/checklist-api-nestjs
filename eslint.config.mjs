@@ -1,16 +1,13 @@
 // @ts-check
-import eslint from '@eslint/js';
-import eslintConfigPrettier from 'eslint-config-prettier/flat';
+import js from '@eslint/js';
+import { defineConfig } from 'eslint/config';
 import globals from 'globals';
 import tseslint from 'typescript-eslint';
 
-export default tseslint.config(
-  {
-    ignores: ['eslint.config.mjs'],
-  },
-  eslint.configs.recommended,
-  ...tseslint.configs.recommendedTypeChecked,
-  eslintConfigPrettier,
+export default defineConfig(
+  js.configs.recommended,
+  tseslint.configs.recommendedTypeChecked,
+  tseslint.configs.stylisticTypeChecked,
   {
     languageOptions: {
       globals: {
@@ -24,18 +21,28 @@ export default tseslint.config(
       },
     },
   },
-  {
-    rules: {
-      '@typescript-eslint/no-explicit-any': 'off',
-      '@typescript-eslint/no-floating-promises': 'warn',
-      '@typescript-eslint/no-unsafe-argument': 'warn',
-      '@typescript-eslint/no-unused-vars': [
-        'error',
-        {
-          args: 'all',
-          argsIgnorePattern: '^_',
-        },
-      ],
-    },
-  },
 );
+// export default tseslint.config(
+// {
+//   ignores: ['eslint.config.mjs'],
+// },
+
+// eslintConfigPrettier,
+// {
+
+// },
+// {
+//   rules: {
+//     '@typescript-eslint/no-explicit-any': 'off',
+//     '@typescript-eslint/no-floating-promises': 'warn',
+//     '@typescript-eslint/no-unsafe-argument': 'warn',
+//     '@typescript-eslint/no-unused-vars': [
+//       'error',
+//       {
+//         args: 'all',
+//         argsIgnorePattern: '^_',
+//       },
+//     ],
+//   },
+// },
+// );

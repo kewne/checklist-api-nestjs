@@ -60,7 +60,7 @@ export class UserChecklistInstanceController {
 
     const items = instance.items.map((item) => ({
       title: item.title,
-      description: item.description || '',
+      description: item.description ?? '',
     }));
 
     const baseDto = {

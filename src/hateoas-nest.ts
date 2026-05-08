@@ -41,7 +41,7 @@ export class NestLinkFactory {
 
   public toHandler<C>(
     controller: Type<C>,
-    handler: MaybeHandlerFunction<C>,
+    handler: ClassMethodName<C>,
     options?: {
       params?: Record<string, string | number>;
       query?: Record<string, string>;
@@ -88,30 +88,36 @@ export class NestLinkFactory {
   }
 }
 
-export type MaybeHandlerFunction<C> = {
-  [H in keyof C]-?: C[H] extends (...args: never) => unknown ? H : never;
-}[keyof C];
+export type MethodsOnly<C> = {
+  [Property in keyof C as C[Property] extends (...args: never[]) => void
+    ? Property
+    : never]: C[Property];
+};
 
-type HandlerLink<C> = Omit<LinkObject, 'href'> & {
-  controller: Type<C>;
-  handler: MaybeHandlerFunction<C>;
+export type ClassMethodName<C> = keyof MethodsOnly<C>;
+
+declare const __handlerLink: unique symbol;
+type HandlerLink = Omit<LinkObject, 'href'> & {
+  [__handlerLink]: void;
+  controller: Type;
+  handler: string | number | symbol;
   params?: Record<string, string | number>;
   query?: Record<string, string>;
 };
 
 export function toHandler<C>(
   controller: Type<C>,
-  handler: MaybeHandlerFunction<C>,
+  handler: ClassMethodName<C>,
   options?: LinkOptions & {
     params?: Record<string, string | number>;
     query?: Record<string, string>;
   },
-): HandlerLink<C> {
+): HandlerLink {
   return {
     ...options,
     controller,
     handler,
-  };
+  } as HandlerLink;
 }
 
 export class NestResourceBuilder extends BaseUrlResourceBuilder {
@@ -124,7 +130,7 @@ export class NestResourceBuilder extends BaseUrlResourceBuilder {
     super(baseUrl, selfUrl);
   }
 
-  private addLinkToHandler<C>(rel: string, options: HandlerLink<C>): this {
+  private addLinkToHandler(rel: string, options: HandlerLink): this {
     const { controller, handler, params, query, ...linkProps } = options;
     const [href] = this.routePathFactory.create({
       ctrlPath: this.reflector.get<string | undefined>(
@@ -158,7 +164,7 @@ export class NestResourceBuilder extends BaseUrlResourceBuilder {
     return this.addLink(rel, linkObj);
   }
 
-  withRel(rel: string, ...links: (LinkObject | HandlerLink<any>)[]): this {
+  withRel(rel: string, ...links: (LinkObject | HandlerLink)[]): this {
     links.forEach((link) => {
       if ('href' in link) {
         return super.addLink(rel, link);

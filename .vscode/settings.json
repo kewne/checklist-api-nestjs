@@ -4,7 +4,7 @@
   },
   "editor.codeActionsOnSave": {
     "source.fixAll.prettier": "explicit",
-    "source.removeUnused.ts": "explicit",
+    "source.removeUnused.ts": "never",
     "source.sort.json": "explicit"
   },
   "editor.defaultFormatter": "esbenp.prettier-vscode",
