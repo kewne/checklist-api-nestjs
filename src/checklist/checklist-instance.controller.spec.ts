@@ -274,7 +274,7 @@ describe('ChecklistInstanceController', () => {
     it('should return 400 when an item title is missing', async () => {
       await request(app.getHttpServer())
         .put('/checklist-instances/456')
-        .send({ title: 'Title', items: [{ id: 'item-1' }] })
+        .send({ title: 'Title', items: [{ name: 'item-1' }] })
         .expect(400);
 
       expect(service.replace).not.toHaveBeenCalled();

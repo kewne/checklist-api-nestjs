@@ -152,7 +152,7 @@ export class InstanceRepository {
       const existing = doc.data() as Omit<ChecklistInstanceDocument, 'id'>;
 
       const items: InstanceItem[] = dto.items.map((itemDto) => {
-        const itemId = itemDto.id ?? randomUUID();
+        const itemId = itemDto.name ?? randomUUID();
         const existingItem = existing.items.find((i) => i.id === itemId);
         return {
           id: itemId,

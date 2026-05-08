@@ -10,7 +10,7 @@ import { Type } from 'class-transformer';
 export class ReplaceInstanceItemDto {
   @IsOptional()
   @IsString()
-  id?: string;
+  name?: string;
 
   @IsNotEmpty()
   @IsString()

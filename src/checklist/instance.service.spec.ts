@@ -287,8 +287,8 @@ describe('InstanceService', () => {
       const result = await service.replace(original.id, {
         title: 'New Title',
         items: [
-          { id: item1.id, title: 'Renamed Task 1' },
-          { id: item2.id, title: 'Renamed Task 2' },
+          { name: item1.id, title: 'Renamed Task 1' },
+          { name: item2.id, title: 'Renamed Task 2' },
         ],
       });
 
