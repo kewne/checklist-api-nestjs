@@ -95,7 +95,7 @@ describe('InstanceService', () => {
       expect(instance.items).toHaveLength(1);
       expect(instance.items[0].title).toBe('Step 1');
       expect(instance.items[0].completed).toBeNull();
-    })
+    });
 
     it('should throw NotFoundException for unknown checklist', async () => {
       await expect(
@@ -114,6 +114,7 @@ describe('InstanceService', () => {
 
       const items = await Promise.all(
         ['Oldest', 'Middle', 'West'].map(async (name) => {
+          await new Promise((resolve) => setTimeout(resolve, 1));
           const id = await instanceRepository.create(
             checklist.id,
             userId,
