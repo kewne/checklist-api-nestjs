@@ -4,7 +4,7 @@ import { ChecklistService } from './checklist.service';
 import { HateoasModule } from '../hateoas/hateoas.module';
 import { NestExpressApplication } from '@nestjs/platform-express';
 import * as request from 'supertest';
-import { PlainResource, LinkObject } from '@app/hateoas';
+import { PlainResource } from '@app/hateoas';
 import { NotFoundException } from '@nestjs/common';
 
 describe('ChecklistController', () => {
@@ -75,13 +75,17 @@ describe('ChecklistController', () => {
       ]);
       expect(response.body).toHaveProperty('_links');
       const resource = response.body as PlainResource;
-      expect(resource._links).toHaveProperty('self');
-      expect(resource._links).toHaveProperty('instances');
-      expect(resource._links.instances).toHaveProperty('href');
-      expect(Array.isArray(resource._links)).toBe(false);
-      expect((resource._links.instances as LinkObject).href).toMatch(
-        /\/checklists\/123\/instances$/,
-      );
+      expect(resource._links).toEqual<PlainResource['_links']>({
+        self: {
+          // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
+          href: expect.stringMatching(/checklists\/123$/),
+        },
+        'create-from': {
+          name: 'instance',
+          // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
+          href: expect.stringMatching(/checklists\/123$/),
+        },
+      });
     });
 
     it('should return a checklist with empty items array when no items exist', async () => {
