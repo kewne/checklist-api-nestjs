@@ -38,7 +38,7 @@ export class InstanceRepository {
     userId: string,
     title: string,
     items: Item[],
-  ): Promise<ChecklistInstanceDocument> {
+  ): Promise<string> {
     const now = new Date();
     const instanceData = {
       checklistId,
@@ -52,17 +52,14 @@ export class InstanceRepository {
       .collection(this.collection)
       .add(instanceData);
 
-    return {
-      id: docRef.id,
-      ...instanceData,
-    };
+    return docRef.id;
   }
 
   async createFromData(
     userId: string,
     title: string,
     items: CreateInstanceItemFromDataDto[],
-  ): Promise<ChecklistInstanceDocument> {
+  ): Promise<string> {
     const now = new Date();
     const instanceData = {
       checklistId: null,
@@ -83,10 +80,7 @@ export class InstanceRepository {
       .collection(this.collection)
       .add(instanceData);
 
-    return {
-      id: docRef.id,
-      ...instanceData,
-    };
+    return docRef.id;
   }
 
   async findById(id: string): Promise<ChecklistInstanceDocument | null> {
@@ -136,17 +130,14 @@ export class InstanceRepository {
     await this.firestore.collection(this.collection).doc(id).delete();
   }
 
-  async replace(
-    id: string,
-    dto: ReplaceChecklistInstanceDto,
-  ): Promise<ChecklistInstanceDocument | null> {
+  async replace(id: string, dto: ReplaceChecklistInstanceDto): Promise<void> {
     const docRef = this.firestore.collection(this.collection).doc(id);
 
-    return await this.firestore.runTransaction(async (transaction) => {
+    await this.firestore.runTransaction(async (transaction) => {
       const doc = await transaction.get(docRef);
 
       if (!doc.exists) {
-        return null;
+        throw new NotFoundException();
       }
 
       const existing = doc.data() as Omit<ChecklistInstanceDocument, 'id'>;
@@ -167,14 +158,6 @@ export class InstanceRepository {
       };
 
       transaction.update(docRef, newData);
-
-      return {
-        id,
-        checklistId: existing.checklistId,
-        createdBy: existing.createdBy,
-        createdAt: existing.createdAt,
-        ...newData,
-      };
     });
   }
 

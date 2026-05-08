@@ -118,10 +118,8 @@ describe('UserChecklistInstanceController', () => {
     });
 
     it('should return empty items array when user has no instances', async () => {
-      // Arrange
       (serviceMock.findCreatedBy as jest.Mock).mockResolvedValue([]);
 
-      // Act & Assert
       const response = await request(app.getHttpServer())
         .get(`/users/${userId}/checklist-instances`)
         .expect(200);
@@ -135,23 +133,14 @@ describe('UserChecklistInstanceController', () => {
 
   describe('POST /users/:userId/checklist-instances', () => {
     it('should create an instance and return 201 with location header', async () => {
-      // Arrange
       const dto = {
         title: 'My Instance',
         items: [{ title: 'Item 1' }],
       };
-      serviceMock.createFromData.mockResolvedValue({
-        id: 'new-instance-id',
-        checklistId: null,
-        createdBy: userId,
-        createdAt: new Date(),
-        title: 'My Instance',
-        items: [{ id: 'item-uuid', title: 'Item 1', completed: null }],
-      });
+      serviceMock.createFromData.mockResolvedValue('new-instance-id');
 
-      // Act & Assert
       const response = await request(app.getHttpServer())
-        .post(`/users/${userId}/checklist-instances`)
+        .post(`/users/${userId}/checklist-instances/create`)
         .send(dto)
         .expect(201);
 

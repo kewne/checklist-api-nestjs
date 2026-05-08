@@ -54,13 +54,7 @@ describe('CreateInstanceController', () => {
 
   describe('POST /checklists/:id', () => {
     it('should create instance with provided title and return 201 with location header', async () => {
-      service.createInstance.mockResolvedValue({
-        id: '456',
-        checklistId: '123',
-        createdBy: 'test-user-id',
-        title: 'My Title',
-        items: [],
-      });
+      service.createInstance.mockResolvedValue('456');
 
       const response = await request(app.getHttpServer())
         .post('/checklists/123')
@@ -78,13 +72,7 @@ describe('CreateInstanceController', () => {
     });
 
     it('should create instance without title and return 201 with location header', async () => {
-      service.createInstance.mockResolvedValue({
-        id: '456',
-        checklistId: '123',
-        createdBy: 'test-user-id',
-        title: 'My Checklist - 2026-04-19T00:00:00.000Z',
-        items: [],
-      });
+      service.createInstance.mockResolvedValue('456');
 
       const response = await request(app.getHttpServer())
         .post('/checklists/123')

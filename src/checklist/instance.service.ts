@@ -19,7 +19,7 @@ export class InstanceService {
     checklistId: string,
     userId: string,
     title?: string,
-  ): Promise<ChecklistInstanceDocument> {
+  ): Promise<string> {
     const checklist = await this.checklistService.findOne(checklistId);
     if (!checklist) {
       throw new NotFoundException(`Checklist with id ${checklistId} not found`);
@@ -39,7 +39,7 @@ export class InstanceService {
   async createFromData(
     userId: string,
     dto: CreateChecklistInstanceFromDataDto,
-  ): Promise<ChecklistInstanceDocument> {
+  ) {
     return this.instanceRepository.createFromData(userId, dto.title, dto.items);
   }
 
@@ -83,13 +83,7 @@ export class InstanceService {
   async replace(
     instanceId: string,
     dto: ReplaceChecklistInstanceDto,
-  ): Promise<ChecklistInstanceDocument> {
-    const instance = await this.instanceRepository.replace(instanceId, dto);
-    if (!instance) {
-      throw new NotFoundException(
-        `Checklist instance with id ${instanceId} not found`,
-      );
-    }
-    return instance;
+  ): Promise<void> {
+    return this.instanceRepository.replace(instanceId, dto);
   }
 }
