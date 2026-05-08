@@ -1,24 +1,5 @@
 {
-  "name": "checklist-api-nestjs",
-  "version": "0.0.1",
-  "description": "",
   "author": "",
-  "private": true,
-  "license": "UNLICENSED",
-  "scripts": {
-    "build": "nest build",
-    "format": "prettier --write \"src/**/*.ts\" \"test/**/*.ts\"",
-    "start": "nest start",
-    "start:dev": "nest start --watch",
-    "start:debug": "nest start --debug --watch",
-    "start:prod": "node dist/main",
-    "lint": "eslint \"{src,apps,libs,test}/**/*.ts\" --fix",
-    "test": "jest",
-    "test:watch": "jest --watch",
-    "test:cov": "jest --coverage",
-    "test:debug": "node --inspect-brk -r tsconfig-paths/register -r ts-node/register node_modules/.bin/jest --runInBand",
-    "test:e2e": "jest --config ./test/jest-e2e.json"
-  },
   "dependencies": {
     "@casl/ability": "^6.8.1",
     "@google-cloud/firestore": "^8.3.0",
@@ -34,6 +15,7 @@
     "rxjs": "^7.8.2",
     "uuid": "^13.0.0"
   },
+  "description": "",
   "devDependencies": {
     "@eslint/eslintrc": "^3.3.1",
     "@eslint/js": "^9.39.4",
@@ -49,9 +31,10 @@
     "@types/supertest": "^6.0.3",
     "eslint": "^9.39.4",
     "eslint-config-prettier": "^10.1.8",
+    "eslint-plugin-jest": "^29.15.2",
     "firebase": "^12.9.0",
     "globals": "^16.3.0",
-    "jest": "^29.7.0",
+    "jest": "^30.4.1",
     "prettier": "^3.6.2",
     "source-map-support": "^0.5.21",
     "supertest": "^7.1.4",
@@ -63,5 +46,23 @@
     "typescript": "^5.9.3",
     "typescript-eslint": "^8.59.2"
   },
-  "packageManager": "pnpm@10.13.1+sha512.37ebf1a5c7a30d5fabe0c5df44ee8da4c965ca0c5af3dbab28c3a1681b70a256218d05c81c9c0dcf767ef6b8551eb5b960042b9ed4300c59242336377e01cfad"
+  "license": "UNLICENSED",
+  "name": "checklist-api-nestjs",
+  "packageManager": "pnpm@10.13.1+sha512.37ebf1a5c7a30d5fabe0c5df44ee8da4c965ca0c5af3dbab28c3a1681b70a256218d05c81c9c0dcf767ef6b8551eb5b960042b9ed4300c59242336377e01cfad",
+  "private": true,
+  "scripts": {
+    "build": "nest build",
+    "format": "prettier --write \"src/**/*.ts\" \"test/**/*.ts\"",
+    "lint": "eslint \"{src,apps,libs,test}/**/*.ts\" --fix",
+    "start": "nest start",
+    "start:debug": "nest start --debug --watch",
+    "start:dev": "nest start --watch",
+    "start:prod": "node dist/main",
+    "test": "jest",
+    "test:cov": "jest --coverage",
+    "test:debug": "node --inspect-brk -r tsconfig-paths/register -r ts-node/register node_modules/.bin/jest --runInBand",
+    "test:e2e": "jest --config ./test/jest-e2e.json",
+    "test:watch": "jest --watch"
+  },
+  "version": "0.0.1"
 }

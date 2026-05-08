@@ -1,11 +1,11 @@
-import { Test, TestingModule } from '@nestjs/testing';
-import { ChecklistController } from './checklist.controller';
-import { ChecklistService } from './checklist.service';
-import { HateoasModule } from '../hateoas/hateoas.module';
-import { NestExpressApplication } from '@nestjs/platform-express';
-import * as request from 'supertest';
 import { PlainResource } from '@app/hateoas';
 import { NotFoundException } from '@nestjs/common';
+import { NestExpressApplication } from '@nestjs/platform-express';
+import { Test, TestingModule } from '@nestjs/testing';
+import * as request from 'supertest';
+import { HateoasModule } from '../hateoas/hateoas.module';
+import { ChecklistController } from './checklist.controller';
+import { ChecklistService } from './checklist.service';
 
 describe('ChecklistController', () => {
   let app: NestExpressApplication;
@@ -44,7 +44,6 @@ describe('ChecklistController', () => {
 
   describe('GET /checklists/:id', () => {
     it('should return a checklist with HATEOAS links and 200 status when checklist exists', async () => {
-      // Arrange
       const checklist = {
         id: '123',
         title: 'Test Checklist for Retrieval',
@@ -58,7 +57,6 @@ describe('ChecklistController', () => {
 
       (serviceMock.findOne as jest.Mock).mockResolvedValue(checklist);
 
-      // Act & Assert
       const response = await request(app.getHttpServer())
         .get('/checklists/123')
         .expect(200);
@@ -77,30 +75,27 @@ describe('ChecklistController', () => {
       const resource = response.body as PlainResource;
       expect(resource._links).toEqual<PlainResource['_links']>({
         self: {
-          // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
-          href: expect.stringMatching(/checklists\/123$/),
+          href: expect.stringMatching(/checklists\/123$/) as string,
         },
         'create-from': {
           name: 'instance',
-          // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
-          href: expect.stringMatching(/checklists\/123$/),
+          href: expect.stringMatching(/checklists\/123$/) as string,
         },
       });
     });
 
     it('should return a checklist with empty items array when no items exist', async () => {
-      // Arrange
       const checklist = {
         id: '124',
         title: 'Empty Checklist',
         items: [],
         createdAt: new Date(),
         updatedAt: new Date(),
+        createdBy: 'eau',
       };
 
-      (serviceMock.findOne as jest.Mock).mockResolvedValue(checklist);
+      serviceMock.findOne.mockResolvedValue(checklist);
 
-      // Act & Assert
       const response = await request(app.getHttpServer())
         .get('/checklists/124')
         .expect(200);
@@ -109,8 +104,7 @@ describe('ChecklistController', () => {
     });
 
     it('should return null and 200 status when checklist does not exist', async () => {
-      // Arrange
-      (serviceMock.findOne as jest.Mock).mockResolvedValue(null);
+      serviceMock.findOne.mockResolvedValue(null);
 
       // Act & Assert
       const response = await request(app.getHttpServer())

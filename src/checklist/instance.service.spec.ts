@@ -5,7 +5,10 @@ import { randomUUID } from 'crypto';
 import { FirestoreModule } from '../firestore.module';
 import { ChecklistRepository } from './checklist.repository';
 import { ChecklistService } from './checklist.service';
-import { InstanceRepository } from './instance.repository';
+import {
+  ChecklistInstanceDocument,
+  InstanceRepository,
+} from './instance.repository';
 import { InstanceService } from './instance.service';
 
 const EMULATOR_BASE =
@@ -330,17 +333,15 @@ describe('InstanceService', () => {
         items: [{ title: 'Brand New Item' }],
       });
 
-      expect(result).toEqual({
+      expect(result).toEqual<ChecklistInstanceDocument>({
         id: instance.id,
         checklistId: instance.checklistId,
         createdBy: instance.createdBy,
-        // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
-        createdAt: expect.any(Object),
+        createdAt: expect.any(Date) as Date,
         title: 'New Title',
         items: [
           {
-            // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
-            id: expect.any(String),
+            id: expect.any(String) as string,
             title: 'Brand New Item',
             completed: null,
           },
