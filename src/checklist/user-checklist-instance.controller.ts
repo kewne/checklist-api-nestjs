@@ -47,6 +47,12 @@ export class UserChecklistInstanceController {
           }).findOne({ params: { instanceId: instance.id } }),
         ),
       )
+      .withRel(
+        'create',
+        toHandlerCall({
+          controller: UserChecklistInstanceController,
+        }).createInstance({ params: { userId } }),
+      )
       .toResource({});
 
     return resource;
