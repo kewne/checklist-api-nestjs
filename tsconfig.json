@@ -3,10 +3,13 @@
     "allowSyntheticDefaultImports": true,
     "declaration": true,
     "emitDecoratorMetadata": true,
+    "esModuleInterop": true,
     "experimentalDecorators": true,
     "forceConsistentCasingInFileNames": true,
     "incremental": true,
-    "module": "commonjs",
+    "isolatedModules": true,
+    "module": "nodenext",
+    "moduleResolution": "nodenext",
     "noFallthroughCasesInSwitch": false,
     "noImplicitAny": false,
     "outDir": "./dist",
@@ -20,5 +23,6 @@
     "strictNullChecks": true,
     "target": "ES2023",
     "types": ["jest"]
-  }
+  },
+  "exclude": ["node_modules", "dist", "tmp"]
 }

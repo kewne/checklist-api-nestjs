@@ -105,13 +105,41 @@ type HandlerLink = Omit<LinkObject, 'href'> & {
   query?: Record<string, string>;
 };
 
+type ProxiedCalls<C> = {
+  [Property in keyof C]: C[Property] extends (...args: infer ARGS) => unknown
+    ? (args: Pick<HandlerLink, 'params' | 'query'>) => HandlerLink
+    : never;
+};
+
+export type OneLessTuple<C extends unknown[]> = C extends [
+  ...infer OTHER,
+  unknown,
+]
+  ? C | OTHER | OneLessTuple<OTHER>
+  : never;
+
+export function toHandlerCall<C>(
+  options: LinkOptions & {
+    controller: Type<C>;
+  },
+): ProxiedCalls<C> {
+  return new Proxy({} as ProxiedCalls<C>, {
+    get(target, p: string | symbol): () => HandlerLink {
+      return (args?: Pick<HandlerLink, 'params' | 'query'>) =>
+        ({
+          ...options,
+          params: args?.params,
+          query: args?.query,
+          handler: p,
+        }) as HandlerLink;
+    },
+  });
+}
+
 export function toHandler<C>(
   controller: Type<C>,
   handler: ClassMethodName<C>,
-  options?: LinkOptions & {
-    params?: Record<string, string | number>;
-    query?: Record<string, string>;
-  },
+  options?: LinkOptions & Pick<HandlerLink, 'params' | 'query'>,
 ): HandlerLink {
   return {
     ...options,

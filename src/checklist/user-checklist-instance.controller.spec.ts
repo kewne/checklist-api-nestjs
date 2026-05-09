@@ -1,7 +1,7 @@
 import { PlainResource } from '@app/hateoas';
 import { NestExpressApplication } from '@nestjs/platform-express';
 import { Test, TestingModule } from '@nestjs/testing';
-import * as request from 'supertest';
+import request from 'supertest';
 import { HateoasModule } from '../hateoas/hateoas.module';
 import { InstanceService } from './instance.service';
 import { UserChecklistInstanceController } from './user-checklist-instance.controller';

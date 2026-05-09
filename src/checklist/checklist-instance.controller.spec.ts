@@ -4,7 +4,7 @@ import { InstanceService } from './instance.service';
 import { ConflictException, NotFoundException } from '@nestjs/common';
 import { HateoasModule } from '../hateoas/hateoas.module';
 import { NestExpressApplication } from '@nestjs/platform-express';
-import * as request from 'supertest';
+import request from 'supertest';
 import { APP_GUARD } from '@nestjs/core';
 import { MockAuthGuard } from '../auth/auth.guard.mock';
 
@@ -136,9 +136,7 @@ describe('ChecklistInstanceController', () => {
         'item-1',
         undefined,
       );
-      expect(response.headers.location).toMatch(
-        /\/checklist-instances\/456$/,
-      );
+      expect(response.headers.location).toMatch(/\/checklist-instances\/456$/);
     });
 
     it('should pass note to service when provided', async () => {
@@ -198,9 +196,7 @@ describe('ChecklistInstanceController', () => {
         .expect(303);
 
       expect(service.markItemIncomplete).toHaveBeenCalledWith('456', 'item-1');
-      expect(response.headers.location).toMatch(
-        /\/checklist-instances\/456$/,
-      );
+      expect(response.headers.location).toMatch(/\/checklist-instances\/456$/);
     });
 
     it('should return 409 when item is not completed', async () => {

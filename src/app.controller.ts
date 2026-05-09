@@ -1,7 +1,12 @@
 import { Controller, Get } from '@nestjs/common';
 import { UserChecklistController } from './checklist/user-checklist.controller';
 import { UserChecklistInstanceController } from './checklist/user-checklist-instance.controller';
-import { Hateoas, NestLinkFactory, toHandler } from './hateoas-nest';
+import {
+  Hateoas,
+  NestLinkFactory,
+  toHandler,
+  toHandlerCall,
+} from './hateoas-nest';
 import { User } from './auth/user.decorator';
 import { AuthUser } from './auth/auth.guard';
 
@@ -21,6 +26,17 @@ export class AppController {
           name: 'checklist-instances',
           params: { userId: user.uid },
         }),
+      )
+      .withRel(
+        'create',
+        toHandler(UserChecklistController, 'create', {
+          name: 'checklists',
+          params: { userId: user.uid },
+        }),
+        toHandlerCall({
+          controller: UserChecklistInstanceController,
+          name: 'checklist-instances',
+        }).createInstance({ params: { userId: user.uid } }),
       )
       .toResource();
   }
