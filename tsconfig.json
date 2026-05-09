@@ -23,6 +23,5 @@
     "strictNullChecks": true,
     "target": "ES2023",
     "types": ["jest"]
-  },
-  "exclude": ["node_modules", "dist", "tmp"]
+  }
 }

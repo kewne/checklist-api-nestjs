@@ -1,8 +1,8 @@
-import { AuthUser } from '@app/auth/auth.guard';
+import type { AuthUser } from '@app/auth/auth.guard';
 import { User } from '@app/auth/user.decorator';
 import { Hateoas, NestLinkFactory, toHandlerCall } from '@app/hateoas-nest';
 import { Body, Controller, Get, Param, Post, Res } from '@nestjs/common';
-import { Response } from 'express';
+import type { Response } from 'express';
 import { CreateChecklistInstanceFromDataDto } from './dto/create-checklist-instance-from-data.dto';
 import { InstanceService } from './instance.service';
 import { UserChecklistController } from './user-checklist.controller';

@@ -3,7 +3,7 @@ import { UserChecklistController } from './checklist/user-checklist.controller';
 import { UserChecklistInstanceController } from './checklist/user-checklist-instance.controller';
 import { Hateoas, NestLinkFactory, toHandlerCall } from './hateoas-nest';
 import { User } from './auth/user.decorator';
-import { AuthUser } from './auth/auth.guard';
+import type { AuthUser } from './auth/auth.guard';
 
 @Controller()
 export class AppController {

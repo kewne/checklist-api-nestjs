@@ -13,13 +13,13 @@ import {
 } from '@nestjs/common';
 import { InstanceService } from './instance.service';
 import { Hateoas, NestLinkFactory, toHandlerCall } from '@app/hateoas-nest';
-import { Response } from 'express';
+import type { Response } from 'express';
 import { CompleteItemDto } from './dto/complete-item.dto';
 import { IncompleteItemDto } from './dto/incomplete-item.dto';
 import { ReplaceChecklistInstanceDto } from './dto/replace-checklist-instance.dto';
 import { ChecklistController } from './checklist.controller';
 import { User } from '@app/auth/user.decorator';
-import { AuthUser } from '@app/auth/auth.guard';
+import type { AuthUser } from '@app/auth/auth.guard';
 import { UserChecklistInstanceController } from './user-checklist-instance.controller';
 
 @Controller('checklist-instances')

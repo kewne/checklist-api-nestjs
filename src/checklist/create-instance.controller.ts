@@ -1,10 +1,10 @@
 import { Body, Controller, Param, Post, Res } from '@nestjs/common';
 import { InstanceService } from './instance.service';
 import { CreateChecklistInstanceDto } from './dto/create-checklist-instance.dto';
-import { Response } from 'express';
+import type { Response } from 'express';
 import { Hateoas, NestLinkFactory } from '@app/hateoas-nest';
 import { User } from '@app/auth/user.decorator';
-import { AuthUser } from '@app/auth/auth.guard';
+import type { AuthUser } from '@app/auth/auth.guard';
 import { ChecklistInstanceController } from './checklist-instance.controller';
 
 @Controller('checklists/:id')
