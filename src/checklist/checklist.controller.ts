@@ -10,7 +10,7 @@ import {
 } from '@nestjs/common';
 import { ChecklistService } from './checklist.service';
 import { ReplaceChecklistDto } from './dto/update-checklist.dto';
-import { Hateoas, NestLinkFactory, toHandler } from '@app/hateoas-nest';
+import { Hateoas, NestLinkFactory, toHandlerCall } from '@app/hateoas-nest';
 import { CreateInstanceController } from './create-instance.controller';
 
 @Controller('checklists')
@@ -30,12 +30,10 @@ export class ChecklistController {
       .buildResource()
       .withRel(
         'create-from',
-        toHandler(CreateInstanceController, 'createInstance', {
+        toHandlerCall({
+          controller: CreateInstanceController,
           name: 'instance',
-          params: {
-            id: checklist.id,
-          },
-        }),
+        }).createInstance({ params: { id: checklist.id } }),
       )
       .toResource(checklist);
     return resource;

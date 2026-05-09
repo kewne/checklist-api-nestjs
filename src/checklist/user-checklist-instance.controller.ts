@@ -1,6 +1,6 @@
 import { AuthUser } from '@app/auth/auth.guard';
 import { User } from '@app/auth/user.decorator';
-import { Hateoas, NestLinkFactory, toHandler } from '@app/hateoas-nest';
+import { Hateoas, NestLinkFactory, toHandlerCall } from '@app/hateoas-nest';
 import { Body, Controller, Get, Param, Post, Res } from '@nestjs/common';
 import { Response } from 'express';
 import { CreateChecklistInstanceFromDataDto } from './dto/create-checklist-instance-from-data.dto';
@@ -40,13 +40,11 @@ export class UserChecklistInstanceController {
       .withRel(
         'items',
         ...instances.map((instance) =>
-          toHandler(ChecklistInstanceController, 'findOne', {
+          toHandlerCall({
+            controller: ChecklistInstanceController,
             name: instance.id,
             title: instance.title,
-            params: {
-              instanceId: instance.id,
-            },
-          }),
+          }).findOne({ params: { instanceId: instance.id } }),
         ),
       )
       .toResource({});
