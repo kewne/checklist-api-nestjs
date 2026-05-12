@@ -11,7 +11,7 @@ import {
 import { ChecklistService } from './checklist.service';
 import { ReplaceChecklistDto } from './dto/update-checklist.dto';
 import { Hateoas, NestLinkFactory, toHandlerCall } from '@app/hateoas-nest';
-import { CreateInstanceController } from './create-instance.controller';
+import { CreateInstanceController } from './instance/create-instance.controller';
 
 @Controller('checklists')
 export class ChecklistController {

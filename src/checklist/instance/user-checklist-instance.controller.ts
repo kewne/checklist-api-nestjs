@@ -3,9 +3,9 @@ import { User } from '@app/auth/user.decorator';
 import { Hateoas, NestLinkFactory, toHandlerCall } from '@app/hateoas-nest';
 import { Body, Controller, Get, Param, Post, Res } from '@nestjs/common';
 import type { Response } from 'express';
-import { CreateChecklistInstanceFromDataDto } from './dto/create-checklist-instance-from-data.dto';
+import { CreateChecklistInstanceFromDataDto } from './create-checklist-instance-from-data.dto';
 import { InstanceService } from './instance.service';
-import { UserChecklistController } from './user-checklist.controller';
+import { UserChecklistController } from '../user-checklist.controller';
 import { ChecklistInstanceController } from './checklist-instance.controller';
 
 @Controller('users/:userId/checklist-instances')

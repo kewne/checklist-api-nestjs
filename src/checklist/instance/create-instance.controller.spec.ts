@@ -2,7 +2,7 @@ import { Test, TestingModule } from '@nestjs/testing';
 import { CreateInstanceController } from './create-instance.controller';
 import { InstanceService } from './instance.service';
 import { NotFoundException } from '@nestjs/common';
-import { HateoasModule } from '../hateoas/hateoas.module';
+import { HateoasModule } from '../../hateoas/hateoas.module';
 import { NestExpressApplication } from '@nestjs/platform-express';
 import request from 'supertest';
 import { USER_AUTH_KEY } from '@app/auth/auth.constants';

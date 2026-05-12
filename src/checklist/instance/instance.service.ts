@@ -1,8 +1,8 @@
 import { Injectable, NotFoundException } from '@nestjs/common';
-import { ChecklistService } from './checklist.service';
-import { CreateChecklistInstanceFromDataDto } from './dto/create-checklist-instance-from-data.dto';
-import { CreateItemDto } from './dto/create-item.dto';
-import { ReplaceChecklistInstanceDto } from './dto/replace-checklist-instance.dto';
+import { ChecklistService } from '../checklist.service';
+import { CreateChecklistInstanceFromDataDto } from './create-checklist-instance-from-data.dto';
+import { CreateItemDto } from '../dto/create-item.dto';
+import { ReplaceChecklistInstanceDto } from './replace-checklist-instance.dto';
 import {
   ChecklistInstanceDocument,
   ChecklistListItem,

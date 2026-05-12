@@ -5,10 +5,10 @@ import {
   NotFoundException,
 } from '@nestjs/common';
 import { randomUUID } from 'crypto';
-import { Item, ItemCompleted } from './checklist.repository';
-import { CreateInstanceItemFromDataDto } from './dto/create-checklist-instance-from-data.dto';
-import { CreateItemDto } from './dto/create-item.dto';
-import { ReplaceChecklistInstanceDto } from './dto/replace-checklist-instance.dto';
+import { Item, ItemCompleted } from '../checklist.repository';
+import { CreateInstanceItemFromDataDto } from './create-checklist-instance-from-data.dto';
+import { CreateItemDto } from '../dto/create-item.dto';
+import { ReplaceChecklistInstanceDto } from './replace-checklist-instance.dto';
 
 export interface InstanceItem extends Item {
   completed: ItemCompleted | null;

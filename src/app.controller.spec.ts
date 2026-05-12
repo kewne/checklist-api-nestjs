@@ -1,9 +1,9 @@
 import { Test, TestingModule } from '@nestjs/testing';
 import { AppController } from './app.controller';
 import { UserChecklistController } from './checklist/user-checklist.controller';
-import { UserChecklistInstanceController } from './checklist/user-checklist-instance.controller';
+import { UserChecklistInstanceController } from './checklist/instance/user-checklist-instance.controller';
 import { ChecklistService } from './checklist/checklist.service';
-import { InstanceService } from './checklist/instance.service';
+import { InstanceService } from './checklist/instance/instance.service';
 import { HateoasModule } from './hateoas/hateoas.module';
 import { NestExpressApplication } from '@nestjs/platform-express';
 import request from 'supertest';

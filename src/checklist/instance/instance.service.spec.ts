@@ -2,17 +2,14 @@ import { ConflictException, NotFoundException } from '@nestjs/common';
 import { ConfigModule } from '@nestjs/config';
 import { Test, TestingModule } from '@nestjs/testing';
 import { randomUUID } from 'crypto';
-import { FirestoreModule } from '../firestore.module';
-import { ChecklistRepository } from './checklist.repository';
-import { ChecklistService } from './checklist.service';
+import { FirestoreModule } from '../../firestore.module';
+import { ChecklistRepository } from '../checklist.repository';
+import { ChecklistService } from '../checklist.service';
 import {
   ChecklistInstanceDocument,
   InstanceRepository,
 } from './instance.repository';
 import { InstanceService } from './instance.service';
-
-const EMULATOR_BASE =
-  'http://127.0.0.1:8080/emulator/v1/projects/demo-test/databases/(default)/documents';
 
 describe('InstanceService', () => {
   let service: InstanceService;
@@ -33,10 +30,6 @@ describe('InstanceService', () => {
     service = module.get<InstanceService>(InstanceService);
     instanceRepository = module.get<InstanceRepository>(InstanceRepository);
     checklistRepository = module.get<ChecklistRepository>(ChecklistRepository);
-  });
-
-  afterEach(async () => {
-    await fetch(EMULATOR_BASE, { method: 'DELETE' });
   });
 
   describe('createFromData', () => {

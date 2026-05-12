@@ -107,7 +107,9 @@ describe('ChecklistService', () => {
       const checklist: ChecklistDocument = {
         id: 'checklist-1',
         title: 'Test Checklist',
-        items: [{ id: 'item-1', title: 'Item 1', description: 'Description 1' }],
+        items: [
+          { id: 'item-1', title: 'Item 1', description: 'Description 1' },
+        ],
         createdBy: 'user-123',
         createdAt: new Date(),
         updatedAt: new Date(),

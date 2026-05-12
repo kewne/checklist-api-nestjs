@@ -15,12 +15,12 @@ import {
   ValidationPipe,
 } from '@nestjs/common';
 import type { Response } from 'express';
-import { CompleteItemDto } from './dto/complete-item.dto';
-import { CreateItemDto } from './dto/create-item.dto';
-import { IncompleteItemDto } from './dto/incomplete-item.dto';
-import { ReplaceChecklistInstanceDto } from './dto/replace-checklist-instance.dto';
+import { CompleteItemDto } from './complete-item.dto';
+import { CreateItemDto } from '../dto/create-item.dto';
+import { IncompleteItemDto } from './incomplete-item.dto';
+import { ReplaceChecklistInstanceDto } from './replace-checklist-instance.dto';
 import { InstanceService } from './instance.service';
-import { InstanceResource } from './resources/instance.resource';
+import { InstanceResource } from './instance.resource';
 
 @Controller('checklist-instances')
 export class ChecklistInstanceController {

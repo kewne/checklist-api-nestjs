@@ -3,8 +3,8 @@ import { APP_GUARD } from '@nestjs/core';
 import { NestExpressApplication } from '@nestjs/platform-express';
 import { Test, TestingModule } from '@nestjs/testing';
 import request from 'supertest';
-import { MockAuthGuard } from '../auth/auth.guard.mock';
-import { HateoasModule } from '../hateoas/hateoas.module';
+import { MockAuthGuard } from '../../auth/auth.guard.mock';
+import { HateoasModule } from '../../hateoas/hateoas.module';
 import { ChecklistInstanceController } from './checklist-instance.controller';
 import { InstanceService } from './instance.service';
 

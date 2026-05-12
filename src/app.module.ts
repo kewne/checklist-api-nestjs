@@ -6,6 +6,7 @@ import { AuthGuard } from './auth/auth.guard';
 import { AuthModule } from './auth/auth.module';
 import { CaslModule } from './casl/casl.module';
 import { ChecklistModule } from './checklist/checklist.module';
+import { InstanceModule } from './checklist/instance/instance.module';
 import { FirebaseAdminModule } from './firebase-admin.module';
 import { FirestoreModule } from './firestore.module';
 import { HateoasModule } from './hateoas/hateoas.module';
@@ -18,6 +19,7 @@ import { HateoasModule } from './hateoas/hateoas.module';
     FirebaseAdminModule,
     FirestoreModule,
     ChecklistModule,
+    InstanceModule,
     HateoasModule,
     AuthModule,
     CaslModule,

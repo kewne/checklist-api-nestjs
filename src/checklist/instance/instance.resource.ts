@@ -1,8 +1,8 @@
 import { NestLinkFactory, toHandler, toHandlerCall } from '@app/hateoas-nest';
-import { ChecklistInstanceController } from '../checklist-instance.controller';
+import { ChecklistInstanceController } from './checklist-instance.controller';
 import { ChecklistController } from '../checklist.controller';
-import { ChecklistInstanceDocument } from '../instance.repository';
-import { UserChecklistInstanceController } from '../user-checklist-instance.controller';
+import { ChecklistInstanceDocument } from './instance.repository';
+import { UserChecklistInstanceController } from './user-checklist-instance.controller';
 
 export class InstanceResource {
   static toResource(
