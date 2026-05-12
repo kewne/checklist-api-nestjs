@@ -7,6 +7,7 @@ import {
 import { randomUUID } from 'crypto';
 import { Item, ItemCompleted } from './checklist.repository';
 import { CreateInstanceItemFromDataDto } from './dto/create-checklist-instance-from-data.dto';
+import { CreateItemDto } from './dto/create-item.dto';
 import { ReplaceChecklistInstanceDto } from './dto/replace-checklist-instance.dto';
 
 export interface InstanceItem extends Item {
@@ -237,5 +238,36 @@ export class InstanceRepository {
     item.completed = null;
 
     await docRef.update({ items: data.items });
+  }
+
+  async addItem(
+    instanceId: string,
+    dto: CreateItemDto,
+  ): Promise<ChecklistInstanceDocument> {
+    const docRef = this.firestore.collection(this.collection).doc(instanceId);
+    const doc = await docRef.get();
+
+    if (!doc.exists) {
+      throw new NotFoundException(
+        `Checklist instance with id ${instanceId} not found`,
+      );
+    }
+
+    const data = doc.data() as Omit<ChecklistInstanceDocument, 'id'>;
+    const newItem: InstanceItem = {
+      id: randomUUID(),
+      title: dto.title,
+      ...(dto.description !== undefined && { description: dto.description }),
+      completed: null,
+    };
+
+    const updatedItems = [...data.items, newItem];
+    await docRef.update({ items: updatedItems });
+
+    return {
+      id: instanceId,
+      ...data,
+      items: updatedItems,
+    };
   }
 }

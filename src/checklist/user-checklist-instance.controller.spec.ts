@@ -27,6 +27,7 @@ describe('UserChecklistInstanceController', () => {
       markItemIncomplete: jest.fn(),
       remove: jest.fn(),
       replace: jest.fn(),
+      addItem: jest.fn(),
     };
 
     const module: TestingModule = await Test.createTestingModule({

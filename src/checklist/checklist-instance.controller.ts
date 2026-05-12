@@ -1,3 +1,6 @@
+import { AuthUser } from '@app/auth/auth.guard';
+import { User } from '@app/auth/user.decorator';
+import { Hateoas, NestLinkFactory } from '@app/hateoas-nest';
 import {
   Body,
   Controller,
@@ -11,16 +14,13 @@ import {
   UsePipes,
   ValidationPipe,
 } from '@nestjs/common';
-import { InstanceService } from './instance.service';
-import { Hateoas, NestLinkFactory, toHandler } from '@app/hateoas-nest';
 import { Response } from 'express';
 import { CompleteItemDto } from './dto/complete-item.dto';
+import { CreateItemDto } from './dto/create-item.dto';
 import { IncompleteItemDto } from './dto/incomplete-item.dto';
 import { ReplaceChecklistInstanceDto } from './dto/replace-checklist-instance.dto';
-import { ChecklistController } from './checklist.controller';
-import { User } from '@app/auth/user.decorator';
-import { AuthUser } from '@app/auth/auth.guard';
-import { UserChecklistInstanceController } from './user-checklist-instance.controller';
+import { InstanceService } from './instance.service';
+import { InstanceResource } from './resources/instance.resource';
 
 @Controller('checklist-instances')
 export class ChecklistInstanceController {
@@ -33,68 +33,7 @@ export class ChecklistInstanceController {
     @Hateoas() linkFactory: NestLinkFactory,
   ) {
     const instance = await this.instanceService.findOne(instanceId);
-
-    const resource = linkFactory.buildResource();
-    if (instance.checklistId) {
-      resource.withRel(
-        'related',
-        toHandler(ChecklistController, 'findOne', {
-          name: 'checklist',
-          title: instance.checklistId,
-          params: { id: instance.checklistId },
-        }),
-      );
-    }
-
-    resource.withRel(
-      'create-from',
-      toHandler(
-        UserChecklistInstanceController,
-        'createChecklistFromInstance',
-        {
-          name: 'checklist',
-          params: { userId: user.uid, instanceId },
-        },
-      ),
-    );
-
-    const incompleteItems = instance.items.filter((item) => !item.completed);
-    if (incompleteItems.length > 0) {
-      resource.withRel(
-        'complete-item',
-        ...incompleteItems.map((item) =>
-          toHandler(ChecklistInstanceController, 'completeItem', {
-            name: item.id,
-            title: item.title,
-            params: { instanceId, itemId: item.id },
-          }),
-        ),
-      );
-    }
-
-    const completedItems = instance.items.filter((item) => item.completed);
-    if (completedItems.length > 0) {
-      resource.withRel(
-        'mark-incomplete-item',
-        ...completedItems.map((item) =>
-          toHandler(ChecklistInstanceController, 'markItemIncomplete', {
-            name: item.id,
-            title: item.title,
-            params: { instanceId, itemId: item.id },
-          }),
-        ),
-      );
-    }
-
-    const transformedInstance = {
-      ...instance,
-      items: instance.items.map(({ id, ...rest }) => ({
-        ...rest,
-        name: id,
-      })),
-    };
-
-    return resource.toResource(transformedInstance);
+    return InstanceResource.toResource(instance, user.uid, linkFactory);
   }
 
   @Post(':instanceId/items/:itemId/complete')
@@ -139,6 +78,19 @@ export class ChecklistInstanceController {
     @Body() dto: ReplaceChecklistInstanceDto,
   ): Promise<void> {
     await this.instanceService.replace(instanceId, dto);
+  }
+
+  @Post(':instanceId/add-item')
+  @HttpCode(200)
+  @UsePipes(new ValidationPipe({ transform: true }))
+  async addItem(
+    @Param('instanceId') instanceId: string,
+    @Body() dto: CreateItemDto,
+    @User() user: AuthUser,
+    @Hateoas() linkFactory: NestLinkFactory,
+  ) {
+    const instance = await this.instanceService.addItem(instanceId, dto);
+    return InstanceResource.toResource(instance, user.uid, linkFactory);
   }
 
   @Delete(':instanceId')

@@ -355,4 +355,61 @@ describe('InstanceService', () => {
       ).rejects.toThrow(NotFoundException);
     });
   });
+
+  describe('addItem', () => {
+    it('should add an item with title and description', async () => {
+      const userId = randomUUID();
+      const checklist = await checklistRepository.create(
+        { title: 'CL', items: [{ title: 'Initial Item', description: 'Initial' }] },
+        userId,
+      );
+      const instance = await instanceRepository.create(
+        checklist.id,
+        userId,
+        'Test Instance',
+        checklist.items,
+      );
+
+      const result = await service.addItem(instance.id, {
+        title: 'New Item',
+        description: 'New Description',
+      });
+
+      expect(result.items).toHaveLength(2);
+      const newItem = result.items[1];
+      expect(newItem.title).toBe('New Item');
+      expect(newItem.description).toBe('New Description');
+      expect(newItem.completed).toBeNull();
+    });
+
+    it('should add an item with title only', async () => {
+      const userId = randomUUID();
+      const checklist = await checklistRepository.create(
+        { title: 'CL', items: [] },
+        userId,
+      );
+      const instance = await instanceRepository.create(
+        checklist.id,
+        userId,
+        'Test Instance',
+        [],
+      );
+
+      const result = await service.addItem(instance.id, {
+        title: 'New Item',
+      });
+
+      expect(result.items).toHaveLength(1);
+      const newItem = result.items[0];
+      expect(newItem.title).toBe('New Item');
+      expect(newItem.description).toBeUndefined();
+      expect(newItem.completed).toBeNull();
+    });
+
+    it('should throw NotFoundException for unknown instance', async () => {
+      await expect(
+        service.addItem('non-existent-id', { title: 'New Item' }),
+      ).rejects.toThrow(NotFoundException);
+    });
+  });
 });

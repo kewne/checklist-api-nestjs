@@ -1,12 +1,12 @@
+import { ConflictException, NotFoundException } from '@nestjs/common';
+import { APP_GUARD } from '@nestjs/core';
+import { NestExpressApplication } from '@nestjs/platform-express';
 import { Test, TestingModule } from '@nestjs/testing';
+import * as request from 'supertest';
+import { MockAuthGuard } from '../auth/auth.guard.mock';
+import { HateoasModule } from '../hateoas/hateoas.module';
 import { ChecklistInstanceController } from './checklist-instance.controller';
 import { InstanceService } from './instance.service';
-import { ConflictException, NotFoundException } from '@nestjs/common';
-import { HateoasModule } from '../hateoas/hateoas.module';
-import { NestExpressApplication } from '@nestjs/platform-express';
-import * as request from 'supertest';
-import { APP_GUARD } from '@nestjs/core';
-import { MockAuthGuard } from '../auth/auth.guard.mock';
 
 describe('ChecklistInstanceController', () => {
   let app: NestExpressApplication;
@@ -16,6 +16,7 @@ describe('ChecklistInstanceController', () => {
     markItemIncomplete: jest.fn(),
     remove: jest.fn(),
     replace: jest.fn(),
+    addItem: jest.fn(),
   };
 
   beforeEach(async () => {
@@ -136,9 +137,7 @@ describe('ChecklistInstanceController', () => {
         'item-1',
         undefined,
       );
-      expect(response.headers.location).toMatch(
-        /\/checklist-instances\/456$/,
-      );
+      expect(response.headers.location).toMatch(/\/checklist-instances\/456$/);
     });
 
     it('should pass note to service when provided', async () => {
@@ -198,9 +197,7 @@ describe('ChecklistInstanceController', () => {
         .expect(303);
 
       expect(service.markItemIncomplete).toHaveBeenCalledWith('456', 'item-1');
-      expect(response.headers.location).toMatch(
-        /\/checklist-instances\/456$/,
-      );
+      expect(response.headers.location).toMatch(/\/checklist-instances\/456$/);
     });
 
     it('should return 409 when item is not completed', async () => {
@@ -302,6 +299,86 @@ describe('ChecklistInstanceController', () => {
         .expect(404);
 
       expect(service.remove).toHaveBeenCalledWith('non-existent');
+    });
+  });
+
+  describe('POST /checklist-instances/:instanceId/add-item', () => {
+    it('should return 200 with instance and HATEOAS links', async () => {
+      service.addItem.mockResolvedValue({
+        id: '456',
+        checklistId: '123',
+        createdBy: 'test-user-id',
+        createdAt: new Date('2026-02-10T12:00:00Z'),
+        title: 'My Instance',
+        items: [
+          {
+            id: 'new-item',
+            title: 'New Item',
+            description: 'New Description',
+            completed: null,
+          },
+        ],
+      });
+
+      const response = await request(app.getHttpServer())
+        .post('/checklist-instances/456/add-item')
+        .send({ title: 'New Item', description: 'New Description' })
+        .expect(200);
+
+      expect(service.addItem).toHaveBeenCalledWith('456', {
+        title: 'New Item',
+        description: 'New Description',
+      });
+      expect((response.body as Record<string, unknown>).id).toBe('456');
+      expect((response.body as Record<string, unknown>).title).toBe(
+        'My Instance',
+      );
+      expect((response.body as Record<string, unknown>)._links).toBeDefined();
+    });
+
+    it('should add item with title only', async () => {
+      service.addItem.mockResolvedValue({
+        id: '456',
+        checklistId: '123',
+        createdBy: 'test-user-id',
+        createdAt: new Date('2026-02-10T12:00:00Z'),
+        title: 'My Instance',
+        items: [{ id: 'new-item', title: 'New Item', completed: null }],
+      });
+
+      const response = await request(app.getHttpServer())
+        .post('/checklist-instances/456/add-item')
+        .send({ title: 'New Item' })
+        .expect(200);
+
+      expect(service.addItem).toHaveBeenCalledWith('456', {
+        title: 'New Item',
+      });
+      expect((response.body as Record<string, unknown>).id).toBe('456');
+    });
+
+    it('should return 400 when title is missing', async () => {
+      await request(app.getHttpServer())
+        .post('/checklist-instances/456/add-item')
+        .send({ description: 'Just a description' })
+        .expect(400);
+
+      expect(service.addItem).not.toHaveBeenCalled();
+    });
+
+    it('should return 404 when instance not found', async () => {
+      service.addItem.mockRejectedValue(
+        new NotFoundException('Checklist instance not found'),
+      );
+
+      await request(app.getHttpServer())
+        .post('/checklist-instances/non-existent/add-item')
+        .send({ title: 'New Item' })
+        .expect(404);
+
+      expect(service.addItem).toHaveBeenCalledWith('non-existent', {
+        title: 'New Item',
+      });
     });
   });
 });
