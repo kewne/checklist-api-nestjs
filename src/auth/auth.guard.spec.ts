@@ -1,7 +1,7 @@
 import { Test, TestingModule } from '@nestjs/testing';
 import { Controller, Get, UseGuards } from '@nestjs/common';
 import { NestExpressApplication } from '@nestjs/platform-express';
-import * as request from 'supertest';
+import request from 'supertest';
 import { AuthGuard, AuthUser } from './auth.guard';
 import { Auth } from 'firebase-admin/auth';
 import { User } from './user.decorator';

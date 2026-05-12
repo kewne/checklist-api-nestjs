@@ -1,5 +1,5 @@
 import { DecodeBase64JsonPipe } from '@app/common/pipes';
-import { Hateoas, NestLinkFactory, toHandler } from '@app/hateoas-nest';
+import { Hateoas, NestLinkFactory, toHandlerCall } from '@app/hateoas-nest';
 import {
   BadRequestException,
   Body,
@@ -12,7 +12,7 @@ import {
 } from '@nestjs/common';
 import { plainToInstance } from 'class-transformer';
 import { validate } from 'class-validator';
-import { Response } from 'express';
+import { type Response } from 'express';
 import { ChecklistController } from './checklist.controller';
 import { ChecklistService } from './checklist.service';
 import { CreateChecklistDto } from './dto/create-checklist.dto';
@@ -67,13 +67,17 @@ export class UserChecklistController {
       .withRel(
         'items',
         ...checklists.map((checklist) =>
-          toHandler(ChecklistController, 'findOne', {
+          toHandlerCall({
+            controller: ChecklistController,
             name: checklist.title,
-            params: {
-              id: checklist.id,
-            },
-          }),
+          }).findOne({ params: { id: checklist.id } }),
         ),
+      )
+      .withRel(
+        'create',
+        toHandlerCall({
+          controller: UserChecklistController,
+        }).create({ params: { userId } }),
       )
       .toResource({});
 

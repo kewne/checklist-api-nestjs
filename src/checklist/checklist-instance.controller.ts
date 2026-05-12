@@ -1,4 +1,4 @@
-import { AuthUser } from '@app/auth/auth.guard';
+import type { AuthUser } from '@app/auth/auth.guard';
 import { User } from '@app/auth/user.decorator';
 import { Hateoas, NestLinkFactory } from '@app/hateoas-nest';
 import {
@@ -14,7 +14,7 @@ import {
   UsePipes,
   ValidationPipe,
 } from '@nestjs/common';
-import { Response } from 'express';
+import type { Response } from 'express';
 import { CompleteItemDto } from './dto/complete-item.dto';
 import { CreateItemDto } from './dto/create-item.dto';
 import { IncompleteItemDto } from './dto/incomplete-item.dto';
@@ -49,7 +49,9 @@ export class ChecklistInstanceController {
     res.statusCode = 303;
     res.setHeader(
       'location',
-      linkFactory.toAbsolute(`/checklist-instances/${instanceId}`).href,
+      linkFactory.toHandler(ChecklistInstanceController, 'findOne', {
+        params: { instanceId },
+      }),
     );
   }
 
@@ -66,7 +68,9 @@ export class ChecklistInstanceController {
     res.statusCode = 303;
     res.setHeader(
       'location',
-      linkFactory.toAbsolute(`/checklist-instances/${instanceId}`).href,
+      linkFactory.toHandler(ChecklistInstanceController, 'findOne', {
+        params: { instanceId },
+      }),
     );
   }
 

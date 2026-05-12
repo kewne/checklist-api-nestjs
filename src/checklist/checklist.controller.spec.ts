@@ -2,7 +2,7 @@ import { PlainResource } from '@app/hateoas';
 import { NotFoundException } from '@nestjs/common';
 import { NestExpressApplication } from '@nestjs/platform-express';
 import { Test, TestingModule } from '@nestjs/testing';
-import * as request from 'supertest';
+import request from 'supertest';
 import { HateoasModule } from '../hateoas/hateoas.module';
 import { ChecklistController } from './checklist.controller';
 import { ChecklistService } from './checklist.service';

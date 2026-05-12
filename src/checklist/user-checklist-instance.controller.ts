@@ -1,30 +1,31 @@
-import { AuthUser } from '@app/auth/auth.guard';
+import type { AuthUser } from '@app/auth/auth.guard';
 import { User } from '@app/auth/user.decorator';
-import { Hateoas, NestLinkFactory } from '@app/hateoas-nest';
+import { Hateoas, NestLinkFactory, toHandlerCall } from '@app/hateoas-nest';
 import { Body, Controller, Get, Param, Post, Res } from '@nestjs/common';
-import { Response } from 'express';
+import type { Response } from 'express';
 import { CreateChecklistInstanceFromDataDto } from './dto/create-checklist-instance-from-data.dto';
 import { InstanceService } from './instance.service';
 import { UserChecklistController } from './user-checklist.controller';
+import { ChecklistInstanceController } from './checklist-instance.controller';
 
 @Controller('users/:userId/checklist-instances')
 export class UserChecklistInstanceController {
   constructor(private readonly instanceService: InstanceService) {}
 
-  @Post()
+  @Post('/create')
   async createInstance(
-    @User() user: AuthUser,
+    @Param('userId') userId: string,
     @Body() dto: CreateChecklistInstanceFromDataDto,
     @Res({ passthrough: true }) res: Response,
     @Hateoas() linkFactory: NestLinkFactory,
   ) {
-    const instance = await this.instanceService.createFromData(user.uid, dto);
-    res
-      .status(201)
-      .setHeader(
-        'location',
-        linkFactory.toAbsolute(`/checklist-instances/${instance.id}`).href,
-      );
+    const instanceId = await this.instanceService.createFromData(userId, dto);
+    res.status(201).setHeader(
+      'location',
+      linkFactory.toHandler(ChecklistInstanceController, 'findOne', {
+        params: { instanceId },
+      }),
+    );
   }
 
   @Get()
@@ -38,11 +39,19 @@ export class UserChecklistInstanceController {
       .buildResource()
       .withRel(
         'items',
-        ...instances.map((instance) => ({
-          href: linkFactory.toAbsolute(`/checklist-instances/${instance.id}`)
-            .href,
-          name: instance.title,
-        })),
+        ...instances.map((instance) =>
+          toHandlerCall({
+            controller: ChecklistInstanceController,
+            name: instance.id,
+            title: instance.title,
+          }).findOne({ params: { instanceId: instance.id } }),
+        ),
+      )
+      .withRel(
+        'create',
+        toHandlerCall({
+          controller: UserChecklistInstanceController,
+        }).createInstance({ params: { userId } }),
       )
       .toResource({});
 

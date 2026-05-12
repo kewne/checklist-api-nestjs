@@ -4,7 +4,7 @@ import { InstanceService } from './instance.service';
 import { NotFoundException } from '@nestjs/common';
 import { HateoasModule } from '../hateoas/hateoas.module';
 import { NestExpressApplication } from '@nestjs/platform-express';
-import * as request from 'supertest';
+import request from 'supertest';
 import { USER_AUTH_KEY } from '@app/auth/auth.constants';
 import { AuthUser } from '@app/auth/auth.guard';
 import { Request, Response, NextFunction } from 'express';
@@ -54,13 +54,7 @@ describe('CreateInstanceController', () => {
 
   describe('POST /checklists/:id', () => {
     it('should create instance with provided title and return 201 with location header', async () => {
-      service.createInstance.mockResolvedValue({
-        id: '456',
-        checklistId: '123',
-        createdBy: 'test-user-id',
-        title: 'My Title',
-        items: [],
-      });
+      service.createInstance.mockResolvedValue('456');
 
       const response = await request(app.getHttpServer())
         .post('/checklists/123')
@@ -72,19 +66,11 @@ describe('CreateInstanceController', () => {
         'test-user-id',
         'My Title',
       );
-      expect(response.headers.location).toMatch(
-        /\/checklist-instances\/456$/,
-      );
+      expect(response.headers.location).toMatch(/\/checklist-instances\/456$/);
     });
 
     it('should create instance without title and return 201 with location header', async () => {
-      service.createInstance.mockResolvedValue({
-        id: '456',
-        checklistId: '123',
-        createdBy: 'test-user-id',
-        title: 'My Checklist - 2026-04-19T00:00:00.000Z',
-        items: [],
-      });
+      service.createInstance.mockResolvedValue('456');
 
       const response = await request(app.getHttpServer())
         .post('/checklists/123')
@@ -96,9 +82,7 @@ describe('CreateInstanceController', () => {
         'test-user-id',
         undefined,
       );
-      expect(response.headers.location).toMatch(
-        /\/checklist-instances\/456$/,
-      );
+      expect(response.headers.location).toMatch(/\/checklist-instances\/456$/);
     });
 
     it('should return 404 when checklist does not exist', async () => {

@@ -5,7 +5,7 @@ import { ChecklistService } from './checklist.service';
 import { CreateChecklistDto } from './dto/create-checklist.dto';
 import { HateoasModule } from '../hateoas/hateoas.module';
 import { NestExpressApplication } from '@nestjs/platform-express';
-import * as request from 'supertest';
+import request from 'supertest';
 import { PlainResource, LinkObject } from '@app/hateoas';
 
 describe('UserChecklistController', () => {
@@ -59,7 +59,6 @@ describe('UserChecklistController', () => {
 
       serviceMock.create.mockResolvedValue(createdChecklist);
 
-      // Act & Assert
       const response = await request(app.getHttpServer())
         .post(`/users/${userId}/checklists`)
         .send(createDto)
@@ -95,7 +94,6 @@ describe('UserChecklistController', () => {
       ];
       (serviceMock.findAllByUser as jest.Mock).mockResolvedValue(checklists);
 
-      // Act & Assert
       const response = await request(app.getHttpServer())
         .get(`/users/${userId}/checklists`)
         .expect(200);

@@ -6,7 +6,7 @@ import { ChecklistService } from './checklist/checklist.service';
 import { InstanceService } from './checklist/instance.service';
 import { HateoasModule } from './hateoas/hateoas.module';
 import { NestExpressApplication } from '@nestjs/platform-express';
-import * as request from 'supertest';
+import request from 'supertest';
 import { USER_AUTH_KEY } from './auth/auth.constants';
 import { AuthUser } from './auth/auth.guard';
 import { Request, Response, NextFunction } from 'express';
@@ -57,27 +57,22 @@ describe('AppController', () => {
       const response = await request(app.getHttpServer()).get('/').expect(200);
 
       const resource = response.body as PlainResource;
-      expect(resource).toHaveProperty('_links');
-      expect(resource._links).toHaveProperty('related');
+      const related = resource._links.related as LinkObject[];
 
-      const related = resource._links.related;
-      expect(Array.isArray(related)).toBe(true);
-
-      const checklistsLink = (related as LinkObject[]).find(
-        (l) => l.name === 'checklists',
-      );
-      expect(checklistsLink).toBeDefined();
-      expect(checklistsLink!.href).toMatch(
-        /\/users\/test-user-id\/checklists$/,
-      );
-
-      const instancesLink = (related as LinkObject[]).find(
-        (l) => l.name === 'checklist-instances',
-      );
-      expect(instancesLink).toBeDefined();
-      expect(instancesLink!.href).toMatch(
-        /\/users\/test-user-id\/checklist-instances$/,
-      );
+      expect(related).toEqual([
+        {
+          name: 'checklists',
+          href: expect.stringMatching(
+            '/users/test-user-id/checklists',
+          ) as string,
+        },
+        {
+          name: 'checklist-instances',
+          href: expect.stringMatching(
+            /\/users\/test-user-id\/checklist-instances$/,
+          ) as string,
+        },
+      ]);
     });
   });
 });

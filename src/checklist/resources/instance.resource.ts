@@ -1,4 +1,4 @@
-import { NestLinkFactory, toHandler } from '@app/hateoas-nest';
+import { NestLinkFactory, toHandler, toHandlerCall } from '@app/hateoas-nest';
 import { ChecklistInstanceController } from '../checklist-instance.controller';
 import { ChecklistController } from '../checklist.controller';
 import { ChecklistInstanceDocument } from '../instance.repository';
@@ -15,11 +15,11 @@ export class InstanceResource {
     if (instance.checklistId) {
       resource.withRel(
         'related',
-        toHandler(ChecklistController, 'findOne', {
+        toHandlerCall({
+          controller: ChecklistController,
           name: 'checklist',
           title: instance.checklistId,
-          params: { id: instance.checklistId },
-        }),
+        }).findOne({ params: { id: instance.checklistId } }),
       );
     }
 

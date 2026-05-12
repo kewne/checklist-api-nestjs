@@ -1,7 +1,7 @@
-import { LinkObject, PlainResource } from '@app/hateoas';
+import { PlainResource } from '@app/hateoas';
 import { NestExpressApplication } from '@nestjs/platform-express';
 import { Test, TestingModule } from '@nestjs/testing';
-import * as request from 'supertest';
+import request from 'supertest';
 import { HateoasModule } from '../hateoas/hateoas.module';
 import { InstanceService } from './instance.service';
 import { UserChecklistInstanceController } from './user-checklist-instance.controller';
@@ -96,33 +96,27 @@ describe('UserChecklistInstanceController', () => {
       expect(serviceMock.findCreatedBy).toHaveBeenCalledWith(userId);
 
       const resource = response.body as PlainResource;
-      expect(resource).toHaveProperty('_links');
-      expect(resource._links).toHaveProperty('items');
-
-      const items = resource._links.items;
-      expect(Array.isArray(items)).toBe(true);
-      expect(items).toHaveLength(2);
-
-      // Verify first item (oldest)
-      expect(items[0]).toHaveProperty('href');
-      expect(items[0]).toHaveProperty('name', 'First Instance');
-      expect((items[0] as LinkObject).href).toMatch(
-        /\/checklist-instances\/instance-1$/,
-      );
-
-      // Verify second item (newer)
-      expect(items[1]).toHaveProperty('href');
-      expect(items[1]).toHaveProperty('name', 'Second Instance');
-      expect((items[1] as LinkObject).href).toMatch(
-        /\/checklist-instances\/instance-2$/,
-      );
+      expect(resource._links.items).toEqual([
+        {
+          href: expect.stringMatching(
+            /\/checklist-instances\/instance-1$/,
+          ) as string,
+          name: 'instance-1',
+          title: 'First Instance',
+        },
+        {
+          href: expect.stringMatching(
+            /\/checklist-instances\/instance-2$/,
+          ) as string,
+          name: 'instance-2',
+          title: 'Second Instance',
+        },
+      ]);
     });
 
     it('should return empty items array when user has no instances', async () => {
-      // Arrange
       (serviceMock.findCreatedBy as jest.Mock).mockResolvedValue([]);
 
-      // Act & Assert
       const response = await request(app.getHttpServer())
         .get(`/users/${userId}/checklist-instances`)
         .expect(200);
@@ -136,23 +130,14 @@ describe('UserChecklistInstanceController', () => {
 
   describe('POST /users/:userId/checklist-instances', () => {
     it('should create an instance and return 201 with location header', async () => {
-      // Arrange
       const dto = {
         title: 'My Instance',
         items: [{ title: 'Item 1' }],
       };
-      serviceMock.createFromData.mockResolvedValue({
-        id: 'new-instance-id',
-        checklistId: null,
-        createdBy: userId,
-        createdAt: new Date(),
-        title: 'My Instance',
-        items: [{ id: 'item-uuid', title: 'Item 1', completed: null }],
-      });
+      serviceMock.createFromData.mockResolvedValue('new-instance-id');
 
-      // Act & Assert
       const response = await request(app.getHttpServer())
-        .post(`/users/${userId}/checklist-instances`)
+        .post(`/users/${userId}/checklist-instances/create`)
         .send(dto)
         .expect(201);
 

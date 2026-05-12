@@ -43,7 +43,7 @@ describe('InstanceService', () => {
     it('should create an instance with items and descriptions from the given data', async () => {
       const userId = randomUUID();
 
-      const instance = await service.createFromData(userId, {
+      const instanceId = await service.createFromData(userId, {
         title: 'My Instance',
         items: [
           { title: 'Step 1', description: 'Do step 1' },
@@ -51,16 +51,28 @@ describe('InstanceService', () => {
         ],
       });
 
-      expect(instance.checklistId).toBeNull();
-      expect(instance.createdBy).toBe(userId);
-      expect(instance.title).toBe('My Instance');
-      expect(instance.items).toHaveLength(2);
-      expect(instance.items[0].title).toBe('Step 1');
-      expect(instance.items[0].description).toBe('Do step 1');
-      expect(instance.items[0].completed).toBeNull();
-      expect(instance.items[1].title).toBe('Step 2');
-      expect(instance.items[1].description).toBeUndefined();
-      expect(instance.items[1].completed).toBeNull();
+      expect(
+        await service.findOne(instanceId),
+      ).toEqual<ChecklistInstanceDocument>({
+        id: instanceId,
+        createdAt: expect.anything() as Date,
+        checklistId: null,
+        createdBy: userId,
+        title: 'My Instance',
+        items: [
+          {
+            id: expect.any(String) as string,
+            title: 'Step 1',
+            description: 'Do step 1',
+            completed: null,
+          },
+          {
+            id: expect.any(String) as string,
+            title: 'Step 2',
+            completed: null,
+          },
+        ],
+      });
     });
   });
 
@@ -75,7 +87,8 @@ describe('InstanceService', () => {
         userId,
       );
 
-      const instance = await service.createInstance(checklist.id, userId);
+      const instanceId = await service.createInstance(checklist.id, userId);
+      const instance = await service.findOne(instanceId);
 
       expect(instance.checklistId).toBe(checklist.id);
       expect(instance.createdBy).toBe(userId);
@@ -99,11 +112,18 @@ describe('InstanceService', () => {
         userId,
       );
 
-      const items = [
-        await instanceRepository.create(checklist.id, userId, 'Oldest', []),
-        await instanceRepository.create(checklist.id, userId, 'Middle', []),
-        await instanceRepository.create(checklist.id, userId, 'Newest', []),
-      ];
+      const items = await Promise.all(
+        ['Oldest', 'Middle', 'West'].map(async (name) => {
+          await new Promise((resolve) => setTimeout(resolve, 1));
+          const id = await instanceRepository.create(
+            checklist.id,
+            userId,
+            name,
+            [],
+          );
+          return { id, title: name };
+        }),
+      );
 
       const result = await service.findCreatedBy(userId);
 
@@ -131,16 +151,16 @@ describe('InstanceService', () => {
         },
         userId,
       );
-      const created = await instanceRepository.create(
+      const id = await instanceRepository.create(
         checklist.id,
         userId,
         'My Instance',
         checklist.items,
       );
 
-      const result = await service.findOne(created.id);
+      const result = await service.findOne(id);
 
-      expect(result.id).toBe(created.id);
+      expect(result.id).toBe(id);
       expect(result.title).toBe('My Instance');
       expect(result.items).toHaveLength(1);
     });
@@ -159,12 +179,13 @@ describe('InstanceService', () => {
         { title: 'CL', items: [{ title: 'Task 1', description: 'Do it' }] },
         userId,
       );
-      const instance = await instanceRepository.create(
+      const instanceId = await instanceRepository.create(
         checklist.id,
         userId,
         'Test Instance',
         checklist.items,
       );
+      const instance = await service.findOne(instanceId);
       return { instance, itemId: instance.items[0].id };
     }
 
@@ -216,14 +237,18 @@ describe('InstanceService', () => {
         { title: 'CL', items: [{ title: 'Task 1', description: 'Do task 1' }] },
         userId,
       );
-      const instance = await instanceRepository.create(
+      const instanceId = await instanceRepository.create(
         checklist.id,
         userId,
         'Test Instance',
         checklist.items,
       );
+      const instance = await instanceRepository.findById(instanceId);
+      if (instance == null) {
+        throw new Error('Failed to fetch instance');
+      }
       const itemId = instance.items[0].id;
-      await service.completeItem(instance.id, itemId);
+      await service.completeItem(instanceId, itemId);
       return { instance, itemId };
     }
 
@@ -249,15 +274,16 @@ describe('InstanceService', () => {
         { title: 'CL', items: [{ title: 'Task 1', description: 'Do task 1' }] },
         userId,
       );
-      const instance = await instanceRepository.create(
+      const instanceId = await instanceRepository.create(
         checklist.id,
         userId,
         'Test Instance',
         checklist.items,
       );
 
+      const instance = await instanceRepository.findById(instanceId);
       await expect(
-        service.markItemIncomplete(instance.id, instance.items[0].id),
+        service.markItemIncomplete(instanceId, instance!.items[0].id),
       ).rejects.toThrow(ConflictException);
     });
   });
@@ -275,16 +301,18 @@ describe('InstanceService', () => {
         },
         userId,
       );
-      const original = await instanceRepository.create(
+      const instanceId = await instanceRepository.create(
         checklist.id,
         userId,
         'Original Title',
         checklist.items,
       );
-      const [item1, item2] = original.items;
-      await service.completeItem(original.id, item1.id, 'done');
+      const {
+        items: [item1, item2],
+      } = (await instanceRepository.findById(instanceId))!;
+      await service.completeItem(instanceId, item1.id, 'done');
 
-      const result = await service.replace(original.id, {
+      await service.replace(instanceId, {
         title: 'New Title',
         items: [
           { name: item1.id, title: 'Renamed Task 1' },
@@ -292,10 +320,10 @@ describe('InstanceService', () => {
         ],
       });
 
-      expect(result).toEqual({
-        id: original.id,
-        checklistId: original.checklistId,
-        createdBy: original.createdBy,
+      expect(await instanceRepository.findById(instanceId)).toEqual({
+        id: instanceId,
+        checklistId: checklist.id,
+        createdBy: userId,
         createdAt: expect.any(Object) as string,
         title: 'New Title',
         items: [
@@ -321,22 +349,22 @@ describe('InstanceService', () => {
         { title: 'CL', items: [{ title: 'Task 1', description: 'Do task 1' }] },
         userId,
       );
-      const instance = await instanceRepository.create(
+      const id = await instanceRepository.create(
         checklist.id,
         userId,
         'Original Title',
         checklist.items,
       );
 
-      const result = await service.replace(instance.id, {
+      await service.replace(id, {
         title: 'New Title',
         items: [{ title: 'Brand New Item' }],
       });
 
-      expect(result).toEqual<ChecklistInstanceDocument>({
-        id: instance.id,
-        checklistId: instance.checklistId,
-        createdBy: instance.createdBy,
+      expect(await service.findOne(id)).toEqual<ChecklistInstanceDocument>({
+        id: id,
+        checklistId: checklist.id,
+        createdBy: userId,
         createdAt: expect.anything() as Date,
         title: 'New Title',
         items: [
@@ -360,17 +388,20 @@ describe('InstanceService', () => {
     it('should add an item with title and description', async () => {
       const userId = randomUUID();
       const checklist = await checklistRepository.create(
-        { title: 'CL', items: [{ title: 'Initial Item', description: 'Initial' }] },
+        {
+          title: 'CL',
+          items: [{ title: 'Initial Item', description: 'Initial' }],
+        },
         userId,
       );
-      const instance = await instanceRepository.create(
+      const instanceId = await instanceRepository.create(
         checklist.id,
         userId,
         'Test Instance',
         checklist.items,
       );
 
-      const result = await service.addItem(instance.id, {
+      const result = await service.addItem(instanceId, {
         title: 'New Item',
         description: 'New Description',
       });
@@ -388,14 +419,14 @@ describe('InstanceService', () => {
         { title: 'CL', items: [] },
         userId,
       );
-      const instance = await instanceRepository.create(
+      const instanceId = await instanceRepository.create(
         checklist.id,
         userId,
         'Test Instance',
         [],
       );
 
-      const result = await service.addItem(instance.id, {
+      const result = await service.addItem(instanceId, {
         title: 'New Item',
       });
 
