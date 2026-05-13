@@ -1,4 +1,5 @@
 import { PlainResource } from '@app/hateoas';
+import { NotFoundException } from '@nestjs/common';
 import { NestExpressApplication } from '@nestjs/platform-express';
 import { Test, TestingModule } from '@nestjs/testing';
 import request from 'supertest';
@@ -125,6 +126,63 @@ describe('UserChecklistInstanceController', () => {
 
       const resource = response.body as PlainResource;
       expect(resource._links.items ?? []).toEqual([]);
+    });
+  });
+
+  describe('POST /users/:userId/checklist-instances/create-from-checklist', () => {
+    it('should create instance with provided title and return 201 with location header', async () => {
+      serviceMock.createInstance.mockResolvedValue('456');
+
+      const response = await request(app.getHttpServer())
+        .post(
+          `/users/${userId}/checklist-instances/create-from-checklist?checklist_id=123`,
+        )
+        .send({ title: 'My Title' })
+        .expect(201);
+
+      expect(serviceMock.createInstance).toHaveBeenCalledWith(
+        '123',
+        userId,
+        'My Title',
+      );
+      expect(response.headers.location).toMatch(/\/checklist-instances\/456$/);
+    });
+
+    it('should create instance without title and return 201 with location header', async () => {
+      serviceMock.createInstance.mockResolvedValue('456');
+
+      const response = await request(app.getHttpServer())
+        .post(
+          `/users/${userId}/checklist-instances/create-from-checklist?checklist_id=123`,
+        )
+        .send({})
+        .expect(201);
+
+      expect(serviceMock.createInstance).toHaveBeenCalledWith(
+        '123',
+        userId,
+        undefined,
+      );
+      expect(response.headers.location).toMatch(/\/checklist-instances\/456$/);
+    });
+
+    it('should return 404 when checklist does not exist', async () => {
+      serviceMock.createInstance.mockImplementation(() => {
+        throw new NotFoundException('Checklist not found');
+      });
+
+      await request(app.getHttpServer())
+        .post(
+          `/users/${userId}/checklist-instances/create-from-checklist?checklist_id=999`,
+        )
+        .send({})
+        .expect(404);
+
+      expect(serviceMock.createInstance).toHaveBeenCalledWith(
+        '999',
+        userId,
+        undefined,
+      );
     });
   });
 

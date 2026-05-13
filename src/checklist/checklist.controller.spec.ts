@@ -1,8 +1,11 @@
 import { PlainResource } from '@app/hateoas';
+import { USER_AUTH_KEY } from '@app/auth/auth.constants';
+import { AuthUser } from '@app/auth/auth.guard';
 import { NotFoundException } from '@nestjs/common';
 import { NestExpressApplication } from '@nestjs/platform-express';
 import { Test, TestingModule } from '@nestjs/testing';
 import request from 'supertest';
+import { Request, Response, NextFunction } from 'express';
 import { HateoasModule } from '../hateoas/hateoas.module';
 import { ChecklistController } from './checklist.controller';
 import { ChecklistService } from './checklist.service';
@@ -10,6 +13,7 @@ import { ChecklistService } from './checklist.service';
 describe('ChecklistController', () => {
   let app: NestExpressApplication;
   let serviceMock: jest.Mocked<Omit<ChecklistService, 'repository'>>;
+  const mockUser: AuthUser = { uid: 'test-user-id' };
 
   beforeEach(async () => {
     serviceMock = {
@@ -33,6 +37,18 @@ describe('ChecklistController', () => {
     }).compile();
 
     app = module.createNestApplication<NestExpressApplication>();
+
+    app.use(
+      (
+        req: Request & { [USER_AUTH_KEY]: AuthUser },
+        _res: Response,
+        next: NextFunction,
+      ) => {
+        req[USER_AUTH_KEY] = mockUser;
+        next();
+      },
+    );
+
     await app.init();
   });
 
@@ -79,7 +95,9 @@ describe('ChecklistController', () => {
         },
         'create-from': {
           name: 'instance',
-          href: expect.stringMatching(/checklists\/123$/) as string,
+          href: expect.stringMatching(
+            /\/users\/test-user-id\/checklist-instances\/create-from-checklist\?checklist_id=123$/,
+          ) as string,
         },
       });
     });

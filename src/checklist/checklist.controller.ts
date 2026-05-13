@@ -11,7 +11,9 @@ import {
 import { ChecklistService } from './checklist.service';
 import { ReplaceChecklistDto } from './dto/update-checklist.dto';
 import { Hateoas, NestLinkFactory, toHandlerCall } from '@app/hateoas-nest';
-import { CreateInstanceController } from './instance/create-instance.controller';
+import { UserChecklistInstanceController } from './instance/user-checklist-instance.controller';
+import type { AuthUser } from '@app/auth/auth.guard';
+import { User } from '@app/auth/user.decorator';
 
 @Controller('checklists')
 export class ChecklistController {
@@ -20,6 +22,7 @@ export class ChecklistController {
   @Get(':id')
   async findOne(
     @Param('id') id: string,
+    @User() user: AuthUser,
     @Hateoas() linkFactory: NestLinkFactory,
   ) {
     const checklist = await this.checklistService.findOne(id);
@@ -31,9 +34,12 @@ export class ChecklistController {
       .withRel(
         'create-from',
         toHandlerCall({
-          controller: CreateInstanceController,
+          controller: UserChecklistInstanceController,
           name: 'instance',
-        }).createInstance({ params: { id: checklist.id } }),
+        }).createFromChecklist({
+          params: { userId: user.uid },
+          query: { checklist_id: checklist.id },
+        }),
       )
       .toResource(checklist);
     return resource;
