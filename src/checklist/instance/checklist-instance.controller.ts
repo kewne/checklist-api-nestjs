@@ -15,10 +15,8 @@ import {
   ValidationPipe,
 } from '@nestjs/common';
 import type { Response } from 'express';
-import { CompleteItemDto } from './complete-item.dto';
+import { CompleteItemDto, ReplaceChecklistInstanceDto } from './dto';
 import { CreateItemDto } from '../dto/create-item.dto';
-import { IncompleteItemDto } from './incomplete-item.dto';
-import { ReplaceChecklistInstanceDto } from './replace-checklist-instance.dto';
 import { InstanceService } from './instance.service';
 import { InstanceResource } from './instance.resource';
 

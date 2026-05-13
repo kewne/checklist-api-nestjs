@@ -1,6 +1,6 @@
 import { Body, Controller, Param, Post, Res } from '@nestjs/common';
 import { InstanceService } from './instance.service';
-import { CreateChecklistInstanceDto } from './create-checklist-instance.dto';
+import { CreateChecklistInstanceDto } from './dto';
 import type { Response } from 'express';
 import { Hateoas, NestLinkFactory } from '@app/hateoas-nest';
 import { User } from '@app/auth/user.decorator';

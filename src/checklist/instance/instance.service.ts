@@ -1,8 +1,10 @@
 import { Injectable, NotFoundException } from '@nestjs/common';
 import { ChecklistService } from '../checklist.service';
-import { CreateChecklistInstanceFromDataDto } from './create-checklist-instance-from-data.dto';
+import {
+  ChecklistInstance,
+  ReplaceChecklistInstanceDto,
+} from './dto';
 import { CreateItemDto } from '../dto/create-item.dto';
-import { ReplaceChecklistInstanceDto } from './replace-checklist-instance.dto';
 import {
   ChecklistInstanceDocument,
   ChecklistListItem,
@@ -39,7 +41,7 @@ export class InstanceService {
 
   async createFromData(
     userId: string,
-    dto: CreateChecklistInstanceFromDataDto,
+    dto: ChecklistInstance,
   ) {
     return this.instanceRepository.createFromData(userId, dto.title, dto.items);
   }

@@ -6,9 +6,11 @@ import {
 } from '@nestjs/common';
 import { randomUUID } from 'crypto';
 import { Item, ItemCompleted } from '../checklist.repository';
-import { CreateInstanceItemFromDataDto } from './create-checklist-instance-from-data.dto';
+import {
+  ChecklistInstanceItem,
+  ReplaceChecklistInstanceDto,
+} from './dto';
 import { CreateItemDto } from '../dto/create-item.dto';
-import { ReplaceChecklistInstanceDto } from './replace-checklist-instance.dto';
 
 export interface InstanceItem extends Item {
   completed: ItemCompleted | null;
@@ -59,7 +61,7 @@ export class InstanceRepository {
   async createFromData(
     userId: string,
     title: string,
-    items: CreateInstanceItemFromDataDto[],
+    items: ChecklistInstanceItem[],
   ): Promise<string> {
     const now = new Date();
     const instanceData = {
