@@ -58,7 +58,6 @@ export class ChecklistInstanceController {
   async markItemIncomplete(
     @Param('instanceId') instanceId: string,
     @Param('itemId') itemId: string,
-    @Body() _dto: IncompleteItemDto,
     @Res({ passthrough: true }) res: Response,
     @Hateoas() linkFactory: NestLinkFactory,
   ) {
