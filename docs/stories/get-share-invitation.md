@@ -2,18 +2,16 @@
 
 **Status**: NEW
 
-As a user, I want to get a checklist share invitation so that I can give the link to another user to accept.
+As a user, I want to get a checklist share invitation so that I can view its details and share the acceptance link with others.
 
 ## Acceptance Criteria
 
-- A user can retrieve an invitation by calling `GET /checklists/:checklistId/invitations/:invitationId`
-- The endpoint returns HTTP 200 with the invitation details including the acceptance link
+- A user can retrieve any invitation by its ID
+- An invitation can be accessed by anyone
 - The invitation details include the checklist title and the unique acceptance URL
-- Only the invitation creator can retrieve the invitation details
-- Attempting to get a non-existent invitation returns HTTP 404
-- Attempting to get an invitation you didn't create returns HTTP 403
-- The invitation must still be valid (not yet accepted or expired)
-- Attempting to get an expired invitation (older than 24 hours) returns HTTP 410
+- An invitation is retrievable whether or not it has expired
+- Attempting to retrieve an invitation that doesn't exist results in an error
+- Include a link that allows the user to accept the invitation
 
 ## Related Stories
 
