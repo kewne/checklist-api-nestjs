@@ -9,7 +9,6 @@ import { Test, TestingModule } from '@nestjs/testing';
 import { NextFunction, Request, Response } from 'express';
 import request from 'supertest';
 import { HateoasModule } from '../../hateoas/hateoas.module';
-import { ChecklistService } from '../checklist.service';
 import { ChecklistInvitationController } from './checklist-invitation.controller';
 import { InvitationService } from './invitation.service';
 
@@ -18,7 +17,6 @@ describe('ChecklistInvitationController', () => {
   let serviceMock: jest.Mocked<
     Pick<InvitationService, 'createInvitation' | 'acceptInvitation'>
   >;
-  let checklistServiceMock: jest.Mocked<Pick<ChecklistService, 'findOne'>>;
   const mockUser: AuthUser = { uid: 'owner-uid' };
   const abilityFactory = new AbilityFactory();
 
@@ -26,9 +24,6 @@ describe('ChecklistInvitationController', () => {
     serviceMock = {
       createInvitation: jest.fn(),
       acceptInvitation: jest.fn(),
-    };
-    checklistServiceMock = {
-      findOne: jest.fn(),
     };
 
     const module: TestingModule = await Test.createTestingModule({
@@ -38,10 +33,6 @@ describe('ChecklistInvitationController', () => {
         {
           provide: InvitationService,
           useValue: serviceMock,
-        },
-        {
-          provide: ChecklistService,
-          useValue: checklistServiceMock,
         },
       ],
     }).compile();
@@ -72,14 +63,6 @@ describe('ChecklistInvitationController', () => {
 
   describe('POST /checklists/:checklistId/invitations', () => {
     it('should create an invitation and return 201 with Location header', async () => {
-      checklistServiceMock.findOne.mockResolvedValue({
-        id: 'checklist-1',
-        createdBy: mockUser.uid,
-        title: 'My Checklist',
-        items: [],
-        createdAt: new Date(),
-        updatedAt: new Date(),
-      });
       serviceMock.createInvitation.mockResolvedValue('inv-123');
 
       const response = await request(app.getHttpServer())
@@ -90,6 +73,7 @@ describe('ChecklistInvitationController', () => {
       expect(serviceMock.createInvitation).toHaveBeenCalledWith(
         'checklist-1',
         'My Invitation',
+        expect.any(Function),
       );
       expect(response.headers.location).toMatch(
         /\/checklists\/checklist-1\/invitations\/inv-123$/,
@@ -97,7 +81,7 @@ describe('ChecklistInvitationController', () => {
     });
 
     it('should return 404 when checklist does not exist', async () => {
-      checklistServiceMock.findOne.mockResolvedValue(null);
+      serviceMock.createInvitation.mockRejectedValue(new NotFoundException());
 
       await request(app.getHttpServer())
         .post('/checklists/non-existent/invitations')
@@ -106,14 +90,19 @@ describe('ChecklistInvitationController', () => {
     });
 
     it('should return 403 when caller is not the checklist owner', async () => {
-      checklistServiceMock.findOne.mockResolvedValue({
-        id: 'checklist-1',
-        createdBy: 'different-owner',
-        title: 'My Checklist',
-        items: [],
-        createdAt: new Date(),
-        updatedAt: new Date(),
-      });
+      serviceMock.createInvitation.mockImplementation(
+        (_checklistId, _title, check) => {
+          check?.({
+            id: 'checklist-1',
+            createdBy: 'different-owner',
+            title: '',
+            items: [],
+            createdAt: new Date(),
+            updatedAt: new Date(),
+          });
+          return Promise.resolve('inv-123');
+        },
+      );
 
       await request(app.getHttpServer())
         .post('/checklists/checklist-1/invitations')

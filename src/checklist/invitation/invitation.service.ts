@@ -1,5 +1,8 @@
 import { GoneException, Injectable, NotFoundException } from '@nestjs/common';
-import { ChecklistRepository } from '../checklist.repository';
+import {
+  ChecklistDocument,
+  ChecklistRepository,
+} from '../checklist.repository';
 import { InvitationRepository } from './invitation.repository';
 import { ShareService } from '../share.service';
 
@@ -11,12 +14,16 @@ export class InvitationService {
     private readonly shareService: ShareService,
   ) {}
 
-  async createInvitation(checklistId: string, title: string): Promise<string> {
+  async createInvitation(
+    checklistId: string,
+    title: string,
+    check?: (checklist: ChecklistDocument) => void,
+  ): Promise<string> {
     const checklist = await this.checklistRepository.findById(checklistId);
     if (!checklist) {
       throw new NotFoundException(`Checklist ${checklistId} not found`);
     }
-
+    check?.(checklist);
     return this.invitationRepository.create(checklistId, title);
   }
 
