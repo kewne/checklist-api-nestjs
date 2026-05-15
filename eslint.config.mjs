@@ -13,6 +13,9 @@ export default defineConfig(
     plugins: {
       jest: pluginJest,
     },
+    rules: {
+      '@typescript-eslint/no-unused-vars': ['error', { argsIgnorePattern: '^_' }],
+    },
     languageOptions: {
       globals: {
         ...globals.node,

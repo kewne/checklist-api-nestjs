@@ -13,14 +13,16 @@ describe('AbilityFactory', () => {
   });
 
   describe('createForUser', () => {
+    const user = { uid: 'user-1' };
+
     it('should create an ability instance', () => {
-      const ability = factory.createForUser();
+      const ability = factory.createForUser(user);
 
       expect(ability).toBeDefined();
     });
 
     it('should return an Ability instance with no rules in minimal bootstrap', () => {
-      const ability = factory.createForUser();
+      const ability = factory.createForUser(user);
 
       // In minimal bootstrap, ability should have no rules
       expect(ability.rules).toEqual([]);

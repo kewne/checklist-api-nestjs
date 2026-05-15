@@ -4,6 +4,7 @@ import {
   MongoAbility,
 } from '@casl/ability';
 import { Injectable } from '@nestjs/common';
+import { AuthUser } from '../auth/auth.guard';
 
 export type Subjects = 'all';
 
@@ -11,7 +12,7 @@ export type AppAbility = MongoAbility<[string, Subjects]>;
 
 @Injectable()
 export class AbilityFactory {
-  createForUser(): AppAbility {
+  createForUser(_user: AuthUser): AppAbility {
     const { build } = new AbilityBuilder<AppAbility>(createMongoAbility);
 
     return build();
