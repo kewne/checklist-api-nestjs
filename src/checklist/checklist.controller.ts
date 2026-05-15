@@ -11,7 +11,7 @@ import {
 import { ChecklistService } from './checklist.service';
 import { ReplaceChecklistDto } from './dto/update-checklist.dto';
 import { Hateoas, NestLinkFactory, toHandlerCall } from '@app/hateoas-nest';
-import { ChecklistInvitationController } from './checklist-invitation.controller';
+import { ChecklistInvitationController } from './invitation/checklist-invitation.controller';
 import { UserChecklistInstanceController } from './instance/user-checklist-instance.controller';
 import type { AuthUser } from '@app/auth/auth.guard';
 import { User } from '@app/auth/user.decorator';

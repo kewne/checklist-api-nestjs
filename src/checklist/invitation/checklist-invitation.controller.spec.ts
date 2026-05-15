@@ -1,22 +1,29 @@
 import { USER_AUTH_KEY } from '@app/auth/auth.constants';
 import { AuthUser } from '@app/auth/auth.guard';
-import { ForbiddenException, NotFoundException } from '@nestjs/common';
+import {
+  ForbiddenException,
+  GoneException,
+  NotFoundException,
+} from '@nestjs/common';
 import { NestExpressApplication } from '@nestjs/platform-express';
 import { Test, TestingModule } from '@nestjs/testing';
+import { NextFunction, Request, Response } from 'express';
 import request from 'supertest';
-import { Request, Response, NextFunction } from 'express';
-import { HateoasModule } from '../hateoas/hateoas.module';
+import { HateoasModule } from '../../hateoas/hateoas.module';
 import { ChecklistInvitationController } from './checklist-invitation.controller';
 import { InvitationService } from './invitation.service';
 
 describe('ChecklistInvitationController', () => {
   let app: NestExpressApplication;
-  let serviceMock: jest.Mocked<Pick<InvitationService, 'createInvitation'>>;
+  let serviceMock: jest.Mocked<
+    Pick<InvitationService, 'createInvitation' | 'acceptInvitation'>
+  >;
   const mockUser: AuthUser = { uid: 'owner-uid' };
 
   beforeEach(async () => {
     serviceMock = {
       createInvitation: jest.fn(),
+      acceptInvitation: jest.fn(),
     };
 
     const module: TestingModule = await Test.createTestingModule({
@@ -87,6 +94,38 @@ describe('ChecklistInvitationController', () => {
         .post('/checklists/checklist-1/invitations')
         .send({ title: 'My Invitation' })
         .expect(403);
+    });
+  });
+
+  describe('POST /checklists/:checklistId/invitations/:id/accept', () => {
+    it('should return 204 on successful acceptance', async () => {
+      serviceMock.acceptInvitation.mockResolvedValue(undefined);
+
+      await request(app.getHttpServer())
+        .post('/checklists/checklist-1/invitations/inv-1/accept')
+        .expect(204);
+
+      expect(serviceMock.acceptInvitation).toHaveBeenCalledWith(
+        'checklist-1',
+        'inv-1',
+        mockUser.uid,
+      );
+    });
+
+    it('should return 404 when invitation does not exist', async () => {
+      serviceMock.acceptInvitation.mockRejectedValue(new NotFoundException());
+
+      await request(app.getHttpServer())
+        .post('/checklists/checklist-1/invitations/non-existent/accept')
+        .expect(404);
+    });
+
+    it('should return 410 when invitation is expired', async () => {
+      serviceMock.acceptInvitation.mockRejectedValue(new GoneException());
+
+      await request(app.getHttpServer())
+        .post('/checklists/checklist-1/invitations/expired-inv/accept')
+        .expect(410);
     });
   });
 });

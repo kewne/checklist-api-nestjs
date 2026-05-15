@@ -1,5 +1,5 @@
-import { User } from '@app/auth/user.decorator';
 import type { AuthUser } from '@app/auth/auth.guard';
+import { User } from '@app/auth/user.decorator';
 import { Hateoas, NestLinkFactory } from '@app/hateoas-nest';
 import {
   Body,
@@ -13,7 +13,7 @@ import {
   ValidationPipe,
 } from '@nestjs/common';
 import { type Response } from 'express';
-import { CreateShareInvitationDto } from './dto/create-share-invitation.dto';
+import { CreateShareInvitationDto } from './create-share-invitation.dto';
 import { InvitationService } from './invitation.service';
 
 @Controller('checklists/:checklistId/invitations')
@@ -46,5 +46,19 @@ export class ChecklistInvitationController {
   @Get(':id')
   findOne(): void {
     // Placeholder for future implementation
+  }
+
+  @Post(':id/accept')
+  @HttpCode(204)
+  async accept(
+    @Param('checklistId') checklistId: string,
+    @Param('id') invitationId: string,
+    @User() user: AuthUser,
+  ): Promise<void> {
+    await this.invitationService.acceptInvitation(
+      checklistId,
+      invitationId,
+      user.uid,
+    );
   }
 }
