@@ -1,5 +1,4 @@
 import {
-  ForbiddenException,
   GoneException,
   NotFoundException,
 } from '@nestjs/common';
@@ -44,7 +43,7 @@ describe('InvitationService with Firestore Emulator', () => {
   });
 
   describe('createInvitation', () => {
-    it('should create an invitation when caller is the owner', async () => {
+    it('should create an invitation', async () => {
       const { id: checklistId } = await checklistRepository.create(
         { title: 'My Checklist' },
         ownerUid,
@@ -53,7 +52,6 @@ describe('InvitationService with Firestore Emulator', () => {
       const result = await service.createInvitation(
         checklistId,
         'My Invite',
-        ownerUid,
       );
 
       expect(result).toBeTruthy();
@@ -62,19 +60,8 @@ describe('InvitationService with Firestore Emulator', () => {
 
     it('should throw NotFoundException when checklist does not exist', async () => {
       await expect(
-        service.createInvitation('non-existent-id', 'My Invite', ownerUid),
+        service.createInvitation('non-existent-id', 'My Invite'),
       ).rejects.toThrow(NotFoundException);
-    });
-
-    it('should throw ForbiddenException when caller is not the owner', async () => {
-      const { id: checklistId } = await checklistRepository.create(
-        { title: 'My Checklist' },
-        ownerUid,
-      );
-
-      await expect(
-        service.createInvitation(checklistId, 'My Invite', otherUid),
-      ).rejects.toThrow(ForbiddenException);
     });
   });
 

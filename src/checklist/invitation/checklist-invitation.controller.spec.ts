@@ -1,15 +1,15 @@
 import { USER_AUTH_KEY } from '@app/auth/auth.constants';
 import { AuthUser } from '@app/auth/auth.guard';
-import {
-  ForbiddenException,
-  GoneException,
-  NotFoundException,
-} from '@nestjs/common';
+import { ABILITY_KEY } from '@app/casl/casl.interceptor';
+import { AbilityFactory } from '@app/casl/ability.factory';
+import { CaslForbiddenErrorFilter } from '@app/casl/casl-forbidden-error.filter';
+import { GoneException, NotFoundException } from '@nestjs/common';
 import { NestExpressApplication } from '@nestjs/platform-express';
 import { Test, TestingModule } from '@nestjs/testing';
 import { NextFunction, Request, Response } from 'express';
 import request from 'supertest';
 import { HateoasModule } from '../../hateoas/hateoas.module';
+import { ChecklistService } from '../checklist.service';
 import { ChecklistInvitationController } from './checklist-invitation.controller';
 import { InvitationService } from './invitation.service';
 
@@ -18,12 +18,17 @@ describe('ChecklistInvitationController', () => {
   let serviceMock: jest.Mocked<
     Pick<InvitationService, 'createInvitation' | 'acceptInvitation'>
   >;
+  let checklistServiceMock: jest.Mocked<Pick<ChecklistService, 'findOne'>>;
   const mockUser: AuthUser = { uid: 'owner-uid' };
+  const abilityFactory = new AbilityFactory();
 
   beforeEach(async () => {
     serviceMock = {
       createInvitation: jest.fn(),
       acceptInvitation: jest.fn(),
+    };
+    checklistServiceMock = {
+      findOne: jest.fn(),
     };
 
     const module: TestingModule = await Test.createTestingModule({
@@ -34,18 +39,24 @@ describe('ChecklistInvitationController', () => {
           provide: InvitationService,
           useValue: serviceMock,
         },
+        {
+          provide: ChecklistService,
+          useValue: checklistServiceMock,
+        },
       ],
     }).compile();
 
     app = module.createNestApplication<NestExpressApplication>();
+    app.useGlobalFilters(new CaslForbiddenErrorFilter());
 
     app.use(
       (
-        req: Request & { [USER_AUTH_KEY]: AuthUser },
+        req: Request & { [USER_AUTH_KEY]: AuthUser; [key: symbol]: unknown },
         _res: Response,
         next: NextFunction,
       ) => {
         req[USER_AUTH_KEY] = mockUser;
+        req[ABILITY_KEY] = abilityFactory.createForUser(mockUser);
         next();
       },
     );
@@ -61,6 +72,14 @@ describe('ChecklistInvitationController', () => {
 
   describe('POST /checklists/:checklistId/invitations', () => {
     it('should create an invitation and return 201 with Location header', async () => {
+      checklistServiceMock.findOne.mockResolvedValue({
+        id: 'checklist-1',
+        createdBy: mockUser.uid,
+        title: 'My Checklist',
+        items: [],
+        createdAt: new Date(),
+        updatedAt: new Date(),
+      });
       serviceMock.createInvitation.mockResolvedValue('inv-123');
 
       const response = await request(app.getHttpServer())
@@ -71,7 +90,6 @@ describe('ChecklistInvitationController', () => {
       expect(serviceMock.createInvitation).toHaveBeenCalledWith(
         'checklist-1',
         'My Invitation',
-        mockUser.uid,
       );
       expect(response.headers.location).toMatch(
         /\/checklists\/checklist-1\/invitations\/inv-123$/,
@@ -79,7 +97,7 @@ describe('ChecklistInvitationController', () => {
     });
 
     it('should return 404 when checklist does not exist', async () => {
-      serviceMock.createInvitation.mockRejectedValue(new NotFoundException());
+      checklistServiceMock.findOne.mockResolvedValue(null);
 
       await request(app.getHttpServer())
         .post('/checklists/non-existent/invitations')
@@ -88,7 +106,14 @@ describe('ChecklistInvitationController', () => {
     });
 
     it('should return 403 when caller is not the checklist owner', async () => {
-      serviceMock.createInvitation.mockRejectedValue(new ForbiddenException());
+      checklistServiceMock.findOne.mockResolvedValue({
+        id: 'checklist-1',
+        createdBy: 'different-owner',
+        title: 'My Checklist',
+        items: [],
+        createdAt: new Date(),
+        updatedAt: new Date(),
+      });
 
       await request(app.getHttpServer())
         .post('/checklists/checklist-1/invitations')

@@ -1,3 +1,4 @@
+import { subject } from '@casl/ability';
 import { Test, TestingModule } from '@nestjs/testing';
 import { AbilityFactory } from './ability.factory';
 
@@ -21,11 +22,30 @@ describe('AbilityFactory', () => {
       expect(ability).toBeDefined();
     });
 
-    it('should return an Ability instance with no rules in minimal bootstrap', () => {
+    it('should allow owner to create a ChecklistShareInvitation', () => {
       const ability = factory.createForUser(user);
 
-      // In minimal bootstrap, ability should have no rules
-      expect(ability.rules).toEqual([]);
+      expect(
+        ability.can(
+          'create',
+          subject('ChecklistShareInvitation', {
+            checklist: { createdBy: user.uid },
+          }),
+        ),
+      ).toBe(true);
+    });
+
+    it('should not allow non-owner to create a ChecklistShareInvitation', () => {
+      const ability = factory.createForUser(user);
+
+      expect(
+        ability.can(
+          'create',
+          subject('ChecklistShareInvitation', {
+            checklist: { createdBy: 'other-user' },
+          }),
+        ),
+      ).toBe(false);
     });
   });
 });

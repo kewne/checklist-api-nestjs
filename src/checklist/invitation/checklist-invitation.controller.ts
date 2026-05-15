@@ -1,24 +1,32 @@
 import type { AuthUser } from '@app/auth/auth.guard';
 import { User } from '@app/auth/user.decorator';
+import { Ability } from '@app/casl/ability.decorator';
+import type { AppAbility } from '@app/casl/ability.factory';
 import { Hateoas, NestLinkFactory } from '@app/hateoas-nest';
 import {
   Body,
   Controller,
   Get,
   HttpCode,
+  NotFoundException,
   Param,
   Post,
   Res,
   UsePipes,
   ValidationPipe,
 } from '@nestjs/common';
+import { ForbiddenError, subject } from '@casl/ability';
 import { type Response } from 'express';
+import { ChecklistService } from '../checklist.service';
 import { CreateShareInvitationDto } from './create-share-invitation.dto';
 import { InvitationService } from './invitation.service';
 
 @Controller('checklists/:checklistId/invitations')
 export class ChecklistInvitationController {
-  constructor(private readonly invitationService: InvitationService) {}
+  constructor(
+    private readonly invitationService: InvitationService,
+    private readonly checklistService: ChecklistService,
+  ) {}
 
   @Post()
   @HttpCode(201)
@@ -26,14 +34,21 @@ export class ChecklistInvitationController {
   async create(
     @Param('checklistId') checklistId: string,
     @Body() dto: CreateShareInvitationDto,
-    @User() user: AuthUser,
+    @Ability() ability: AppAbility,
     @Res({ passthrough: true }) res: Response,
     @Hateoas() linkFactory: NestLinkFactory,
   ) {
+    const checklist = await this.checklistService.findOne(checklistId);
+    if (!checklist) {
+      throw new NotFoundException();
+    }
+    ForbiddenError.from(ability).throwUnlessCan(
+      'create',
+      subject('ChecklistShareInvitation', { checklist }),
+    );
     const invitationId = await this.invitationService.createInvitation(
       checklistId,
       dto.title,
-      user.uid,
     );
     res.setHeader(
       'location',
