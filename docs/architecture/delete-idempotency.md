@@ -1,19 +1,17 @@
 # DELETE Idempotency
 
-When a DELETE request targets a resource that does not exist:
+## Overview
 
-1. The operation is still considered successful
-2. Return HTTP 204 No Content
-3. No response body is included
-4. Clients should treat this as a successful deletion
+DELETE operations are idempotent: deleting a resource that does not exist returns the same successful response as deleting one that does.
 
-## Example
+## Rationale
 
-```
-DELETE /checklists/123/shares/999
+Clients often cannot reliably determine whether a prior delete succeeded — network failures, retries, and race conditions mean the same DELETE may be sent more than once. Treating "resource not found" as an error would force clients to implement separate existence checks or handle spurious failures.
 
-# If the share doesn't exist or is already deleted:
-# HTTP 204 No Content
-```
+Making DELETE unconditionally successful removes this burden: the post-condition (the resource is gone) is always satisfied, regardless of prior state.
 
-This response indicates to the client that the resource is no longer present, whether it was just deleted or never existed in the first place.
+## Behaviour and Invariants
+
+- A DELETE targeting a resource that does not exist returns a success response identical to a successful deletion
+- No distinction is made between "just deleted" and "never existed"
+- The response carries no information about whether the resource was present before the request
