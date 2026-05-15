@@ -6,11 +6,9 @@ As a user, I want to accept a checklist share invitation so that I can access a 
 
 ## Acceptance Criteria
 
-- A user can accept a pending invitation by calling `POST /invitations/:invitationId/accept`
-- The invitation must have been sent to the authenticated user's email address
+- A user can accept a pending invitation by calling an endpoint.
 - The invitation must have been created within the last 24 hours
 - A successful acceptance returns HTTP 204 with no response body
-- On successful acceptance, the invitation document is deleted
 - Accepting an invitation creates a share granting the user read-only access to the checklist
 - Attempting to accept a non-existent invitation returns HTTP 404
 - Attempting to accept an invitation belonging to a different email address returns HTTP 403
