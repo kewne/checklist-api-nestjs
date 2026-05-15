@@ -11,6 +11,7 @@ import {
 import { ChecklistService } from './checklist.service';
 import { ReplaceChecklistDto } from './dto/update-checklist.dto';
 import { Hateoas, NestLinkFactory, toHandlerCall } from '@app/hateoas-nest';
+import { ChecklistInvitationController } from './checklist-invitation.controller';
 import { UserChecklistInstanceController } from './instance/user-checklist-instance.controller';
 import type { AuthUser } from '@app/auth/auth.guard';
 import { User } from '@app/auth/user.decorator';
@@ -40,6 +41,13 @@ export class ChecklistController {
           params: { userId: user.uid },
           query: { checklist_id: checklist.id },
         }),
+      )
+      .withRel(
+        'create',
+        toHandlerCall({
+          controller: ChecklistInvitationController,
+          name: 'invitation',
+        }).create({ params: { checklistId: checklist.id } }),
       )
       .toResource(checklist);
     return resource;

@@ -99,6 +99,12 @@ describe('ChecklistController', () => {
             /\/users\/test-user-id\/checklist-instances\/create-from-checklist\?checklist_id=123$/,
           ) as string,
         },
+        create: {
+          name: 'invitation',
+          href: expect.stringMatching(
+            /\/checklists\/123\/invitations$/,
+          ) as string,
+        },
       });
     });
 

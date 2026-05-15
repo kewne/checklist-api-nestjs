@@ -1,6 +1,6 @@
 # Create Share Invitation
 
-**Status**: NEW
+**Status**: DONE
 
 As a user, I want to share my checklist with other users so that they can view and use my checklist template.
 
