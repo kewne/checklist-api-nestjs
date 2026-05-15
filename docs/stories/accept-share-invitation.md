@@ -11,7 +11,6 @@ As a user, I want to accept a checklist share invitation so that I can access a 
 - A successful acceptance returns HTTP 204 with no response body
 - Accepting an invitation creates a share granting the user read-only access to the checklist
 - Attempting to accept a non-existent invitation returns HTTP 404
-- Attempting to accept an invitation belonging to a different email address returns HTTP 403
 - Attempting to accept an expired invitation (older than 24 hours) returns HTTP 410
 - Attempting to accept an already-deleted invitation returns HTTP 404
 
