@@ -3,7 +3,13 @@ import { APP_GUARD } from '@nestjs/core';
 import { NestExpressApplication } from '@nestjs/platform-express';
 import { Test, TestingModule } from '@nestjs/testing';
 import request from 'supertest';
+import { NextFunction, Request, Response } from 'express';
+import { USER_AUTH_KEY } from '../../auth/auth.constants';
+import { AuthUser } from '../../auth/auth.guard';
 import { MockAuthGuard } from '../../auth/auth.guard.mock';
+import { AbilityFactory } from '../../casl/ability.factory';
+import { CaslForbiddenErrorFilter } from '../../casl/casl-forbidden-error.filter';
+import { ABILITY_KEY } from '../../casl/casl.interceptor';
 import { HateoasModule } from '../../hateoas/hateoas.module';
 import { ChecklistInstanceController } from './checklist-instance.controller';
 import { InstanceService } from './instance.service';
@@ -18,6 +24,8 @@ describe('ChecklistInstanceController', () => {
     replace: jest.fn(),
     addItem: jest.fn(),
   };
+  const mockUser: AuthUser = { uid: 'test-user-id' };
+  const abilityFactory = new AbilityFactory();
 
   beforeEach(async () => {
     const module: TestingModule = await Test.createTestingModule({
@@ -30,12 +38,24 @@ describe('ChecklistInstanceController', () => {
         },
         {
           provide: APP_GUARD,
-          useValue: new MockAuthGuard(() => ({ uid: 'test-user-id' })),
+          useValue: new MockAuthGuard(() => mockUser),
         },
       ],
     }).compile();
 
     app = module.createNestApplication<NestExpressApplication>();
+    app.useGlobalFilters(new CaslForbiddenErrorFilter());
+    app.use(
+      (
+        req: Request & { [USER_AUTH_KEY]: AuthUser; [key: symbol]: unknown },
+        _res: Response,
+        next: NextFunction,
+      ) => {
+        req[USER_AUTH_KEY] = mockUser;
+        req[ABILITY_KEY] = abilityFactory.createForUser(mockUser);
+        next();
+      },
+    );
     await app.init();
   });
 
@@ -325,10 +345,14 @@ describe('ChecklistInstanceController', () => {
         .send({ title: 'New Item', description: 'New Description' })
         .expect(200);
 
-      expect(service.addItem).toHaveBeenCalledWith('456', {
-        title: 'New Item',
-        description: 'New Description',
-      });
+      expect(service.addItem).toHaveBeenCalledWith(
+        '456',
+        {
+          title: 'New Item',
+          description: 'New Description',
+        },
+        expect.any(Function),
+      );
       expect((response.body as Record<string, unknown>).id).toBe('456');
       expect((response.body as Record<string, unknown>).title).toBe(
         'My Instance',
@@ -351,9 +375,13 @@ describe('ChecklistInstanceController', () => {
         .send({ title: 'New Item' })
         .expect(200);
 
-      expect(service.addItem).toHaveBeenCalledWith('456', {
-        title: 'New Item',
-      });
+      expect(service.addItem).toHaveBeenCalledWith(
+        '456',
+        {
+          title: 'New Item',
+        },
+        expect.any(Function),
+      );
       expect((response.body as Record<string, unknown>).id).toBe('456');
     });
 
@@ -376,9 +404,13 @@ describe('ChecklistInstanceController', () => {
         .send({ title: 'New Item' })
         .expect(404);
 
-      expect(service.addItem).toHaveBeenCalledWith('non-existent', {
-        title: 'New Item',
-      });
+      expect(service.addItem).toHaveBeenCalledWith(
+        'non-existent',
+        {
+          title: 'New Item',
+        },
+        expect.any(Function),
+      );
     });
   });
 });

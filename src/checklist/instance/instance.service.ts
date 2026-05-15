@@ -93,7 +93,10 @@ export class InstanceService {
   async addItem(
     instanceId: string,
     dto: CreateItemDto,
+    authCheck?: (instance: ChecklistInstanceDocument) => void,
   ): Promise<ChecklistInstanceDocument> {
+    const instance = await this.findOne(instanceId);
+    authCheck?.(instance);
     return this.instanceRepository.addItem(instanceId, dto);
   }
 }

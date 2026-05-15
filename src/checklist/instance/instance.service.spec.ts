@@ -435,5 +435,30 @@ describe('InstanceService', () => {
         service.addItem('non-existent-id', { title: 'New Item' }),
       ).rejects.toThrow(NotFoundException);
     });
+
+    it('should propagate error thrown by authCheck and not add the item', async () => {
+      const userId = randomUUID();
+      const checklist = await checklistRepository.create(
+        { title: 'CL', items: [] },
+        userId,
+      );
+      const instanceId = await instanceRepository.create(
+        checklist.id,
+        userId,
+        'Test Instance',
+        [],
+      );
+
+      const authCheck = jest.fn().mockImplementation(() => {
+        throw new Error('Forbidden');
+      });
+
+      await expect(
+        service.addItem(instanceId, { title: 'New Item' }, authCheck),
+      ).rejects.toThrow('Forbidden');
+
+      const instance = await service.findOne(instanceId);
+      expect(instance.items).toHaveLength(0);
+    });
   });
 });

@@ -47,5 +47,31 @@ describe('AbilityFactory', () => {
         ),
       ).toBe(false);
     });
+
+    it('should allow owner to create a ChecklistInstanceItem', () => {
+      const ability = factory.createForUser(user);
+
+      expect(
+        ability.can(
+          'create',
+          subject('ChecklistInstanceItem', {
+            instance: { createdBy: user.uid },
+          }),
+        ),
+      ).toBe(true);
+    });
+
+    it('should not allow non-owner to create a ChecklistInstanceItem', () => {
+      const ability = factory.createForUser(user);
+
+      expect(
+        ability.can(
+          'create',
+          subject('ChecklistInstanceItem', {
+            instance: { createdBy: 'other-user' },
+          }),
+        ),
+      ).toBe(false);
+    });
   });
 });
