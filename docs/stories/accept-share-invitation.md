@@ -1,6 +1,6 @@
 # Accept Share Invitation
 
-**Status**: NEW
+**Status**: DONE
 
 As a user, I want to accept a checklist share invitation so that I can access a checklist that was shared with me.
 
