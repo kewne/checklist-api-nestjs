@@ -3,12 +3,14 @@ import { Module } from '@nestjs/common';
 import { ChecklistController } from './checklist.controller';
 import { ChecklistRepository } from './checklist.repository';
 import { ChecklistService } from './checklist.service';
+import { ShareRepository } from './share.repository';
+import { ShareService } from './share.service';
 import { UserChecklistController } from './user-checklist.controller';
 
 @Module({
   controllers: [ChecklistController, UserChecklistController],
-  providers: [ChecklistService, ChecklistRepository],
+  providers: [ChecklistService, ChecklistRepository, ShareService, ShareRepository],
   imports: [HateoasModule],
-  exports: [ChecklistService],
+  exports: [ChecklistService, ShareService],
 })
 export class ChecklistModule {}
