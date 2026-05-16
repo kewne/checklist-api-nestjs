@@ -43,11 +43,11 @@ export class ChecklistController {
         }),
       )
       .withRel(
-        'create',
+        'related',
         toHandlerCall({
           controller: ChecklistInvitationController,
-          name: 'invitation',
-        }).create({ params: { checklistId: checklist.id } }),
+          name: 'share-invitations',
+        }).list({ params: { checklistId: checklist.id } }),
       )
       .toResource(checklist);
     return resource;

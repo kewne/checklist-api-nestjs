@@ -64,6 +64,12 @@ export class ChecklistInvitationController {
     return linkFactory
       .buildResource()
       .withRel(
+        'create',
+        toHandlerCall({
+          controller: ChecklistInvitationController,
+        }).create({ params: { checklistId } }),
+      )
+      .withRel(
         'items',
         ...invitations.map((inv) => {
           const isExpired = Date.now() > inv.expiresAt.getTime();

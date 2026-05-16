@@ -102,6 +102,8 @@ describe('ChecklistInvitationController', () => {
         /\/checklists\/checklist-1\/invitations\/inv-2$/,
       );
       expect(items[0].title).toBe('Second Invite');
+      const create = body._links.create as { href: string };
+      expect(create.href).toMatch(/\/checklists\/checklist-1\/invitations$/);
     });
 
     it('should append (expired) to the name when invitation is expired', async () => {
