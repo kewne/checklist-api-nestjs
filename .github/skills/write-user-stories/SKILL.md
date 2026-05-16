@@ -109,6 +109,10 @@ docs/stories/
 └── share-checklist.md
 ```
 
+## Glossary
+
+For clarity on domain-specific terms, refer to the [glossary](../../docs/glossary) which documents key concepts used in user stories. When defining acceptance criteria, use terminology consistent with the glossary to ensure clear communication across the team.
+
 ## Template
 
 ```markdown
