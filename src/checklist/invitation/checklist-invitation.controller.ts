@@ -2,7 +2,7 @@ import type { AuthUser } from '@app/auth/auth.guard';
 import { User } from '@app/auth/user.decorator';
 import { Ability } from '@app/casl/ability.decorator';
 import type { AppAbility } from '@app/casl/ability.factory';
-import { Hateoas, NestLinkFactory } from '@app/hateoas-nest';
+import { Hateoas, NestLinkFactory, toHandlerCall } from '@app/hateoas-nest';
 import {
   Body,
   Controller,
@@ -52,8 +52,26 @@ export class ChecklistInvitationController {
   }
 
   @Get(':id')
-  findOne(): void {
-    // Placeholder for future implementation
+  async findOne(
+    @Param('checklistId') checklistId: string,
+    @Param('id') id: string,
+    @Hateoas() linkFactory: NestLinkFactory,
+  ) {
+    const view = await this.invitationService.getInvitation(checklistId, id);
+    const isExpired = Date.now() > view.expiresAt.getTime();
+    let builder = linkFactory.buildResource();
+    if (!isExpired) {
+      builder = builder.withRel(
+        'accept',
+        toHandlerCall({
+          controller: ChecklistInvitationController,
+        }).accept({ params: { checklistId, id } }),
+      );
+    }
+    return builder.toResource({
+      title: view.checklistTitle,
+      expiresAt: view.expiresAt,
+    });
   }
 
   @Post(':id/accept')

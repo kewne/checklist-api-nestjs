@@ -6,6 +6,11 @@ import {
 import { InvitationRepository } from './invitation.repository';
 import { ShareService } from '../share.service';
 
+export interface InvitationView {
+  checklistTitle: string;
+  expiresAt: Date;
+}
+
 @Injectable()
 export class InvitationService {
   constructor(
@@ -13,6 +18,29 @@ export class InvitationService {
     private readonly checklistRepository: ChecklistRepository,
     private readonly shareService: ShareService,
   ) {}
+
+  async getInvitation(
+    checklistId: string,
+    invitationId: string,
+  ): Promise<InvitationView> {
+    const invitation = await this.invitationRepository.findById(
+      checklistId,
+      invitationId,
+    );
+    if (!invitation) {
+      throw new NotFoundException();
+    }
+
+    const checklist = await this.checklistRepository.findById(checklistId);
+    if (!checklist) {
+      throw new NotFoundException();
+    }
+
+    return {
+      checklistTitle: checklist.title,
+      expiresAt: invitation.expiresAt,
+    };
+  }
 
   async createInvitation(
     checklistId: string,

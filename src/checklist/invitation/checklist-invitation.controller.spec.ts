@@ -1,3 +1,4 @@
+import { PlainResource } from '@app/hateoas';
 import { USER_AUTH_KEY } from '@app/auth/auth.constants';
 import { AuthUser } from '@app/auth/auth.guard';
 import { ABILITY_KEY } from '@app/casl/casl.interceptor';
@@ -15,7 +16,10 @@ import { InvitationService } from './invitation.service';
 describe('ChecklistInvitationController', () => {
   let app: NestExpressApplication;
   let serviceMock: jest.Mocked<
-    Pick<InvitationService, 'createInvitation' | 'acceptInvitation'>
+    Pick<
+      InvitationService,
+      'createInvitation' | 'acceptInvitation' | 'getInvitation'
+    >
   >;
   const mockUser: AuthUser = { uid: 'owner-uid' };
   const abilityFactory = new AbilityFactory();
@@ -24,6 +28,7 @@ describe('ChecklistInvitationController', () => {
     serviceMock = {
       createInvitation: jest.fn(),
       acceptInvitation: jest.fn(),
+      getInvitation: jest.fn(),
     };
 
     const module: TestingModule = await Test.createTestingModule({
@@ -108,6 +113,53 @@ describe('ChecklistInvitationController', () => {
         .post('/checklists/checklist-1/invitations')
         .send({ title: 'My Invitation' })
         .expect(403);
+    });
+  });
+
+  describe('GET /checklists/:checklistId/invitations/:id', () => {
+    it('should return 200 with title, expiresAt and accept link when not expired', async () => {
+      const expiresAt = new Date(Date.now() + 60 * 60 * 1000);
+      serviceMock.getInvitation.mockResolvedValue({
+        checklistTitle: 'My Checklist',
+        expiresAt,
+      });
+
+      const response = await request(app.getHttpServer())
+        .get('/checklists/checklist-1/invitations/inv-1')
+        .expect(200);
+
+      const body = response.body as PlainResource;
+      expect(body.title).toBe('My Checklist');
+      expect(body.expiresAt).toBe(expiresAt.toISOString());
+      expect(body._links.accept).toBeDefined();
+      expect((body._links.accept as { href: string }).href).toMatch(
+        /\/checklists\/checklist-1\/invitations\/inv-1\/accept$/,
+      );
+    });
+
+    it('should return 200 without accept link when expired', async () => {
+      const expiresAt = new Date(Date.now() - 60 * 60 * 1000);
+      serviceMock.getInvitation.mockResolvedValue({
+        checklistTitle: 'My Checklist',
+        expiresAt,
+      });
+
+      const response = await request(app.getHttpServer())
+        .get('/checklists/checklist-1/invitations/inv-1')
+        .expect(200);
+
+      const body = response.body as PlainResource;
+      expect(body.title).toBe('My Checklist');
+      expect(body.expiresAt).toBe(expiresAt.toISOString());
+      expect(body._links.accept).toBeUndefined();
+    });
+
+    it('should return 404 when invitation does not exist', async () => {
+      serviceMock.getInvitation.mockRejectedValue(new NotFoundException());
+
+      await request(app.getHttpServer())
+        .get('/checklists/checklist-1/invitations/non-existent')
+        .expect(404);
     });
   });
 
