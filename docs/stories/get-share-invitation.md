@@ -1,6 +1,6 @@
 # Get Share Invitation
 
-**Status**: NEW
+**Status**: DONE
 
 As a user, I want to get a checklist share invitation so that I can view its details and share the acceptance link with others.
 
