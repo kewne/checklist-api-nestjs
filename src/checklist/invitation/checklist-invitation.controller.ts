@@ -51,6 +51,31 @@ export class ChecklistInvitationController {
     );
   }
 
+  @Get()
+  async list(
+    @Param('checklistId') checklistId: string,
+    @Ability() ability: AppAbility,
+    @Hateoas() linkFactory: NestLinkFactory,
+  ) {
+    const invitations = await this.invitationService.listInvitations(
+      checklistId,
+      ability,
+    );
+    return linkFactory
+      .buildResource()
+      .withRel(
+        'items',
+        ...invitations.map((inv) => {
+          const isExpired = Date.now() > inv.expiresAt.getTime();
+          return toHandlerCall({
+            controller: ChecklistInvitationController,
+            title: isExpired ? `${inv.title} (expired)` : inv.title,
+          }).findOne({ params: { checklistId, id: inv.id } });
+        }),
+      )
+      .toResource({});
+  }
+
   @Get(':id')
   async findOne(
     @Param('checklistId') checklistId: string,

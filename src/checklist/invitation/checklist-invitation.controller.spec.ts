@@ -1,9 +1,10 @@
-import { PlainResource } from '@app/hateoas';
+import { LinkObject, PlainResource } from '@app/hateoas';
 import { USER_AUTH_KEY } from '@app/auth/auth.constants';
 import { AuthUser } from '@app/auth/auth.guard';
 import { ABILITY_KEY } from '@app/casl/casl.interceptor';
 import { AbilityFactory } from '@app/casl/ability.factory';
 import { CaslForbiddenErrorFilter } from '@app/casl/casl-forbidden-error.filter';
+import { ForbiddenError, subject } from '@casl/ability';
 import { GoneException, NotFoundException } from '@nestjs/common';
 import { NestExpressApplication } from '@nestjs/platform-express';
 import { Test, TestingModule } from '@nestjs/testing';
@@ -18,7 +19,10 @@ describe('ChecklistInvitationController', () => {
   let serviceMock: jest.Mocked<
     Pick<
       InvitationService,
-      'createInvitation' | 'acceptInvitation' | 'getInvitation'
+      | 'createInvitation'
+      | 'acceptInvitation'
+      | 'getInvitation'
+      | 'listInvitations'
     >
   >;
   const mockUser: AuthUser = { uid: 'owner-uid' };
@@ -29,6 +33,7 @@ describe('ChecklistInvitationController', () => {
       createInvitation: jest.fn(),
       acceptInvitation: jest.fn(),
       getInvitation: jest.fn(),
+      listInvitations: jest.fn(),
     };
 
     const module: TestingModule = await Test.createTestingModule({
@@ -64,6 +69,98 @@ describe('ChecklistInvitationController', () => {
     if (app) {
       await app.close();
     }
+  });
+
+  describe('GET /checklists/:checklistId/invitations', () => {
+    it('should return 200 with items links for each invitation', async () => {
+      const expiresAt = new Date(Date.now() + 60 * 60 * 1000);
+      serviceMock.listInvitations.mockResolvedValue([
+        {
+          id: 'inv-2',
+          checklistId: 'checklist-1',
+          title: 'Second Invite',
+          createdAt: new Date(),
+          expiresAt,
+        },
+        {
+          id: 'inv-1',
+          checklistId: 'checklist-1',
+          title: 'First Invite',
+          createdAt: new Date(),
+          expiresAt,
+        },
+      ]);
+
+      const response = await request(app.getHttpServer())
+        .get('/checklists/checklist-1/invitations')
+        .expect(200);
+
+      const body = response.body as PlainResource;
+      const items = body._links.items as LinkObject[];
+      expect(items).toHaveLength(2);
+      expect(items[0].href).toMatch(
+        /\/checklists\/checklist-1\/invitations\/inv-2$/,
+      );
+      expect(items[0].title).toBe('Second Invite');
+    });
+
+    it('should append (expired) to the name when invitation is expired', async () => {
+      const expiresAt = new Date(Date.now() - 60 * 60 * 1000);
+      serviceMock.listInvitations.mockResolvedValue([
+        {
+          id: 'inv-1',
+          checklistId: 'checklist-1',
+          title: 'Old Invite',
+          createdAt: new Date(),
+          expiresAt,
+        },
+      ]);
+
+      const response = await request(app.getHttpServer())
+        .get('/checklists/checklist-1/invitations')
+        .expect(200);
+
+      const body = response.body as PlainResource;
+      const item = body._links.items as LinkObject;
+      expect(item.title).toBe('Old Invite (expired)');
+    });
+
+    it('should return 200 with no items key when list is empty', async () => {
+      serviceMock.listInvitations.mockResolvedValue([]);
+
+      const response = await request(app.getHttpServer())
+        .get('/checklists/checklist-1/invitations')
+        .expect(200);
+
+      const body = response.body as PlainResource;
+      expect(body._links.items).toBeUndefined();
+    });
+
+    it('should return 404 when checklist does not exist', async () => {
+      serviceMock.listInvitations.mockRejectedValue(new NotFoundException());
+
+      await request(app.getHttpServer())
+        .get('/checklists/non-existent/invitations')
+        .expect(404);
+    });
+
+    it('should return 403 when caller is not the checklist owner', async () => {
+      serviceMock.listInvitations.mockImplementation(
+        (_checklistId, ability) => {
+          ForbiddenError.from(ability).throwUnlessCan(
+            'read',
+            subject('ChecklistShareInvitation', {
+              checklist: { createdBy: 'different-owner' },
+            }),
+          );
+          return Promise.resolve([]);
+        },
+      );
+
+      await request(app.getHttpServer())
+        .get('/checklists/checklist-1/invitations')
+        .expect(403);
+    });
   });
 
   describe('POST /checklists/:checklistId/invitations', () => {

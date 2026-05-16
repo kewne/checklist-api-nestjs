@@ -14,7 +14,7 @@ interface ChecklistInstanceItem {
   instance: { createdBy: string };
 }
 
-export type Actions = 'create';
+export type Actions = 'create' | 'read';
 export type Subjects =
   | ChecklistShareInvitation
   | 'ChecklistShareInvitation'
@@ -29,6 +29,10 @@ export class AbilityFactory {
     const { can, build } = new AbilityBuilder<AppAbility>(createMongoAbility);
 
     can('create', 'ChecklistShareInvitation', {
+      'checklist.createdBy': user.uid,
+    });
+
+    can('read', 'ChecklistShareInvitation', {
       'checklist.createdBy': user.uid,
     });
 

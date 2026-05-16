@@ -1,9 +1,8 @@
-import {
-  GoneException,
-  NotFoundException,
-} from '@nestjs/common';
+import { GoneException, NotFoundException } from '@nestjs/common';
 import { Test, TestingModule } from '@nestjs/testing';
+import { ForbiddenError } from '@casl/ability';
 import { FirestoreModule } from '../../firestore.module';
+import { AbilityFactory } from '../../casl/ability.factory';
 import { ChecklistRepository } from '../checklist.repository';
 import { InvitationRepository } from './invitation.repository';
 import { InvitationService } from './invitation.service';
@@ -15,6 +14,7 @@ describe('InvitationService with Firestore Emulator', () => {
   let checklistRepository: ChecklistRepository;
   let invitationRepository: InvitationRepository;
   let shareRepository: ShareRepository;
+  const abilityFactory = new AbilityFactory();
 
   const ownerUid = 'owner-uid';
   const otherUid = 'other-uid';
@@ -42,6 +42,54 @@ describe('InvitationService with Firestore Emulator', () => {
     shareRepository = module.get<ShareRepository>(ShareRepository);
   });
 
+  describe('listInvitations', () => {
+    it('should return invitations ordered newest first', async () => {
+      const { id: checklistId } = await checklistRepository.create(
+        { title: 'My Checklist' },
+        ownerUid,
+      );
+      const firstId = await invitationRepository.create(checklistId, 'First');
+      const secondId = await invitationRepository.create(checklistId, 'Second');
+
+      const ownerAbility = abilityFactory.createForUser({ uid: ownerUid });
+      const result = await service.listInvitations(checklistId, ownerAbility);
+
+      expect(result.map((i) => i.id)).toEqual([secondId, firstId]);
+    });
+
+    it('should return empty array when checklist has no invitations', async () => {
+      const { id: checklistId } = await checklistRepository.create(
+        { title: 'My Checklist' },
+        ownerUid,
+      );
+
+      const ownerAbility = abilityFactory.createForUser({ uid: ownerUid });
+      const result = await service.listInvitations(checklistId, ownerAbility);
+
+      expect(result).toEqual([]);
+    });
+
+    it('should throw NotFoundException when checklist does not exist', async () => {
+      const ownerAbility = abilityFactory.createForUser({ uid: ownerUid });
+
+      await expect(
+        service.listInvitations('non-existent-id', ownerAbility),
+      ).rejects.toThrow(NotFoundException);
+    });
+
+    it('should throw ForbiddenError when caller is not the checklist owner', async () => {
+      const { id: checklistId } = await checklistRepository.create(
+        { title: 'My Checklist' },
+        ownerUid,
+      );
+      const nonOwnerAbility = abilityFactory.createForUser({ uid: otherUid });
+
+      await expect(
+        service.listInvitations(checklistId, nonOwnerAbility),
+      ).rejects.toThrow(ForbiddenError);
+    });
+  });
+
   describe('createInvitation', () => {
     it('should create an invitation', async () => {
       const { id: checklistId } = await checklistRepository.create(
@@ -49,10 +97,7 @@ describe('InvitationService with Firestore Emulator', () => {
         ownerUid,
       );
 
-      const result = await service.createInvitation(
-        checklistId,
-        'My Invite',
-      );
+      const result = await service.createInvitation(checklistId, 'My Invite');
 
       expect(result).toBeTruthy();
       expect(typeof result).toBe('string');

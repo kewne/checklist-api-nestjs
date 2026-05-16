@@ -1,9 +1,14 @@
 import { GoneException, Injectable, NotFoundException } from '@nestjs/common';
+import { ForbiddenError, subject } from '@casl/ability';
+import type { AppAbility } from '@app/casl/ability.factory';
 import {
   ChecklistDocument,
   ChecklistRepository,
 } from '../checklist.repository';
-import { InvitationRepository } from './invitation.repository';
+import {
+  InvitationDocument,
+  InvitationRepository,
+} from './invitation.repository';
 import { ShareService } from '../share.service';
 
 export interface InvitationView {
@@ -40,6 +45,21 @@ export class InvitationService {
       checklistTitle: checklist.title,
       expiresAt: invitation.expiresAt,
     };
+  }
+
+  async listInvitations(
+    checklistId: string,
+    ability: AppAbility,
+  ): Promise<InvitationDocument[]> {
+    const checklist = await this.checklistRepository.findById(checklistId);
+    if (!checklist) {
+      throw new NotFoundException(`Checklist ${checklistId} not found`);
+    }
+    ForbiddenError.from(ability).throwUnlessCan(
+      'read',
+      subject('ChecklistShareInvitation', { checklist }),
+    );
+    return this.invitationRepository.findByChecklist(checklistId);
   }
 
   async createInvitation(

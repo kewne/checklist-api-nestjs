@@ -61,6 +61,26 @@ export class InvitationRepository {
     };
   }
 
+  async findByChecklist(checklistId: string): Promise<InvitationDocument[]> {
+    const snapshot = await this.firestore
+      .collection(this.checklistsCollection)
+      .doc(checklistId)
+      .collection(this.invitationsSubcollection)
+      .orderBy('createdAt', 'desc')
+      .get();
+
+    return snapshot.docs.map((doc) => {
+      const data = doc.data();
+      return {
+        id: doc.id,
+        checklistId,
+        title: data.title as string,
+        createdAt: (data.createdAt as Timestamp).toDate(),
+        expiresAt: (data.expiresAt as Timestamp).toDate(),
+      };
+    });
+  }
+
   async delete(checklistId: string, invitationId: string): Promise<void> {
     await this.firestore
       .collection(this.checklistsCollection)
