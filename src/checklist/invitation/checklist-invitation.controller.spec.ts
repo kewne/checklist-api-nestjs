@@ -13,7 +13,6 @@ import request from 'supertest';
 import { HateoasModule } from '../../hateoas/hateoas.module';
 import { ChecklistInvitationController } from './checklist-invitation.controller';
 import { InvitationService } from './invitation.service';
-import { stringConcat } from '@google-cloud/firestore/pipelines';
 
 describe('ChecklistInvitationController', () => {
   let app: NestExpressApplication;
@@ -217,10 +216,13 @@ describe('ChecklistInvitationController', () => {
   });
 
   describe('GET /checklists/:checklistId/invitations/:id', () => {
-    it('should return 200 with title, expiresAt and accept link when not expired', async () => {
+    it('should return 200 with title, checklistTitle, createdAt, expiresAt and preview link when not expired', async () => {
       const expiresAt = new Date(Date.now() + 60 * 60 * 1000);
+      const createdAt = new Date('2026-01-01T00:00:00.000Z');
       serviceMock.getInvitation.mockResolvedValue({
         title: 'Invitation',
+        checklistTitle: 'My Checklist',
+        createdAt,
         expiresAt,
       });
 
@@ -230,6 +232,70 @@ describe('ChecklistInvitationController', () => {
 
       expect(response.body).toEqual<PlainResource>({
         title: 'Invitation',
+        checklistTitle: 'My Checklist',
+        createdAt: createdAt.toISOString(),
+        expiresAt: expiresAt.toISOString(),
+        _links: {
+          self: expect.anything() as LinkObject,
+          preview: {
+            href: expect.stringMatching(
+              /\/checklists\/checklist-1\/invitations\/inv-1\/preview$/,
+            ) as string,
+          },
+        },
+      });
+    });
+
+    it('should return 200 without accept link when expired', async () => {
+      const expiresAt = new Date(Date.now() - 60 * 60 * 1000);
+      const createdAt = new Date('2026-01-01T00:00:00.000Z');
+      serviceMock.getInvitation.mockResolvedValue({
+        title: 'My Invitation',
+        checklistTitle: 'My Checklist',
+        createdAt,
+        expiresAt,
+      });
+
+      const response = await request(app.getHttpServer())
+        .get('/checklists/checklist-1/invitations/inv-1')
+        .expect(200);
+
+      expect(response.body).toEqual<PlainResource>({
+        title: 'My Invitation',
+        checklistTitle: 'My Checklist',
+        createdAt: createdAt.toISOString(),
+        expiresAt: expiresAt.toISOString(),
+        _links: {
+          self: expect.any(Object) as LinkObject,
+        },
+      });
+    });
+
+    it('should return 404 when invitation does not exist', async () => {
+      serviceMock.getInvitation.mockRejectedValue(new NotFoundException());
+
+      await request(app.getHttpServer())
+        .get('/checklists/checklist-1/invitations/non-existent')
+        .expect(404);
+    });
+  });
+
+  describe('GET /checklists/:checklistId/invitations/:id/preview', () => {
+    it('should return 200 with checklistTitle, expiresAt and accept link when not expired', async () => {
+      const expiresAt = new Date(Date.now() + 60 * 60 * 1000);
+      serviceMock.getInvitation.mockResolvedValue({
+        title: 'Invitation',
+        checklistTitle: 'My Checklist',
+        createdAt: new Date(),
+        expiresAt,
+      });
+
+      const response = await request(app.getHttpServer())
+        .get('/checklists/checklist-1/invitations/inv-1/preview')
+        .expect(200);
+
+      expect(response.body).toEqual<PlainResource>({
+        checklistTitle: 'My Checklist',
         expiresAt: expiresAt.toISOString(),
         _links: {
           self: expect.anything() as LinkObject,
@@ -245,16 +311,18 @@ describe('ChecklistInvitationController', () => {
     it('should return 200 without accept link when expired', async () => {
       const expiresAt = new Date(Date.now() - 60 * 60 * 1000);
       serviceMock.getInvitation.mockResolvedValue({
-        title: 'My Checklist',
+        title: 'Invitation',
+        checklistTitle: 'My Checklist',
+        createdAt: new Date(),
         expiresAt,
       });
 
       const response = await request(app.getHttpServer())
-        .get('/checklists/checklist-1/invitations/inv-1')
+        .get('/checklists/checklist-1/invitations/inv-1/preview')
         .expect(200);
 
       expect(response.body).toEqual<PlainResource>({
-        title: 'My Checklist',
+        checklistTitle: 'My Checklist',
         expiresAt: expiresAt.toISOString(),
         _links: {
           self: expect.any(Object) as LinkObject,
@@ -266,7 +334,7 @@ describe('ChecklistInvitationController', () => {
       serviceMock.getInvitation.mockRejectedValue(new NotFoundException());
 
       await request(app.getHttpServer())
-        .get('/checklists/checklist-1/invitations/non-existent')
+        .get('/checklists/checklist-1/invitations/non-existent/preview')
         .expect(404);
     });
   });

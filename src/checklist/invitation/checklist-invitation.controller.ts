@@ -93,6 +93,31 @@ export class ChecklistInvitationController {
     let builder = linkFactory.buildResource();
     if (!isExpired) {
       builder = builder.withRel(
+        'preview',
+        toHandlerCall({
+          controller: ChecklistInvitationController,
+        }).preview({ params: { checklistId, id } }),
+      );
+    }
+    return builder.toResource({
+      title: view.title,
+      checklistTitle: view.checklistTitle,
+      createdAt: view.createdAt,
+      expiresAt: view.expiresAt,
+    });
+  }
+
+  @Get(':id/preview')
+  async preview(
+    @Param('checklistId') checklistId: string,
+    @Param('id') id: string,
+    @Hateoas() linkFactory: NestLinkFactory,
+  ) {
+    const view = await this.invitationService.getInvitation(checklistId, id);
+    const isExpired = Date.now() > view.expiresAt.getTime();
+    let builder = linkFactory.buildResource();
+    if (!isExpired) {
+      builder = builder.withRel(
         'accept',
         toHandlerCall({
           controller: ChecklistInvitationController,
@@ -100,7 +125,7 @@ export class ChecklistInvitationController {
       );
     }
     return builder.toResource({
-      title: view.title,
+      checklistTitle: view.checklistTitle,
       expiresAt: view.expiresAt,
     });
   }
