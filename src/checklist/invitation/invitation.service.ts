@@ -12,7 +12,7 @@ import {
 import { ShareService } from '../share.service';
 
 export interface InvitationView {
-  checklistTitle: string;
+  title: string;
   expiresAt: Date;
 }
 
@@ -42,7 +42,7 @@ export class InvitationService {
     }
 
     return {
-      checklistTitle: checklist.title,
+      title: invitation.title,
       expiresAt: invitation.expiresAt,
     };
   }

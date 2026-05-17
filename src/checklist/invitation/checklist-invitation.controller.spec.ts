@@ -13,6 +13,7 @@ import request from 'supertest';
 import { HateoasModule } from '../../hateoas/hateoas.module';
 import { ChecklistInvitationController } from './checklist-invitation.controller';
 import { InvitationService } from './invitation.service';
+import { stringConcat } from '@google-cloud/firestore/pipelines';
 
 describe('ChecklistInvitationController', () => {
   let app: NestExpressApplication;
@@ -219,7 +220,7 @@ describe('ChecklistInvitationController', () => {
     it('should return 200 with title, expiresAt and accept link when not expired', async () => {
       const expiresAt = new Date(Date.now() + 60 * 60 * 1000);
       serviceMock.getInvitation.mockResolvedValue({
-        checklistTitle: 'My Checklist',
+        title: 'Invitation',
         expiresAt,
       });
 
@@ -227,19 +228,24 @@ describe('ChecklistInvitationController', () => {
         .get('/checklists/checklist-1/invitations/inv-1')
         .expect(200);
 
-      const body = response.body as PlainResource;
-      expect(body.title).toBe('My Checklist');
-      expect(body.expiresAt).toBe(expiresAt.toISOString());
-      expect(body._links.accept).toBeDefined();
-      expect((body._links.accept as { href: string }).href).toMatch(
-        /\/checklists\/checklist-1\/invitations\/inv-1\/accept$/,
-      );
+      expect(response.body).toEqual<PlainResource>({
+        title: 'Invitation',
+        expiresAt: expiresAt.toISOString(),
+        _links: {
+          self: expect.anything() as LinkObject,
+          accept: {
+            href: expect.stringMatching(
+              /\/checklists\/checklist-1\/invitations\/inv-1\/accept$/,
+            ) as string,
+          },
+        },
+      });
     });
 
     it('should return 200 without accept link when expired', async () => {
       const expiresAt = new Date(Date.now() - 60 * 60 * 1000);
       serviceMock.getInvitation.mockResolvedValue({
-        checklistTitle: 'My Checklist',
+        title: 'My Checklist',
         expiresAt,
       });
 
@@ -247,10 +253,13 @@ describe('ChecklistInvitationController', () => {
         .get('/checklists/checklist-1/invitations/inv-1')
         .expect(200);
 
-      const body = response.body as PlainResource;
-      expect(body.title).toBe('My Checklist');
-      expect(body.expiresAt).toBe(expiresAt.toISOString());
-      expect(body._links.accept).toBeUndefined();
+      expect(response.body).toEqual<PlainResource>({
+        title: 'My Checklist',
+        expiresAt: expiresAt.toISOString(),
+        _links: {
+          self: expect.any(Object) as LinkObject,
+        },
+      });
     });
 
     it('should return 404 when invitation does not exist', async () => {

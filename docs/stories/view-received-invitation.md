@@ -1,14 +1,14 @@
-# Get Share Invitation
+# View Received Invitation
 
-**Status**: DONE
+**Status**: NEW
 
-As a user, I want to get a checklist share invitation so that I can view its details and share the acceptance link with others.
+As a user, I want to view details of a share invitation I received so that I can decide whether to accept it.
 
 ## Acceptance Criteria
 
-- A user can retrieve any invitation by its ID
+- A user can retrieve an invitation by its ID
 - An invitation can be accessed by anyone
-- The invitation details include the invitation title, checklist title, created timestamp, and expiration timestamp
+- The invitation details include only the checklist title and expiration timestamp
 - An invitation is retrievable whether or not it has expired
 - Attempting to retrieve an invitation that doesn't exist results in an error
 - Include a link that allows the user to accept the invitation
@@ -16,7 +16,6 @@ As a user, I want to get a checklist share invitation so that I can view its det
 
 ## Related Stories
 
+- [Get Share Invitation](get-share-invitation.md)
 - [Create Share Invitation](create-share-invitation.md)
 - [Accept Share Invitation](accept-share-invitation.md)
-- [List Checklist Shares](list-checklist-shares.md)
-- [View Received Invitation](view-received-invitation.md)

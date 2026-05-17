@@ -100,7 +100,7 @@ export class ChecklistInvitationController {
       );
     }
     return builder.toResource({
-      title: view.checklistTitle,
+      title: view.title,
       expiresAt: view.expiresAt,
     });
   }

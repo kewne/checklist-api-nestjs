@@ -11,7 +11,8 @@ When a checklist owner wants to share their template with another user, they cre
 A checklist share invitation contains:
 
 - **Invitation ID**: An unguessable identifier (token) that uniquely identifies the invitation
-- **Checklist Title**: The title of the checklist being shared. This is used by the checklist owner to identify the purpose of the share
+- **Invitation Title**: A title assigned by the checklist owner to easily identify the invitation (for the owner's reference only; not exposed to recipients)
+- **Checklist Title**: The title of the checklist being shared. This is displayed to both the owner and recipients.
 - **Created Timestamp**: When the invitation was created
 - **Expiration Timestamp**: When the invitation expires (24 hours after creation)
 
