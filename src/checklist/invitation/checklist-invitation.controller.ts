@@ -18,6 +18,7 @@ import { ForbiddenError, subject } from '@casl/ability';
 import { type Response } from 'express';
 import { CreateShareInvitationDto } from './create-share-invitation.dto';
 import { InvitationService } from './invitation.service';
+import { ChecklistShareController } from '../checklist-share.controller';
 
 @Controller('checklists/:checklistId/invitations')
 export class ChecklistInvitationController {
@@ -68,6 +69,13 @@ export class ChecklistInvitationController {
         toHandlerCall({
           controller: ChecklistInvitationController,
         }).create({ params: { checklistId } }),
+      )
+      .withRel(
+        'related',
+        toHandlerCall({
+          controller: ChecklistShareController,
+          name: 'shares',
+        }).list({ params: { checklistId } }),
       )
       .withRel(
         'items',

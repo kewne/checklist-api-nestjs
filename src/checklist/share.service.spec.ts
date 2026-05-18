@@ -1,9 +1,11 @@
+import { ForbiddenError } from '@casl/ability';
 import {
   ConflictException,
   ForbiddenException,
   NotFoundException,
 } from '@nestjs/common';
 import { Test, TestingModule } from '@nestjs/testing';
+import { AbilityFactory } from '../casl/ability.factory';
 import { FirestoreModule } from '../firestore.module';
 import { ChecklistRepository } from './checklist.repository';
 import { ShareRepository } from './share.repository';
@@ -17,6 +19,7 @@ describe('ShareService with Firestore Emulator', () => {
   const ownerUid = 'owner-uid';
   const otherUid = 'other-uid';
   const userId = 'recipient-uid';
+  const abilityFactory = new AbilityFactory();
 
   beforeAll(() => {
     // Set up Firestore to use emulator
@@ -72,7 +75,10 @@ describe('ShareService with Firestore Emulator', () => {
       );
       await service.createShare(checklistId, userId);
 
-      const shares = await service.listShares(checklistId, ownerUid);
+      const shares = await service.listShares(
+        checklistId,
+        abilityFactory.createForUser({ uid: ownerUid }),
+      );
 
       expect(shares).toHaveLength(1);
       expect(shares[0].userId).toBe(userId);
@@ -80,19 +86,25 @@ describe('ShareService with Firestore Emulator', () => {
 
     it('should throw NotFoundException when checklist does not exist', async () => {
       await expect(
-        service.listShares('non-existent-id', ownerUid),
+        service.listShares(
+          'non-existent-id',
+          abilityFactory.createForUser({ uid: ownerUid }),
+        ),
       ).rejects.toThrow(NotFoundException);
     });
 
-    it('should throw ForbiddenException when caller is not the owner', async () => {
+    it('should throw ForbiddenError when caller is not the owner', async () => {
       const { id: checklistId } = await checklistRepository.create(
         { title: 'My Checklist' },
         ownerUid,
       );
 
-      await expect(service.listShares(checklistId, otherUid)).rejects.toThrow(
-        ForbiddenException,
-      );
+      await expect(
+        service.listShares(
+          checklistId,
+          abilityFactory.createForUser({ uid: otherUid }),
+        ),
+      ).rejects.toThrow(ForbiddenError);
     });
 
     it('should return empty array when no shares exist', async () => {
@@ -101,7 +113,10 @@ describe('ShareService with Firestore Emulator', () => {
         ownerUid,
       );
 
-      const shares = await service.listShares(checklistId, ownerUid);
+      const shares = await service.listShares(
+        checklistId,
+        abilityFactory.createForUser({ uid: ownerUid }),
+      );
 
       expect(shares).toEqual([]);
     });
@@ -117,7 +132,10 @@ describe('ShareService with Firestore Emulator', () => {
 
       await service.removeShare(checklistId, createdShareId, ownerUid);
 
-      const shares = await service.listShares(checklistId, ownerUid);
+      const shares = await service.listShares(
+        checklistId,
+        abilityFactory.createForUser({ uid: ownerUid }),
+      );
       expect(shares).toHaveLength(0);
     });
 

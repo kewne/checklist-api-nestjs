@@ -82,6 +82,28 @@ export class ShareRepository {
     return !snapshot.empty;
   }
 
+  async findById(
+    checklistId: string,
+    shareId: string,
+  ): Promise<ShareDocument | null> {
+    const doc = await this.firestore
+      .collection(this.checklistsCollection)
+      .doc(checklistId)
+      .collection(this.sharesSubcollection)
+      .doc(shareId)
+      .get();
+
+    if (!doc.exists) {
+      return null;
+    }
+
+    return {
+      id: doc.id,
+      checklistId,
+      ...doc.data(),
+    } as ShareDocument;
+  }
+
   async delete(checklistId: string, shareId: string): Promise<void> {
     await this.firestore
       .collection(this.checklistsCollection)

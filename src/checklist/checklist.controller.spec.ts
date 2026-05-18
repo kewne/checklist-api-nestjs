@@ -1,11 +1,11 @@
-import { PlainResource } from '@app/hateoas';
 import { USER_AUTH_KEY } from '@app/auth/auth.constants';
 import { AuthUser } from '@app/auth/auth.guard';
+import { PlainResource } from '@app/hateoas';
 import { NotFoundException } from '@nestjs/common';
 import { NestExpressApplication } from '@nestjs/platform-express';
 import { Test, TestingModule } from '@nestjs/testing';
+import { NextFunction, Request, Response } from 'express';
 import request from 'supertest';
-import { Request, Response, NextFunction } from 'express';
 import { HateoasModule } from '../hateoas/hateoas.module';
 import { ChecklistController } from './checklist.controller';
 import { ChecklistService } from './checklist.service';
@@ -99,12 +99,18 @@ describe('ChecklistController', () => {
             /\/users\/test-user-id\/checklist-instances\/create-from-checklist\?checklist_id=123$/,
           ) as string,
         },
-        related: {
-          name: 'share-invitations',
-          href: expect.stringMatching(
-            /\/checklists\/123\/invitations$/,
-          ) as string,
-        },
+        related: [
+          {
+            name: 'share-invitations',
+            href: expect.stringMatching(
+              /\/checklists\/123\/invitations$/,
+            ) as string,
+          },
+          {
+            name: 'shares',
+            href: expect.stringMatching(/\/checklists\/123\/shares$/) as string,
+          },
+        ],
       });
     });
 

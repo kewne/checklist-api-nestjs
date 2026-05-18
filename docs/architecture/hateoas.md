@@ -33,6 +33,7 @@ Relations used across the API:
 | `delete`        | Delete the current resource                                              |
 | `complete-item` | Mark an item within the resource as complete                             |
 | `reopen-item`   | Reopen a previously completed item                                       |
+| `items`         | A member resource within a collection                                    |
 
 ## Related Docs
 

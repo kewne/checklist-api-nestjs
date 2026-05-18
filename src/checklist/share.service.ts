@@ -4,6 +4,8 @@ import {
   Injectable,
   NotFoundException,
 } from '@nestjs/common';
+import { ForbiddenError, subject } from '@casl/ability';
+import { AppAbility } from '../casl/ability.factory';
 import { ChecklistRepository } from './checklist.repository';
 import { ShareDocument, ShareRepository } from './share.repository';
 
@@ -33,17 +35,39 @@ export class ShareService {
 
   async listShares(
     checklistId: string,
-    callerUid: string,
+    ability: AppAbility,
   ): Promise<ShareDocument[]> {
     const checklist = await this.checklistRepository.findById(checklistId);
     if (!checklist) {
       throw new NotFoundException(`Checklist ${checklistId} not found`);
     }
-    if (checklist.createdBy !== callerUid) {
-      throw new ForbiddenException();
-    }
+    ForbiddenError.from(ability).throwUnlessCan(
+      'read',
+      subject('ChecklistShare', { checklist }),
+    );
 
     return this.shareRepository.findByChecklist(checklistId);
+  }
+
+  async getShare(
+    checklistId: string,
+    shareId: string,
+    ability: AppAbility,
+  ): Promise<ShareDocument> {
+    const checklist = await this.checklistRepository.findById(checklistId);
+    if (!checklist) {
+      throw new NotFoundException(`Checklist ${checklistId} not found`);
+    }
+    ForbiddenError.from(ability).throwUnlessCan(
+      'read',
+      subject('ChecklistShare', { checklist }),
+    );
+
+    const share = await this.shareRepository.findById(checklistId, shareId);
+    if (!share) {
+      throw new NotFoundException(`Share ${shareId} not found`);
+    }
+    return share;
   }
 
   async removeShare(

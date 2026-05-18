@@ -10,6 +10,10 @@ interface ChecklistShareInvitation {
   checklist: { createdBy: string };
 }
 
+interface ChecklistShare {
+  checklist: { createdBy: string };
+}
+
 interface ChecklistInstanceItem {
   instance: { createdBy: string };
 }
@@ -18,6 +22,8 @@ export type Actions = 'create' | 'read';
 export type Subjects =
   | ChecklistShareInvitation
   | 'ChecklistShareInvitation'
+  | ChecklistShare
+  | 'ChecklistShare'
   | ChecklistInstanceItem
   | 'ChecklistInstanceItem';
 
@@ -33,6 +39,10 @@ export class AbilityFactory {
     });
 
     can('read', 'ChecklistShareInvitation', {
+      'checklist.createdBy': user.uid,
+    });
+
+    can('read', 'ChecklistShare', {
       'checklist.createdBy': user.uid,
     });
 
