@@ -55,8 +55,10 @@ Write clear, testable criteria that define when the feature is complete. Focus o
 **Examples to avoid:**
 
 - "POST /checklists creates a checklist" (prescribes HTTP method)
-- "The endpoint returns status code 201" (prescribes implementation detail)
+- "The endpoint returns status code 201" (prescribes HTTP status code)
 - "A PUT request to /checklists/{id} updates it" (prescribes method and URL)
+- "The endpoint returns HTTP 200 with updated share details" (prescribes status code)
+- "Attempting to update a non-existent share returns HTTP 404" (prescribes status code)
 
 ### 4. Add Links to Related Stories
 
@@ -85,10 +87,11 @@ Use markdown links to the story files:
 - Criteria focus on user-visible behavior, not technical implementation
 - Use simple, measurable language
 
-**2. Don't Prescribe URLs or HTTP Methods**
+**2. Don't Prescribe URLs, HTTP Methods, or Status Codes**
 
 - Acceptance criteria describe _what_ the system does, not _how_
-- Implementation details (REST verbs, paths, status codes) are architectural decisions, not requirements
+- Implementation details (REST verbs, paths, HTTP status codes) are architectural decisions, not requirements
+- Focus on the outcome and user-visible behavior instead of "returns HTTP 200" or "returns HTTP 404"
 - Let the architecture evolve without changing story definitions
 
 **3. Add Links to Related Stories**
@@ -112,6 +115,16 @@ docs/stories/
 ## Glossary
 
 For clarity on domain-specific terms, refer to the [glossary](../../docs/glossary) which documents key concepts used in user stories. When defining acceptance criteria, use terminology consistent with the glossary to ensure clear communication across the team.
+
+## Story Status
+
+Every story must include a **Status** field that tracks implementation progress:
+
+- **DONE**: The feature is fully implemented and deployed
+- **NEW**: The feature has never been implemented (story only; no code exists)
+- **INCOMPLETE**: The feature is partially implemented, or the implementation does not fully match the acceptance criteria or description (work remains to align code with requirements)
+
+Use these statuses to help teams understand which features are available, which are still in design phase, and which are work-in-progress or misaligned with their specifications.
 
 ## Template
 
