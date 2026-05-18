@@ -19,6 +19,7 @@ export class ShareService {
   async createShare(
     checklistId: string,
     userId: string,
+    title: string,
   ): Promise<string> {
     const alreadyShared = await this.shareRepository.existsByChecklistAndUser(
       checklistId,
@@ -30,7 +31,7 @@ export class ShareService {
       );
     }
 
-    return this.shareRepository.create(checklistId, userId);
+    return this.shareRepository.create(checklistId, userId, title);
   }
 
   async listShares(

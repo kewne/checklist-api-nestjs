@@ -5,6 +5,7 @@ export interface ShareDocument {
   id: string;
   checklistId: string;
   userId: string;
+  title: string;
   createdAt: Date;
 }
 
@@ -15,10 +16,15 @@ export class ShareRepository {
 
   constructor(private readonly firestore: Firestore) {}
 
-  async create(checklistId: string, userId: string): Promise<string> {
+  async create(
+    checklistId: string,
+    userId: string,
+    title: string,
+  ): Promise<string> {
     const now = new Date();
     const data = {
       userId,
+      title,
       createdAt: now,
     };
 

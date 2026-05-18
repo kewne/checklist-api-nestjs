@@ -22,6 +22,7 @@ export class ChecklistShareController {
         ...shares.map((share) =>
           toHandlerCall({
             controller: ChecklistShareController,
+            title: share.title,
           }).findOne({ params: { checklistId, shareId: share.id } }),
         ),
       )
@@ -42,6 +43,7 @@ export class ChecklistShareController {
     );
     return linkFactory.buildResource().toResource({
       userId: share.userId,
+      title: share.title,
       createdAt: share.createdAt,
     });
   }

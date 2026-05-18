@@ -127,7 +127,9 @@ describe('InvitationService with Firestore Emulator', () => {
         await invitationRepository.findById(checklistId, invitationId),
       ).toBeNull();
       const shares = await shareRepository.findByChecklist(checklistId);
-      expect(shares.some((s) => s.userId === otherUid)).toBe(true);
+      const share = shares.find((s) => s.userId === otherUid);
+      expect(share).toBeDefined();
+      expect(share!.title).toBe('Test Invite');
     });
 
     it('should throw NotFoundException when invitation does not exist', async () => {

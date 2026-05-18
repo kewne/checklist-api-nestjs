@@ -44,7 +44,11 @@ describe('ShareService with Firestore Emulator', () => {
         ownerUid,
       );
 
-      const result = await service.createShare(checklistId, userId);
+      const result = await service.createShare(
+        checklistId,
+        userId,
+        'Share Title',
+      );
 
       expect(result).toBeTruthy();
       expect(typeof result).toBe('string');
@@ -52,6 +56,7 @@ describe('ShareService with Firestore Emulator', () => {
       const shares = await shareRepository.findByChecklist(checklistId);
       expect(shares).toHaveLength(1);
       expect(shares[0].userId).toBe(userId);
+      expect(shares[0].title).toBe('Share Title');
     });
 
     it('should throw ConflictException when share already exists', async () => {
@@ -59,11 +64,11 @@ describe('ShareService with Firestore Emulator', () => {
         { title: 'My Checklist' },
         ownerUid,
       );
-      await service.createShare(checklistId, userId);
+      await service.createShare(checklistId, userId, 'Share Title');
 
-      await expect(service.createShare(checklistId, userId)).rejects.toThrow(
-        ConflictException,
-      );
+      await expect(
+        service.createShare(checklistId, userId, 'Share Title'),
+      ).rejects.toThrow(ConflictException);
     });
   });
 
@@ -73,7 +78,7 @@ describe('ShareService with Firestore Emulator', () => {
         { title: 'My Checklist' },
         ownerUid,
       );
-      await service.createShare(checklistId, userId);
+      await service.createShare(checklistId, userId, 'Share Title');
 
       const shares = await service.listShares(
         checklistId,
@@ -128,7 +133,11 @@ describe('ShareService with Firestore Emulator', () => {
         { title: 'My Checklist' },
         ownerUid,
       );
-      const createdShareId = await service.createShare(checklistId, userId);
+      const createdShareId = await service.createShare(
+        checklistId,
+        userId,
+        'Share Title',
+      );
 
       await service.removeShare(checklistId, createdShareId, ownerUid);
 
@@ -168,8 +177,8 @@ describe('ShareService with Firestore Emulator', () => {
         ownerUid,
       );
 
-      await service.createShare(checklistId, userId);
-      await service.createShare(otherChecklistId, userId);
+      await service.createShare(checklistId, userId, 'Share Title');
+      await service.createShare(otherChecklistId, userId, 'Share Title');
 
       const shares = await service.listSharedWithUser(userId);
 

@@ -96,7 +96,7 @@ export class InvitationService {
       throw new GoneException();
     }
 
-    await this.shareService.createShare(checklistId, callerUid);
+    await this.shareService.createShare(checklistId, callerUid, invitation.title);
     await this.invitationRepository.delete(checklistId, invitationId);
   }
 }

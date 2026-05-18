@@ -68,12 +68,14 @@ describe('ChecklistShareController', () => {
           id: 'share-2',
           checklistId: 'checklist-1',
           userId: 'user-b',
+          title: 'Share B',
           createdAt: new Date('2026-05-02T00:00:00.000Z'),
         },
         {
           id: 'share-1',
           checklistId: 'checklist-1',
           userId: 'user-a',
+          title: 'Share A',
           createdAt: new Date('2026-05-01T00:00:00.000Z'),
         },
       ]);
@@ -88,9 +90,11 @@ describe('ChecklistShareController', () => {
       expect(items[0].href).toMatch(
         /\/checklists\/checklist-1\/shares\/share-2$/,
       );
+      expect(items[0].title).toBe('Share B');
       expect(items[1].href).toMatch(
         /\/checklists\/checklist-1\/shares\/share-1$/,
       );
+      expect(items[1].title).toBe('Share A');
     });
 
     it('should return 200 with no items key when list is empty', async () => {
@@ -136,6 +140,7 @@ describe('ChecklistShareController', () => {
         id: 'share-1',
         checklistId: 'checklist-1',
         userId: 'user-a',
+        title: 'My Share',
         createdAt,
       });
 
@@ -145,6 +150,7 @@ describe('ChecklistShareController', () => {
 
       const body = response.body as PlainResource;
       expect(body.userId).toBe('user-a');
+      expect(body.title).toBe('My Share');
       expect(body.createdAt).toBe(createdAt.toISOString());
     });
 
@@ -169,6 +175,7 @@ describe('ChecklistShareController', () => {
             id: 'share-1',
             checklistId: 'checklist-1',
             userId: 'user-a',
+            title: 'My Share',
             createdAt: new Date(),
           });
         },
