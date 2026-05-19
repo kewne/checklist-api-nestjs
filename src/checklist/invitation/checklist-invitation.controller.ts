@@ -3,6 +3,7 @@ import { User } from '@app/auth/user.decorator';
 import { Ability } from '@app/casl/ability.decorator';
 import type { AppAbility } from '@app/casl/ability.factory';
 import { Hateoas, NestLinkFactory, toHandlerCall } from '@app/hateoas-nest';
+import { ForbiddenError, subject } from '@casl/ability';
 import {
   Body,
   Controller,
@@ -14,11 +15,9 @@ import {
   UsePipes,
   ValidationPipe,
 } from '@nestjs/common';
-import { ForbiddenError, subject } from '@casl/ability';
 import { type Response } from 'express';
 import { CreateShareInvitationDto } from './create-share-invitation.dto';
 import { InvitationService } from './invitation.service';
-import { ChecklistShareController } from '../checklist-share.controller';
 
 @Controller('checklists/:checklistId/invitations')
 export class ChecklistInvitationController {
@@ -69,13 +68,6 @@ export class ChecklistInvitationController {
         toHandlerCall({
           controller: ChecklistInvitationController,
         }).create({ params: { checklistId } }),
-      )
-      .withRel(
-        'related',
-        toHandlerCall({
-          controller: ChecklistShareController,
-          name: 'shares',
-        }).list({ params: { checklistId } }),
       )
       .withRel(
         'items',
