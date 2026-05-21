@@ -2,6 +2,7 @@ import { Ability } from '@app/casl/ability.decorator';
 import type { AppAbility } from '@app/casl/ability.factory';
 import { Hateoas, NestLinkFactory, toHandlerCall } from '@app/hateoas-nest';
 import { Controller, Get, Param } from '@nestjs/common';
+import { ChecklistInvitationController } from './invitation/checklist-invitation.controller';
 import { ShareService } from './share.service';
 
 @Controller('checklists/:checklistId/shares')
@@ -25,6 +26,13 @@ export class ChecklistShareController {
             title: share.title,
           }).findOne({ params: { checklistId, shareId: share.id } }),
         ),
+      )
+      .withRel(
+        'related',
+        toHandlerCall({
+          controller: ChecklistInvitationController,
+          name: 'invitations',
+        }).list({ params: { checklistId } }),
       )
       .toResource({});
   }

@@ -1,3 +1,6 @@
+import type { AuthUser } from '@app/auth/auth.guard';
+import { User } from '@app/auth/user.decorator';
+import { Hateoas, NestLinkFactory, toHandlerCall } from '@app/hateoas-nest';
 import {
   Body,
   Controller,
@@ -8,14 +11,10 @@ import {
   UsePipes,
   ValidationPipe,
 } from '@nestjs/common';
+import { ChecklistShareController } from './checklist-share.controller';
 import { ChecklistService } from './checklist.service';
 import { ReplaceChecklistDto } from './dto/update-checklist.dto';
-import { Hateoas, NestLinkFactory, toHandlerCall } from '@app/hateoas-nest';
-import { ChecklistInvitationController } from './invitation/checklist-invitation.controller';
-import { ChecklistShareController } from './checklist-share.controller';
 import { UserChecklistInstanceController } from './instance/user-checklist-instance.controller';
-import type { AuthUser } from '@app/auth/auth.guard';
-import { User } from '@app/auth/user.decorator';
 
 @Controller('checklists')
 export class ChecklistController {
@@ -42,13 +41,6 @@ export class ChecklistController {
           params: { userId: user.uid },
           query: { checklist_id: checklist.id },
         }),
-      )
-      .withRel(
-        'related',
-        toHandlerCall({
-          controller: ChecklistInvitationController,
-          name: 'share-invitations',
-        }).list({ params: { checklistId: checklist.id } }),
       )
       .withRel(
         'related',
