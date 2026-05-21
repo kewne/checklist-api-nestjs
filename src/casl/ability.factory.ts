@@ -50,6 +50,10 @@ export class AbilityFactory {
       'checklist.createdBy': user.uid,
     });
 
+    can('delete', 'ChecklistShare', {
+      'checklist.createdBy': user.uid,
+    });
+
     can('create', 'ChecklistInstanceItem', {
       'instance.createdBy': user.uid,
     });

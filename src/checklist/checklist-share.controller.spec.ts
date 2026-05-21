@@ -16,7 +16,9 @@ import { ShareService } from './share.service';
 
 describe('ChecklistShareController', () => {
   let app: NestExpressApplication;
-  let serviceMock: jest.Mocked<Pick<ShareService, 'listShares' | 'getShare'>>;
+  let serviceMock: jest.Mocked<
+    Pick<ShareService, 'listShares' | 'getShare' | 'removeShare'>
+  >;
   const mockUser: AuthUser = { uid: 'owner-uid' };
   const abilityFactory = new AbilityFactory();
 
@@ -184,6 +186,60 @@ describe('ChecklistShareController', () => {
       await request(app.getHttpServer())
         .get('/checklists/checklist-1/shares/share-1')
         .expect(403);
+    });
+  });
+
+  describe('DELETE /checklists/:checklistId/shares/:shareId', () => {
+    it('should return 204 on successful deletion', async () => {
+      serviceMock.removeShare = jest.fn().mockResolvedValue(undefined);
+
+      await request(app.getHttpServer())
+        .delete('/checklists/checklist-1/shares/share-1')
+        .expect(204);
+
+      expect(serviceMock.removeShare).toHaveBeenCalledWith(
+        'checklist-1',
+        'share-1',
+        expect.any(Object),
+      );
+    });
+
+    it('should return 403 when caller is not owner', async () => {
+      serviceMock.removeShare = jest
+        .fn()
+        .mockImplementation((_checklistId, _shareId, ability) => {
+          ForbiddenError.from(ability).throwUnlessCan(
+            'delete',
+            subject('ChecklistShare', {
+              checklist: { createdBy: 'other-uid' },
+            }),
+          );
+          return Promise.resolve(undefined);
+        });
+
+      await request(app.getHttpServer())
+        .delete('/checklists/checklist-1/shares/share-1')
+        .expect(403);
+    });
+
+    it('should return 404 when checklist does not exist', async () => {
+      serviceMock.removeShare = jest
+        .fn()
+        .mockRejectedValue(
+          new NotFoundException('Checklist checklist-1 not found'),
+        );
+
+      await request(app.getHttpServer())
+        .delete('/checklists/checklist-1/shares/share-1')
+        .expect(404);
+    });
+
+    it('should return 204 even when share does not exist (idempotency)', async () => {
+      serviceMock.removeShare = jest.fn().mockResolvedValue(undefined);
+
+      await request(app.getHttpServer())
+        .delete('/checklists/checklist-1/shares/non-existent-share')
+        .expect(204);
     });
   });
 });

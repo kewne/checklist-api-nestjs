@@ -1,7 +1,7 @@
 import { Ability } from '@app/casl/ability.decorator';
 import type { AppAbility } from '@app/casl/ability.factory';
 import { Hateoas, NestLinkFactory, toHandlerCall } from '@app/hateoas-nest';
-import { Controller, Get, Param } from '@nestjs/common';
+import { Controller, Get, Param, Delete, HttpCode } from '@nestjs/common';
 import { ChecklistInvitationController } from './invitation/checklist-invitation.controller';
 import { ShareService } from './share.service';
 
@@ -54,5 +54,15 @@ export class ChecklistShareController {
       title: share.title,
       createdAt: share.createdAt,
     });
+  }
+
+  @Delete(':shareId')
+  @HttpCode(204)
+  async remove(
+    @Param('checklistId') checklistId: string,
+    @Param('shareId') shareId: string,
+    @Ability() ability: AppAbility,
+  ): Promise<void> {
+    await this.shareService.removeShare(checklistId, shareId, ability);
   }
 }

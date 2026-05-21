@@ -1,6 +1,5 @@
 import {
   ConflictException,
-  ForbiddenException,
   Injectable,
   NotFoundException,
 } from '@nestjs/common';
@@ -74,15 +73,16 @@ export class ShareService {
   async removeShare(
     checklistId: string,
     shareId: string,
-    callerUid: string,
+    ability: AppAbility,
   ): Promise<void> {
     const checklist = await this.checklistRepository.findById(checklistId);
     if (!checklist) {
       throw new NotFoundException(`Checklist ${checklistId} not found`);
     }
-    if (checklist.createdBy !== callerUid) {
-      throw new ForbiddenException();
-    }
+    ForbiddenError.from(ability).throwUnlessCan(
+      'delete',
+      subject('ChecklistShare', { checklist }),
+    );
 
     await this.shareRepository.delete(checklistId, shareId);
   }

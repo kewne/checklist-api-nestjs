@@ -1,7 +1,6 @@
 import { ForbiddenError } from '@casl/ability';
 import {
   ConflictException,
-  ForbiddenException,
   NotFoundException,
 } from '@nestjs/common';
 import { Test, TestingModule } from '@nestjs/testing';
@@ -128,7 +127,7 @@ describe('ShareService with Firestore Emulator', () => {
   });
 
   describe('removeShare', () => {
-    it('should delete a share when caller is the owner', async () => {
+    it('should remove share when caller is owner', async () => {
       const { id: checklistId } = await checklistRepository.create(
         { title: 'My Checklist' },
         ownerUid,
@@ -138,8 +137,9 @@ describe('ShareService with Firestore Emulator', () => {
         userId,
         'Share Title',
       );
+      const ownerAbility = abilityFactory.createForUser({ uid: ownerUid });
 
-      await service.removeShare(checklistId, createdShareId, ownerUid);
+      await service.removeShare(checklistId, createdShareId, ownerAbility);
 
       const shares = await service.listShares(
         checklistId,
@@ -148,21 +148,37 @@ describe('ShareService with Firestore Emulator', () => {
       expect(shares).toHaveLength(0);
     });
 
-    it('should throw NotFoundException when checklist does not exist', async () => {
-      await expect(
-        service.removeShare('non-existent-id', 'some-share-id', ownerUid),
-      ).rejects.toThrow(NotFoundException);
-    });
-
-    it('should throw ForbiddenException when caller is not the owner', async () => {
+    it('should throw ForbiddenError when caller is not owner', async () => {
       const { id: checklistId } = await checklistRepository.create(
         { title: 'My Checklist' },
         ownerUid,
       );
+      await service.createShare(checklistId, userId, 'Share Title');
+      const notOwnerAbility = abilityFactory.createForUser({ uid: otherUid });
 
       await expect(
-        service.removeShare(checklistId, 'some-share-id', otherUid),
-      ).rejects.toThrow(ForbiddenException);
+        service.removeShare(checklistId, 'some-share-id', notOwnerAbility),
+      ).rejects.toThrow(ForbiddenError);
+    });
+
+    it('should succeed when share does not exist (idempotency)', async () => {
+      const { id: checklistId } = await checklistRepository.create(
+        { title: 'My Checklist' },
+        ownerUid,
+      );
+      const ownerAbility = abilityFactory.createForUser({ uid: ownerUid });
+
+      await expect(
+        service.removeShare(checklistId, 'non-existent-share', ownerAbility),
+      ).resolves.not.toThrow();
+    });
+
+    it('should throw NotFoundException when checklist does not exist', async () => {
+      const ownerAbility = abilityFactory.createForUser({ uid: ownerUid });
+
+      await expect(
+        service.removeShare('non-existent-checklist', 'any-share', ownerAbility),
+      ).rejects.toThrow(NotFoundException);
     });
   });
 
