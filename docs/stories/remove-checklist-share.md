@@ -2,19 +2,21 @@
 
 **Status**: NEW
 
-As a user, I want to revoke access to a shared checklist so that I can control who can view my checklist template.
+As a checklist owner, I want to remove a share so that the checklist isn't accessible to that person anymore.
 
 ## Acceptance Criteria
 
-- Only the checklist owner can remove shares
-- A successful removal returns HTTP 204 with no response body
-- Attempting to remove a share for a non-existent checklist returns HTTP 404
-- Attempting to remove a non-existent share returns HTTP 204
-- Attempting to remove a share from a checklist you don't own returns HTTP 403
-- After removal, the user no longer has access to the checklist (except if the checklist is public)
+- A checklist owner can remove an active share they have granted
+- Once removed, the recipient can no longer access the shared checklist
+- The checklist itself remains intact for the owner
+- Only the checklist owner can remove shares for their checklists
+- A removed share is no longer listed when viewing active shares for that checklist
+- Removing a share does not affect other shares or invitations for the same checklist
 
 ## Related Stories
 
-- [Share Checklist](share-checklist.md)
+- [Create Share Invitation](create-share-invitation.md)
+- [Accept Share Invitation](accept-share-invitation.md)
 - [List Checklist Shares](list-checklist-shares.md)
-- [View Shared Checklists](list-shared-checklists.md)
+- [Delete Share Invitation](delete-share-invitation.md)
+- [Update Checklist Share](update-checklist-share.md)
