@@ -21,6 +21,7 @@ describe('ChecklistInvitationController', () => {
       InvitationService,
       | 'createInvitation'
       | 'acceptInvitation'
+      | 'deleteInvitation'
       | 'getInvitation'
       | 'listInvitations'
     >
@@ -32,6 +33,7 @@ describe('ChecklistInvitationController', () => {
     serviceMock = {
       createInvitation: jest.fn(),
       acceptInvitation: jest.fn(),
+      deleteInvitation: jest.fn(),
       getInvitation: jest.fn(),
       listInvitations: jest.fn(),
     };
@@ -368,6 +370,56 @@ describe('ChecklistInvitationController', () => {
       await request(app.getHttpServer())
         .post('/checklists/checklist-1/invitations/expired-inv/accept')
         .expect(410);
+    });
+  });
+
+  describe('DELETE /checklists/:checklistId/invitations/:id', () => {
+    it('should return 204 on successful deletion', async () => {
+      serviceMock.deleteInvitation.mockResolvedValue(undefined);
+
+      await request(app.getHttpServer())
+        .delete('/checklists/checklist-1/invitations/inv-1')
+        .expect(204);
+
+      expect(serviceMock.deleteInvitation).toHaveBeenCalledWith(
+        'checklist-1',
+        'inv-1',
+        expect.any(Object),
+      );
+    });
+
+    it('should return 204 even when invitation does not exist (idempotency)', async () => {
+      serviceMock.deleteInvitation.mockResolvedValue(undefined);
+
+      await request(app.getHttpServer())
+        .delete('/checklists/checklist-1/invitations/non-existent')
+        .expect(204);
+    });
+
+    it('should return 403 when caller is not the checklist owner', async () => {
+      serviceMock.deleteInvitation.mockImplementation(
+        (_checklistId, _id, ability) => {
+          ForbiddenError.from(ability).throwUnlessCan(
+            'delete',
+            subject('ChecklistShareInvitation', {
+              checklist: { createdBy: 'different-owner' },
+            }),
+          );
+          return Promise.resolve(undefined);
+        },
+      );
+
+      await request(app.getHttpServer())
+        .delete('/checklists/checklist-1/invitations/inv-1')
+        .expect(403);
+    });
+
+    it('should return 404 when checklist does not exist', async () => {
+      serviceMock.deleteInvitation.mockRejectedValue(new NotFoundException());
+
+      await request(app.getHttpServer())
+        .delete('/checklists/non-existent/invitations/inv-1')
+        .expect(404);
     });
   });
 });

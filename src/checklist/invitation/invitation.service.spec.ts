@@ -160,4 +160,64 @@ describe('InvitationService with Firestore Emulator', () => {
       ).rejects.toThrow(GoneException);
     });
   });
+
+  describe('deleteInvitation', () => {
+    it('should delete an invitation when caller is the owner', async () => {
+      const { id: checklistId } = await checklistRepository.create(
+        { title: 'My Checklist' },
+        ownerUid,
+      );
+      const invitationId = await invitationRepository.create(
+        checklistId,
+        'Test Invite',
+      );
+      const ownerAbility = abilityFactory.createForUser({ uid: ownerUid });
+
+      await service.deleteInvitation(checklistId, invitationId, ownerAbility);
+
+      expect(
+        await invitationRepository.findById(checklistId, invitationId),
+      ).toBeNull();
+    });
+
+    it('should throw ForbiddenError when caller is not the owner', async () => {
+      const { id: checklistId } = await checklistRepository.create(
+        { title: 'My Checklist' },
+        ownerUid,
+      );
+      const invitationId = await invitationRepository.create(
+        checklistId,
+        'Test Invite',
+      );
+      const nonOwnerAbility = abilityFactory.createForUser({ uid: otherUid });
+
+      await expect(
+        service.deleteInvitation(checklistId, invitationId, nonOwnerAbility),
+      ).rejects.toThrow(ForbiddenError);
+    });
+
+    it('should not throw when deleting non-existent invitation (idempotency)', async () => {
+      const { id: checklistId } = await checklistRepository.create(
+        { title: 'My Checklist' },
+        ownerUid,
+      );
+      const ownerAbility = abilityFactory.createForUser({ uid: ownerUid });
+
+      await expect(
+        service.deleteInvitation(checklistId, 'non-existent-id', ownerAbility),
+      ).resolves.not.toThrow();
+    });
+
+    it('should throw NotFoundException when checklist does not exist', async () => {
+      const ownerAbility = abilityFactory.createForUser({ uid: ownerUid });
+
+      await expect(
+        service.deleteInvitation(
+          'non-existent-checklist',
+          'some-id',
+          ownerAbility,
+        ),
+      ).rejects.toThrow(NotFoundException);
+    });
+  });
 });

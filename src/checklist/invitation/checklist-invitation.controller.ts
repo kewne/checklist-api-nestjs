@@ -7,6 +7,7 @@ import { ForbiddenError, subject } from '@casl/ability';
 import {
   Body,
   Controller,
+  Delete,
   Get,
   HttpCode,
   Param,
@@ -142,5 +143,15 @@ export class ChecklistInvitationController {
       invitationId,
       user.uid,
     );
+  }
+
+  @Delete(':id')
+  @HttpCode(204)
+  async remove(
+    @Param('checklistId') checklistId: string,
+    @Param('id') id: string,
+    @Ability() ability: AppAbility,
+  ): Promise<void> {
+    await this.invitationService.deleteInvitation(checklistId, id, ability);
   }
 }

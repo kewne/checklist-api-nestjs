@@ -22,6 +22,41 @@ Rejecting unauthorized requests early in the controller prevents services from e
 - A service method should assume that any request reaching it has already been authorized
 - Ability objects are immutable and scoped to a single request; they cannot be shared or reused across requests
 
+## Authorization Patterns
+
+### Pattern 1: Controller-Based Authorization
+
+For simple read operations where authorization depends only on user role or resource ownership:
+
+1. Controller checks ability using `ForbiddenError.from(ability).throwUnlessCan()`
+2. If check passes, controller invokes service method without passing ability
+3. Service assumes authorization has already been verified
+
+**When to use**: Simple resource queries where all authenticated users can read if they own the resource.
+
+### Pattern 2: Service-Based Authorization
+
+For operations where authorization is tightly coupled with business logic or depends on resource state:
+
+1. Controller passes `AppAbility` to service method
+2. Service fetches resource and performs authorization check using `ForbiddenError.from(ability).throwUnlessCan()`
+3. Service proceeds with business logic only after authorization succeeds
+
+**When to use**:
+
+- Delete operations where resource state affects permissions
+- Operations that need to fetch the resource anyway for validation
+- Multi-step operations where authorization applies to each step
+
+**Examples in codebase**:
+
+- `InvitationService.listInvitations(checklistId, ability)` — checks 'read' permission on invitation resource
+- `ShareService.listShares(checklistId, ability)` — checks 'read' permission on share resource
+- `ShareService.getShare(checklistId, shareId, ability)` — checks 'read' permission before returning share
+- `InvitationService.deleteInvitation(checklistId, invitationId, ability)` — checks 'delete' permission before deleting
+
+**Rationale**: Keeps authorization logic co-located with business logic, reduces repeated resource fetches, and makes complex authorization requirements explicit and testable.
+
 ## Related Docs
 
 - [HATEOAS](hateoas.md) — CASL abilities inform which links are included in responses

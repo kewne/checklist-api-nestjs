@@ -96,7 +96,27 @@ export class InvitationService {
       throw new GoneException();
     }
 
-    await this.shareService.createShare(checklistId, callerUid, invitation.title);
+    await this.shareService.createShare(
+      checklistId,
+      callerUid,
+      invitation.title,
+    );
+    await this.invitationRepository.delete(checklistId, invitationId);
+  }
+
+  async deleteInvitation(
+    checklistId: string,
+    invitationId: string,
+    ability: AppAbility,
+  ): Promise<void> {
+    const checklist = await this.checklistRepository.findById(checklistId);
+    if (!checklist) {
+      throw new NotFoundException(`Checklist ${checklistId} not found`);
+    }
+    ForbiddenError.from(ability).throwUnlessCan(
+      'delete',
+      subject('ChecklistShareInvitation', { checklist }),
+    );
     await this.invitationRepository.delete(checklistId, invitationId);
   }
 }
