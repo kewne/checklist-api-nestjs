@@ -370,6 +370,24 @@ describe('InstanceService', () => {
       });
     });
 
+    it('should persist item descriptions provided in the request', async () => {
+      const userId = randomUUID();
+      const id = await instanceRepository.create(
+        null as unknown as string,
+        userId,
+        'Original Title',
+        [{ id: randomUUID(), title: 'Task 1' }],
+      );
+
+      await service.replace(id, {
+        title: 'New Title',
+        items: [{ title: 'Task 1', description: 'Step by step' }],
+      });
+
+      const updated = (await instanceRepository.findById(id))!;
+      expect(updated.items[0].description).toBe('Step by step');
+    });
+
     it('should throw NotFoundException for unknown instance', async () => {
       await expect(
         service.replace('non-existent-id', { title: 'Title', items: [] }),

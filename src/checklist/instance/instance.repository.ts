@@ -6,10 +6,7 @@ import {
 } from '@nestjs/common';
 import { randomUUID } from 'crypto';
 import { Item, ItemCompleted } from '../checklist.repository';
-import {
-  ChecklistInstanceItem,
-  ReplaceChecklistInstanceDto,
-} from './dto';
+import { ChecklistInstanceItem, ReplaceChecklistInstanceDto } from './dto';
 import { CreateItemDto } from '../dto/create-item.dto';
 
 export interface InstanceItem extends Item {
@@ -151,6 +148,9 @@ export class InstanceRepository {
         return {
           id: itemId,
           title: itemDto.title,
+          ...(itemDto.description !== undefined && {
+            description: itemDto.description,
+          }),
           completed: existingItem?.completed ?? null,
         };
       });
