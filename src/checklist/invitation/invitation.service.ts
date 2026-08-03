@@ -9,11 +9,14 @@ import {
   InvitationDocument,
   InvitationRepository,
 } from './invitation.repository';
+import { ShareDocument, ShareRepository } from '../share.repository';
 import { ShareService } from '../share.service';
 
 export interface InvitationView {
   title: string;
   checklistTitle: string;
+  checklistCreatedBy: string;
+  checklistShares: ShareDocument[];
   createdAt: Date;
   expiresAt: Date;
 }
@@ -24,6 +27,7 @@ export class InvitationService {
     private readonly invitationRepository: InvitationRepository,
     private readonly checklistRepository: ChecklistRepository,
     private readonly shareService: ShareService,
+    private readonly shareRepository: ShareRepository,
   ) {}
 
   async getInvitation(
@@ -38,7 +42,10 @@ export class InvitationService {
       throw new NotFoundException();
     }
 
-    const checklist = await this.checklistRepository.findById(checklistId);
+    const [checklist, shares] = await Promise.all([
+      this.checklistRepository.findById(checklistId),
+      this.shareRepository.findByChecklist(checklistId),
+    ]);
     if (!checklist) {
       throw new NotFoundException();
     }
@@ -46,6 +53,8 @@ export class InvitationService {
     return {
       title: invitation.title,
       checklistTitle: checklist.title,
+      checklistCreatedBy: checklist.createdBy,
+      checklistShares: shares,
       createdAt: invitation.createdAt,
       expiresAt: invitation.expiresAt,
     };

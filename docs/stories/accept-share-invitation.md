@@ -12,6 +12,7 @@ As a user, I want to accept a checklist share invitation so that I can access a 
 - The created share has the same title as the invitation it originated from
 - Attempting to accept a non-existent invitation results in a not found error
 - Attempting to accept an expired invitation (older than 24 hours) results in an error
+- A user cannot accept an invitation for a checklist they already have access to
 - After accepting an invitation, the invitation no longer exists
 
 ## Related Stories

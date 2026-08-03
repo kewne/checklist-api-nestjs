@@ -14,6 +14,19 @@ interface ChecklistShare {
   checklist: { createdBy: string };
 }
 
+interface ChecklistShareEntry {
+  id: string;
+  checklistId: string;
+  userId: string;
+  title: string;
+  createdAt: Date;
+}
+
+interface Checklist {
+  createdBy: string;
+  shares: ChecklistShareEntry[];
+}
+
 interface ChecklistInstanceItem {
   instance: { createdBy: string };
 }
@@ -24,6 +37,8 @@ export type Subjects =
   | 'ChecklistShareInvitation'
   | ChecklistShare
   | 'ChecklistShare'
+  | Checklist
+  | 'Checklist'
   | ChecklistInstanceItem
   | 'ChecklistInstanceItem';
 
@@ -52,6 +67,11 @@ export class AbilityFactory {
 
     can('delete', 'ChecklistShare', {
       'checklist.createdBy': user.uid,
+    });
+
+    can('read', 'Checklist', { createdBy: user.uid });
+    can('read', 'Checklist', {
+      shares: { $elemMatch: { userId: user.uid } },
     });
 
     can('create', 'ChecklistInstanceItem', {

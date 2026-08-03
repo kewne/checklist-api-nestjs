@@ -112,12 +112,20 @@ export class ChecklistInvitationController {
   async preview(
     @Param('checklistId') checklistId: string,
     @Param('id') id: string,
+    @Ability() ability: AppAbility,
     @Hateoas() linkFactory: NestLinkFactory,
   ) {
     const view = await this.invitationService.getInvitation(checklistId, id);
     const isExpired = Date.now() > view.expiresAt.getTime();
+    const alreadyHasAccess = ability.can(
+      'read',
+      subject('Checklist', {
+        createdBy: view.checklistCreatedBy,
+        shares: view.checklistShares,
+      }),
+    );
     let builder = linkFactory.buildResource();
-    if (!isExpired) {
+    if (!isExpired && !alreadyHasAccess) {
       builder = builder.withRel(
         'accept',
         toHandlerCall({

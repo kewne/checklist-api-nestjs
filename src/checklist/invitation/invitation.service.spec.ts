@@ -110,6 +110,51 @@ describe('InvitationService with Firestore Emulator', () => {
     });
   });
 
+  describe('getInvitation', () => {
+    it('should return enriched view with checklistCreatedBy and checklistShares', async () => {
+      const { id: checklistId } = await checklistRepository.create(
+        { title: 'My Checklist' },
+        ownerUid,
+      );
+      const invitationId = await invitationRepository.create(
+        checklistId,
+        'My Invite',
+      );
+
+      const result = await service.getInvitation(checklistId, invitationId);
+
+      expect(result.checklistCreatedBy).toBe(ownerUid);
+      expect(result.checklistShares).toEqual([]);
+    });
+
+    it('should include existing shares in checklistShares', async () => {
+      const { id: checklistId } = await checklistRepository.create(
+        { title: 'My Checklist' },
+        ownerUid,
+      );
+      const invitationId = await invitationRepository.create(
+        checklistId,
+        'My Invite',
+      );
+      await shareRepository.create(checklistId, otherUid, 'Shared');
+
+      const result = await service.getInvitation(checklistId, invitationId);
+
+      expect(result.checklistShares.map((s) => s.userId)).toContain(otherUid);
+    });
+
+    it('should throw NotFoundException when invitation does not exist', async () => {
+      const { id: checklistId } = await checklistRepository.create(
+        { title: 'My Checklist' },
+        ownerUid,
+      );
+
+      await expect(
+        service.getInvitation(checklistId, 'non-existent'),
+      ).rejects.toThrow(NotFoundException);
+    });
+  });
+
   describe('acceptInvitation', () => {
     it('should create a share and delete the invitation on success', async () => {
       const { id: checklistId } = await checklistRepository.create(

@@ -17,6 +17,6 @@ import { UserChecklistController } from './user-checklist.controller';
     ShareRepository,
   ],
   imports: [HateoasModule],
-  exports: [ChecklistService, ShareService, ChecklistRepository],
+  exports: [ChecklistService, ShareService, ChecklistRepository, ShareRepository],
 })
 export class ChecklistModule {}

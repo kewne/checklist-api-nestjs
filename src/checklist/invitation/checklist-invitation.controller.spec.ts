@@ -224,6 +224,8 @@ describe('ChecklistInvitationController', () => {
       serviceMock.getInvitation.mockResolvedValue({
         title: 'Invitation',
         checklistTitle: 'My Checklist',
+        checklistCreatedBy: 'other-user',
+        checklistShares: [],
         createdAt,
         expiresAt,
       });
@@ -254,6 +256,8 @@ describe('ChecklistInvitationController', () => {
       serviceMock.getInvitation.mockResolvedValue({
         title: 'My Invitation',
         checklistTitle: 'My Checklist',
+        checklistCreatedBy: 'other-user',
+        checklistShares: [],
         createdAt,
         expiresAt,
       });
@@ -288,6 +292,8 @@ describe('ChecklistInvitationController', () => {
       serviceMock.getInvitation.mockResolvedValue({
         title: 'Invitation',
         checklistTitle: 'My Checklist',
+        checklistCreatedBy: 'other-user',
+        checklistShares: [],
         createdAt: new Date(),
         expiresAt,
       });
@@ -315,6 +321,8 @@ describe('ChecklistInvitationController', () => {
       serviceMock.getInvitation.mockResolvedValue({
         title: 'Invitation',
         checklistTitle: 'My Checklist',
+        checklistCreatedBy: 'other-user',
+        checklistShares: [],
         createdAt: new Date(),
         expiresAt,
       });
@@ -338,6 +346,62 @@ describe('ChecklistInvitationController', () => {
       await request(app.getHttpServer())
         .get('/checklists/checklist-1/invitations/non-existent/preview')
         .expect(404);
+    });
+
+    it('should return 200 without accept link when user is the checklist owner', async () => {
+      const expiresAt = new Date(Date.now() + 60 * 60 * 1000);
+      serviceMock.getInvitation.mockResolvedValue({
+        title: 'Invitation',
+        checklistTitle: 'My Checklist',
+        checklistCreatedBy: mockUser.uid,
+        checklistShares: [],
+        createdAt: new Date(),
+        expiresAt,
+      });
+
+      const response = await request(app.getHttpServer())
+        .get('/checklists/checklist-1/invitations/inv-1/preview')
+        .expect(200);
+
+      expect(response.body).toEqual<PlainResource>({
+        checklistTitle: 'My Checklist',
+        expiresAt: expiresAt.toISOString(),
+        _links: {
+          self: expect.any(Object) as LinkObject,
+        },
+      });
+    });
+
+    it('should return 200 without accept link when user already has a share', async () => {
+      const expiresAt = new Date(Date.now() + 60 * 60 * 1000);
+      serviceMock.getInvitation.mockResolvedValue({
+        title: 'Invitation',
+        checklistTitle: 'My Checklist',
+        checklistCreatedBy: 'other-user',
+        checklistShares: [
+          {
+            id: 's1',
+            checklistId: 'checklist-1',
+            userId: mockUser.uid,
+            title: 'My Share',
+            createdAt: new Date(),
+          },
+        ],
+        createdAt: new Date(),
+        expiresAt,
+      });
+
+      const response = await request(app.getHttpServer())
+        .get('/checklists/checklist-1/invitations/inv-1/preview')
+        .expect(200);
+
+      expect(response.body).toEqual<PlainResource>({
+        checklistTitle: 'My Checklist',
+        expiresAt: expiresAt.toISOString(),
+        _links: {
+          self: expect.any(Object) as LinkObject,
+        },
+      });
     });
   });
 

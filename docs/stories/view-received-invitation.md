@@ -13,8 +13,7 @@ As a user, I want to view details of a share invitation I received so that I can
 - Attempting to retrieve an invitation that doesn't exist results in an error
 - Include a link that allows the user to accept the invitation
 - The acceptance link is only present when the invitation has not expired
-
-## Related Stories
+- The acceptance link is not shown when the user already has read access to the checklist (as owner or existing share recipient)
 
 - [Get Share Invitation](get-share-invitation.md)
 - [Create Share Invitation](create-share-invitation.md)
