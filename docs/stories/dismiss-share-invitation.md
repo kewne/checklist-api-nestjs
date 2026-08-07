@@ -7,9 +7,8 @@ As a user, I want to dismiss a checklist share invitation so that I can decline 
 ## Acceptance Criteria
 
 - Any logged-in user can dismiss a share invitation by its ID
-- Once dismissed, the invitation can no longer be accepted by the user who dismissed it
-- Dismissing an invitation does not affect the checklist or other potential recipients
-- Attempting to dismiss a non-existent invitation results in an error
+- Once dismissed, the invitation no longer exists and cannot be accepted by anyone
+- Dismissing a non-existent invitation succeeds silently
 
 ## Related Stories
 
