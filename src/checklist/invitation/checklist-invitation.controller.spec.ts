@@ -22,6 +22,7 @@ describe('ChecklistInvitationController', () => {
       | 'createInvitation'
       | 'acceptInvitation'
       | 'deleteInvitation'
+      | 'dismissInvitation'
       | 'getInvitation'
       | 'listInvitations'
     >
@@ -34,6 +35,7 @@ describe('ChecklistInvitationController', () => {
       createInvitation: jest.fn(),
       acceptInvitation: jest.fn(),
       deleteInvitation: jest.fn(),
+      dismissInvitation: jest.fn(),
       getInvitation: jest.fn(),
       listInvitations: jest.fn(),
     };
@@ -484,6 +486,29 @@ describe('ChecklistInvitationController', () => {
       await request(app.getHttpServer())
         .delete('/checklists/non-existent/invitations/inv-1')
         .expect(404);
+    });
+  });
+
+  describe('DELETE /checklists/:checklistId/invitations/:id/preview', () => {
+    it('should return 204 on successful dismiss', async () => {
+      serviceMock.dismissInvitation.mockResolvedValue(undefined);
+
+      await request(app.getHttpServer())
+        .delete('/checklists/checklist-1/invitations/inv-1/preview')
+        .expect(204);
+
+      expect(serviceMock.dismissInvitation).toHaveBeenCalledWith(
+        'checklist-1',
+        'inv-1',
+      );
+    });
+
+    it('should return 204 when invitation does not exist (idempotency)', async () => {
+      serviceMock.dismissInvitation.mockResolvedValue(undefined);
+
+      await request(app.getHttpServer())
+        .delete('/checklists/checklist-1/invitations/non-existent/preview')
+        .expect(204);
     });
   });
 });

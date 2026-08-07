@@ -113,6 +113,13 @@ export class InvitationService {
     await this.invitationRepository.delete(checklistId, invitationId);
   }
 
+  async dismissInvitation(
+    checklistId: string,
+    invitationId: string,
+  ): Promise<void> {
+    await this.invitationRepository.delete(checklistId, invitationId);
+  }
+
   async deleteInvitation(
     checklistId: string,
     invitationId: string,

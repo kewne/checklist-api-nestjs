@@ -265,4 +265,34 @@ describe('InvitationService with Firestore Emulator', () => {
       ).rejects.toThrow(NotFoundException);
     });
   });
+
+  describe('dismissInvitation', () => {
+    it('should delete the invitation', async () => {
+      const { id: checklistId } = await checklistRepository.create(
+        { title: 'My Checklist' },
+        ownerUid,
+      );
+      const invitationId = await invitationRepository.create(
+        checklistId,
+        'Test Invite',
+      );
+
+      await service.dismissInvitation(checklistId, invitationId);
+
+      expect(
+        await invitationRepository.findById(checklistId, invitationId),
+      ).toBeNull();
+    });
+
+    it('should not throw when invitation does not exist (idempotency)', async () => {
+      const { id: checklistId } = await checklistRepository.create(
+        { title: 'My Checklist' },
+        ownerUid,
+      );
+
+      await expect(
+        service.dismissInvitation(checklistId, 'non-existent-id'),
+      ).resolves.not.toThrow();
+    });
+  });
 });
