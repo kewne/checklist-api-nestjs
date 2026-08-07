@@ -153,6 +153,16 @@ export class ChecklistInvitationController {
     );
   }
 
+  @Delete(':id/preview')
+  @HttpCode(204)
+  async deletePreview(
+    @Param('checklistId') checklistId: string,
+    @Param('id') id: string,
+    @User() _user: AuthUser,
+  ): Promise<void> {
+    await this.invitationService.dismissInvitation(checklistId, id);
+  }
+
   @Delete(':id')
   @HttpCode(204)
   async remove(
