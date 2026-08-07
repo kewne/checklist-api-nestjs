@@ -6,16 +6,16 @@ As a user, I want to see the checklists that have been explicitly shared with me
 
 ## Acceptance Criteria
 
-- The endpoint returns HTTP 200 with an array of shared checklists
-- The array includes only checklists that have been explicitly shared with the user
-- Each checklist in the response includes:
+- A user can retrieve a list of all checklists that have been explicitly shared with them
+- The list includes only checklists shared by other users (not their own)
+- Each checklist in the list includes:
   - The checklist ID
   - The title
   - The list of items (with titles and descriptions)
   - The user ID of the original creator
   - The timestamp of when the checklist was created
-- The response is a subset of checklist data suitable for read-only access
 - A user can create instances from any checklist in this list
+- The list can be empty if no checklists have been shared with the user
 
 ## Related Stories
 
