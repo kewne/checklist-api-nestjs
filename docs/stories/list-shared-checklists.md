@@ -16,6 +16,7 @@ As a user, I want to see the checklists that have been explicitly shared with me
   - The timestamp of when the checklist was created
 - A user can create instances from any checklist in this list
 - The list can be empty if no checklists have been shared with the user
+- A user cannot retrieve the list of shared checklists for another user
 
 ## Related Stories
 

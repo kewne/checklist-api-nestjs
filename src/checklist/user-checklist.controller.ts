@@ -1,4 +1,6 @@
 import { DecodeBase64JsonPipe } from '@app/common/pipes';
+import { Ability } from '@app/casl/ability.decorator';
+import type { AppAbility } from '@app/casl/ability.factory';
 import { Hateoas, NestLinkFactory, toHandlerCall } from '@app/hateoas-nest';
 import {
   BadRequestException,
@@ -16,10 +18,14 @@ import { type Response } from 'express';
 import { ChecklistController } from './checklist.controller';
 import { ChecklistService } from './checklist.service';
 import { CreateChecklistDto } from './dto/create-checklist.dto';
+import { ShareService } from './share.service';
 
 @Controller('users/:userId/checklists')
 export class UserChecklistController {
-  constructor(private readonly checklistService: ChecklistService) {}
+  constructor(
+    private readonly checklistService: ChecklistService,
+    private readonly shareService: ShareService,
+  ) {}
 
   @Post()
   async create(
@@ -78,6 +84,40 @@ export class UserChecklistController {
         toHandlerCall({
           controller: UserChecklistController,
         }).create({ params: { userId } }),
+      )
+      .withRel(
+        'related',
+        toHandlerCall({
+          controller: UserChecklistController,
+          name: 'shared',
+        }).findAllSharedWith({ params: { userId } }),
+      )
+      .toResource({});
+
+    return resource;
+  }
+
+  @Get('shared')
+  async findAllSharedWith(
+    @Param('userId') userId: string,
+    @Ability() ability: AppAbility,
+    @Hateoas() linkFactory: NestLinkFactory,
+  ) {
+    const checklists = await this.shareService.listChecklistsSharedWithUser(
+      userId,
+      ability,
+    );
+
+    const resource = linkFactory
+      .buildResource()
+      .withRel(
+        'items',
+        ...checklists.map((checklist) =>
+          toHandlerCall({
+            controller: ChecklistController,
+            name: checklist.title,
+          }).findOne({ params: { id: checklist.id } }),
+        ),
       )
       .toResource({});
 

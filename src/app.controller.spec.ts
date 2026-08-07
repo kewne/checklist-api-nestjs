@@ -3,6 +3,7 @@ import { AppController } from './app.controller';
 import { UserChecklistController } from './checklist/user-checklist.controller';
 import { UserChecklistInstanceController } from './checklist/instance/user-checklist-instance.controller';
 import { ChecklistService } from './checklist/checklist.service';
+import { ShareService } from './checklist/share.service';
 import { InstanceService } from './checklist/instance/instance.service';
 import { HateoasModule } from './hateoas/hateoas.module';
 import { NestExpressApplication } from '@nestjs/platform-express';
@@ -26,6 +27,7 @@ describe('AppController', () => {
       ],
       providers: [
         { provide: ChecklistService, useValue: {} },
+        { provide: ShareService, useValue: {} },
         { provide: InstanceService, useValue: {} },
       ],
     }).compile();

@@ -1,8 +1,6 @@
 import { ForbiddenError } from '@casl/ability';
-import {
-  ConflictException,
-  NotFoundException,
-} from '@nestjs/common';
+import { ConflictException, NotFoundException } from '@nestjs/common';
+import { randomUUID } from 'crypto';
 import { Test, TestingModule } from '@nestjs/testing';
 import { AbilityFactory } from '../casl/ability.factory';
 import { FirestoreModule } from '../firestore.module';
@@ -15,9 +13,9 @@ describe('ShareService with Firestore Emulator', () => {
   let checklistRepository: ChecklistRepository;
   let shareRepository: ShareRepository;
 
-  const ownerUid = 'owner-uid';
-  const otherUid = 'other-uid';
-  const userId = 'recipient-uid';
+  let ownerUid: string;
+  let otherUid: string;
+  let userId: string;
   const abilityFactory = new AbilityFactory();
 
   beforeAll(() => {
@@ -26,6 +24,10 @@ describe('ShareService with Firestore Emulator', () => {
   });
 
   beforeEach(async () => {
+    ownerUid = randomUUID();
+    otherUid = randomUUID();
+    userId = randomUUID();
+
     const module: TestingModule = await Test.createTestingModule({
       imports: [FirestoreModule],
       providers: [ShareService, ShareRepository, ChecklistRepository],
@@ -177,7 +179,11 @@ describe('ShareService with Firestore Emulator', () => {
       const ownerAbility = abilityFactory.createForUser({ uid: ownerUid });
 
       await expect(
-        service.removeShare('non-existent-checklist', 'any-share', ownerAbility),
+        service.removeShare(
+          'non-existent-checklist',
+          'any-share',
+          ownerAbility,
+        ),
       ).rejects.toThrow(NotFoundException);
     });
   });
@@ -208,6 +214,41 @@ describe('ShareService with Firestore Emulator', () => {
       const shares = await service.listSharedWithUser('unknown-user');
 
       expect(shares).toEqual([]);
+    });
+  });
+
+  describe('listChecklistsSharedWithUser', () => {
+    it('should return checklists shared with the user', async () => {
+      const { id: checklistId } = await checklistRepository.create(
+        { title: 'Shared Checklist' },
+        ownerUid,
+      );
+      await service.createShare(checklistId, userId, 'Share Title');
+
+      const checklists = await service.listChecklistsSharedWithUser(
+        userId,
+        abilityFactory.createForUser({ uid: userId }),
+      );
+
+      expect(checklists.map((c) => c.id)).toContain(checklistId);
+    });
+
+    it('should return empty array when no checklists are shared with the user', async () => {
+      const checklists = await service.listChecklistsSharedWithUser(
+        userId,
+        abilityFactory.createForUser({ uid: userId }),
+      );
+
+      expect(checklists).toEqual([]);
+    });
+
+    it("should throw ForbiddenError when requesting another user's shared checklists", async () => {
+      await expect(
+        service.listChecklistsSharedWithUser(
+          userId,
+          abilityFactory.createForUser({ uid: otherUid }),
+        ),
+      ).rejects.toThrow(ForbiddenError);
     });
   });
 });

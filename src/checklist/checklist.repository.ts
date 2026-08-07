@@ -72,6 +72,17 @@ export class ChecklistRepository {
     } as ChecklistDocument;
   }
 
+  async findByIds(ids: string[]): Promise<ChecklistDocument[]> {
+    if (ids.length === 0) {
+      return [];
+    }
+    const refs = ids.map((id) => this.firestore.collection(this.collection).doc(id));
+    const docs = await this.firestore.getAll(...refs);
+    return docs
+      .filter((doc) => doc.exists)
+      .map((doc) => ({ id: doc.id, ...doc.data() }) as ChecklistDocument);
+  }
+
   async findAll(): Promise<ChecklistDocument[]> {
     const snapshot = await this.firestore.collection(this.collection).get();
 

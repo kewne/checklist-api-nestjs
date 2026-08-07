@@ -5,7 +5,7 @@ import {
 } from '@nestjs/common';
 import { ForbiddenError, subject } from '@casl/ability';
 import { AppAbility } from '../casl/ability.factory';
-import { ChecklistRepository } from './checklist.repository';
+import { ChecklistDocument, ChecklistRepository } from './checklist.repository';
 import { ShareDocument, ShareRepository } from './share.repository';
 
 @Injectable()
@@ -89,5 +89,18 @@ export class ShareService {
 
   async listSharedWithUser(userId: string): Promise<ShareDocument[]> {
     return this.shareRepository.findByUserId(userId);
+  }
+
+  async listChecklistsSharedWithUser(
+    userId: string,
+    ability: AppAbility,
+  ): Promise<ChecklistDocument[]> {
+    ForbiddenError.from(ability).throwUnlessCan(
+      'read',
+      subject('ChecklistsSharedWithUser', { userId }),
+    );
+    const shares = await this.shareRepository.findByUserId(userId);
+    const ids = shares.map((s) => s.checklistId);
+    return this.checklistRepository.findByIds(ids);
   }
 }

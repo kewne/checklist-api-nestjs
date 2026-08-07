@@ -31,6 +31,10 @@ interface ChecklistInstanceItem {
   instance: { createdBy: string };
 }
 
+interface ChecklistsSharedWithUser {
+  userId: string;
+}
+
 export type Actions = 'create' | 'read' | 'delete';
 export type Subjects =
   | ChecklistShareInvitation
@@ -40,7 +44,9 @@ export type Subjects =
   | Checklist
   | 'Checklist'
   | ChecklistInstanceItem
-  | 'ChecklistInstanceItem';
+  | 'ChecklistInstanceItem'
+  | ChecklistsSharedWithUser
+  | 'ChecklistsSharedWithUser';
 
 export type AppAbility = MongoAbility<[Actions, Subjects]>;
 
@@ -77,6 +83,8 @@ export class AbilityFactory {
     can('create', 'ChecklistInstanceItem', {
       'instance.createdBy': user.uid,
     });
+
+    can('read', 'ChecklistsSharedWithUser', { userId: user.uid });
 
     return build();
   }
