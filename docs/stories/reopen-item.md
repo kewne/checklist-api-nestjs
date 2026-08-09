@@ -9,6 +9,7 @@ As a user, I want to mark a completed checklist item as incomplete so that I can
 - A successful reopening returns HTTP 303 redirecting to the parent checklist instance
 - Reopening an already-incomplete item is an error
 - Reopening an item on a non-existent instance returns HTTP 404
+- Reopening an item on an instance that belongs to another user returns HTTP 403
 
 ## Related Stories
 

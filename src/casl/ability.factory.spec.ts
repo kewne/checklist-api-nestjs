@@ -113,5 +113,47 @@ describe('AbilityFactory', () => {
         ),
       ).toBe(false);
     });
+
+    it('should allow owner to read a ChecklistInstance', () => {
+      const ability = factory.createForUser(user);
+      expect(
+        ability.can('read', subject('ChecklistInstance', { createdBy: user.uid })),
+      ).toBe(true);
+    });
+
+    it('should not allow non-owner to read a ChecklistInstance', () => {
+      const ability = factory.createForUser(user);
+      expect(
+        ability.can('read', subject('ChecklistInstance', { createdBy: 'other-user' })),
+      ).toBe(false);
+    });
+
+    it('should allow owner to update a ChecklistInstance', () => {
+      const ability = factory.createForUser(user);
+      expect(
+        ability.can('update', subject('ChecklistInstance', { createdBy: user.uid })),
+      ).toBe(true);
+    });
+
+    it('should not allow non-owner to update a ChecklistInstance', () => {
+      const ability = factory.createForUser(user);
+      expect(
+        ability.can('update', subject('ChecklistInstance', { createdBy: 'other-user' })),
+      ).toBe(false);
+    });
+
+    it('should allow owner to delete a ChecklistInstance', () => {
+      const ability = factory.createForUser(user);
+      expect(
+        ability.can('delete', subject('ChecklistInstance', { createdBy: user.uid })),
+      ).toBe(true);
+    });
+
+    it('should not allow non-owner to delete a ChecklistInstance', () => {
+      const ability = factory.createForUser(user);
+      expect(
+        ability.can('delete', subject('ChecklistInstance', { createdBy: 'other-user' })),
+      ).toBe(false);
+    });
   });
 });

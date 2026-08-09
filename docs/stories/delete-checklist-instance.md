@@ -7,6 +7,7 @@ As a user, I want to delete a checklist instance so that I can remove instances 
 - Deleting a checklist instance by its ID returns HTTP 200
 - The deleted instance is no longer accessible after deletion
 - Deleting a non-existent instance returns HTTP 404
+- Deleting an instance that belongs to another user returns HTTP 403
 
 ## Related Stories
 

@@ -1,4 +1,5 @@
 import { ConflictException, NotFoundException } from '@nestjs/common';
+import { ForbiddenError, subject } from '@casl/ability';
 import { APP_GUARD } from '@nestjs/core';
 import { NestExpressApplication } from '@nestjs/platform-express';
 import { Test, TestingModule } from '@nestjs/testing';
@@ -7,7 +8,7 @@ import { NextFunction, Request, Response } from 'express';
 import { USER_AUTH_KEY } from '../../auth/auth.constants';
 import { AuthUser } from '../../auth/auth.guard';
 import { MockAuthGuard } from '../../auth/auth.guard.mock';
-import { AbilityFactory } from '../../casl/ability.factory';
+import { AbilityFactory, AppAbility } from '../../casl/ability.factory';
 import { CaslForbiddenErrorFilter } from '../../casl/casl-forbidden-error.filter';
 import { ABILITY_KEY } from '../../casl/casl.interceptor';
 import { HateoasModule } from '../../hateoas/hateoas.module';
@@ -141,6 +142,21 @@ describe('ChecklistInstanceController', () => {
 
       expect(service.findOne).toHaveBeenCalledWith('non-existent');
     });
+
+    it('should return 403 when instance belongs to another user', async () => {
+      service.findOne.mockResolvedValue({
+        id: '456',
+        checklistId: '123',
+        createdBy: 'other-user',
+        createdAt: new Date('2026-02-10T12:00:00Z'),
+        title: 'My Instance',
+        items: [],
+      });
+
+      await request(app.getHttpServer())
+        .get('/checklist-instances/456')
+        .expect(403);
+    });
   });
 
   describe('POST /checklist-instances/:instanceId/items/:itemId/complete', () => {
@@ -156,6 +172,7 @@ describe('ChecklistInstanceController', () => {
         '456',
         'item-1',
         undefined,
+        expect.any(Object),
       );
       expect(response.headers.location).toMatch(/\/checklist-instances\/456$/);
     });
@@ -172,7 +189,24 @@ describe('ChecklistInstanceController', () => {
         '456',
         'item-1',
         'Well done',
+        expect.any(Object),
       );
+    });
+
+    it('should return 403 when instance belongs to another user', async () => {
+      service.completeItem.mockImplementation(
+        (_id: string, _itemId: string, _note: unknown, ability: AppAbility) => {
+          ForbiddenError.from(ability).throwUnlessCan(
+            'update',
+            subject('ChecklistInstance', { createdBy: 'other-user' }),
+          );
+        },
+      );
+
+      await request(app.getHttpServer())
+        .post('/checklist-instances/456/items/item-1/complete')
+        .send({})
+        .expect(403);
     });
 
     it('should return 409 when item is already completed', async () => {
@@ -216,8 +250,28 @@ describe('ChecklistInstanceController', () => {
         .send({})
         .expect(303);
 
-      expect(service.markItemIncomplete).toHaveBeenCalledWith('456', 'item-1');
+      expect(service.markItemIncomplete).toHaveBeenCalledWith(
+        '456',
+        'item-1',
+        expect.any(Object),
+      );
       expect(response.headers.location).toMatch(/\/checklist-instances\/456$/);
+    });
+
+    it('should return 403 when instance belongs to another user', async () => {
+      service.markItemIncomplete.mockImplementation(
+        (_id: string, _itemId: string, ability: AppAbility) => {
+          ForbiddenError.from(ability).throwUnlessCan(
+            'update',
+            subject('ChecklistInstance', { createdBy: 'other-user' }),
+          );
+        },
+      );
+
+      await request(app.getHttpServer())
+        .post('/checklist-instances/456/items/item-1/incomplete')
+        .send({})
+        .expect(403);
     });
 
     it('should return 409 when item is not completed', async () => {
@@ -252,11 +306,28 @@ describe('ChecklistInstanceController', () => {
         .send({ title: 'Updated Title', items: [{ title: 'Updated Item' }] })
         .expect(204);
 
-      expect(service.replace).toHaveBeenCalledWith('456', {
-        title: 'Updated Title',
-        items: [{ title: 'Updated Item' }],
-      });
+      expect(service.replace).toHaveBeenCalledWith(
+        '456',
+        { title: 'Updated Title', items: [{ title: 'Updated Item' }] },
+        expect.any(Object),
+      );
       expect(response.body).toEqual({});
+    });
+
+    it('should return 403 when instance belongs to another user', async () => {
+      service.replace.mockImplementation(
+        (_id: string, _dto: unknown, ability: AppAbility) => {
+          ForbiddenError.from(ability).throwUnlessCan(
+            'update',
+            subject('ChecklistInstance', { createdBy: 'other-user' }),
+          );
+        },
+      );
+
+      await request(app.getHttpServer())
+        .put('/checklist-instances/456')
+        .send({ title: 'Updated Title', items: [{ title: 'Updated Item' }] })
+        .expect(403);
     });
 
     it('should return 404 when instance not found', async () => {
@@ -306,7 +377,22 @@ describe('ChecklistInstanceController', () => {
         .delete('/checklist-instances/456')
         .expect(200);
 
-      expect(service.remove).toHaveBeenCalledWith('456');
+      expect(service.remove).toHaveBeenCalledWith('456', expect.any(Object));
+    });
+
+    it('should return 403 when instance belongs to another user', async () => {
+      service.remove.mockImplementation(
+        (_id: string, ability: AppAbility) => {
+          ForbiddenError.from(ability).throwUnlessCan(
+            'delete',
+            subject('ChecklistInstance', { createdBy: 'other-user' }),
+          );
+        },
+      );
+
+      await request(app.getHttpServer())
+        .delete('/checklist-instances/456')
+        .expect(403);
     });
 
     it('should return 404 when instance not found', async () => {
@@ -318,7 +404,10 @@ describe('ChecklistInstanceController', () => {
         .delete('/checklist-instances/non-existent')
         .expect(404);
 
-      expect(service.remove).toHaveBeenCalledWith('non-existent');
+      expect(service.remove).toHaveBeenCalledWith(
+        'non-existent',
+        expect.any(Object),
+      );
     });
   });
 

@@ -11,6 +11,7 @@ As a user, I want to view a specific checklist instance so that I can see the cu
 - The response includes a link to reopen each completed item
 - The response includes a link to add a new item to the instance
 - Requesting a non-existent instance returns HTTP 404
+- Requesting an instance that belongs to another user returns HTTP 403
 
 ## Related Stories
 

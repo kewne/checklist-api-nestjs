@@ -10,6 +10,7 @@ As a user, I want to mark a checklist item as complete so that I can record that
 - A successful completion returns HTTP 303 redirecting to the parent checklist instance
 - Completing an already-completed item is an error
 - Completing an item on a non-existent instance returns HTTP 404
+- Completing an item on an instance that belongs to another user returns HTTP 403
 
 ## Related Stories
 

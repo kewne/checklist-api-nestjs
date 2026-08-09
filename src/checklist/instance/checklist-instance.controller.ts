@@ -31,9 +31,14 @@ export class ChecklistInstanceController {
   async findOne(
     @Param('instanceId') instanceId: string,
     @User() user: AuthUser,
+    @Ability() ability: AppAbility,
     @Hateoas() linkFactory: NestLinkFactory,
   ) {
     const instance = await this.instanceService.findOne(instanceId);
+    ForbiddenError.from(ability).throwUnlessCan(
+      'read',
+      subject('ChecklistInstance', instance),
+    );
     return InstanceResource.toResource(instance, user.uid, linkFactory);
   }
 
@@ -43,10 +48,16 @@ export class ChecklistInstanceController {
     @Param('instanceId') instanceId: string,
     @Param('itemId') itemId: string,
     @Body() dto: CompleteItemDto,
+    @Ability() ability: AppAbility,
     @Res({ passthrough: true }) res: Response,
     @Hateoas() linkFactory: NestLinkFactory,
   ) {
-    await this.instanceService.completeItem(instanceId, itemId, dto.note);
+    await this.instanceService.completeItem(
+      instanceId,
+      itemId,
+      dto.note,
+      ability,
+    );
     res.statusCode = 303;
     res.setHeader(
       'location',
@@ -61,10 +72,15 @@ export class ChecklistInstanceController {
   async markItemIncomplete(
     @Param('instanceId') instanceId: string,
     @Param('itemId') itemId: string,
+    @Ability() ability: AppAbility,
     @Res({ passthrough: true }) res: Response,
     @Hateoas() linkFactory: NestLinkFactory,
   ) {
-    await this.instanceService.markItemIncomplete(instanceId, itemId);
+    await this.instanceService.markItemIncomplete(
+      instanceId,
+      itemId,
+      ability,
+    );
     res.statusCode = 303;
     res.setHeader(
       'location',
@@ -80,8 +96,13 @@ export class ChecklistInstanceController {
   async replace(
     @Param('instanceId') instanceId: string,
     @Body() dto: ReplaceChecklistInstanceDto,
+    @Ability() ability: AppAbility,
   ): Promise<void> {
-    await this.instanceService.replace(instanceId, dto);
+    await this.instanceService.replace(
+      instanceId,
+      dto,
+      ability,
+    );
   }
 
   @Post(':instanceId/add-item')
@@ -107,7 +128,10 @@ export class ChecklistInstanceController {
   }
 
   @Delete(':instanceId')
-  remove(@Param('instanceId') instanceId: string) {
-    return this.instanceService.remove(instanceId);
+  remove(
+    @Param('instanceId') instanceId: string,
+    @Ability() ability: AppAbility,
+  ) {
+    return this.instanceService.remove(instanceId, ability);
   }
 }

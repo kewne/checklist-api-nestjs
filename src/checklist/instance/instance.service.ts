@@ -1,5 +1,7 @@
 import { Injectable, NotFoundException } from '@nestjs/common';
+import { ForbiddenError, subject } from '@casl/ability';
 import { ChecklistService } from '../checklist.service';
+import { AppAbility } from '../../casl/ability.factory';
 import {
   ChecklistInstance,
   ReplaceChecklistInstanceDto,
@@ -62,7 +64,15 @@ export class InstanceService {
     instanceId: string,
     itemId: string,
     note?: string,
+    ability?: AppAbility,
   ): Promise<void> {
+    const instance = await this.findOne(instanceId);
+    if (ability) {
+      ForbiddenError.from(ability).throwUnlessCan(
+        'update',
+        subject('ChecklistInstance', instance),
+      );
+    }
     await this.instanceRepository.completeItem(
       instanceId,
       itemId,
@@ -71,14 +81,31 @@ export class InstanceService {
     );
   }
 
-  async markItemIncomplete(instanceId: string, itemId: string): Promise<void> {
+  async markItemIncomplete(
+    instanceId: string,
+    itemId: string,
+    ability?: AppAbility,
+  ): Promise<void> {
+    const instance = await this.findOne(instanceId);
+    if (ability) {
+      ForbiddenError.from(ability).throwUnlessCan(
+        'update',
+        subject('ChecklistInstance', instance),
+      );
+    }
     await this.instanceRepository.markItemIncomplete(instanceId, itemId);
   }
 
-  async remove(id: string): Promise<void> {
-    const instance = await this.instanceRepository.findById(id);
-    if (!instance) {
-      throw new NotFoundException(`Checklist instance with id ${id} not found`);
+  async remove(
+    id: string,
+    ability?: AppAbility,
+  ): Promise<void> {
+    const instance = await this.findOne(id);
+    if (ability) {
+      ForbiddenError.from(ability).throwUnlessCan(
+        'delete',
+        subject('ChecklistInstance', instance),
+      );
     }
     await this.instanceRepository.delete(id);
   }
@@ -86,7 +113,15 @@ export class InstanceService {
   async replace(
     instanceId: string,
     dto: ReplaceChecklistInstanceDto,
+    ability?: AppAbility,
   ): Promise<void> {
+    const instance = await this.findOne(instanceId);
+    if (ability) {
+      ForbiddenError.from(ability).throwUnlessCan(
+        'update',
+        subject('ChecklistInstance', instance),
+      );
+    }
     return this.instanceRepository.replace(instanceId, dto);
   }
 
