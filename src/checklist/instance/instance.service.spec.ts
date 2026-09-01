@@ -1,8 +1,10 @@
 import { ConflictException, NotFoundException } from '@nestjs/common';
+import { ForbiddenError } from '@casl/ability';
 import { ConfigModule } from '@nestjs/config';
 import { Test, TestingModule } from '@nestjs/testing';
 import { randomUUID } from 'crypto';
 import { FirestoreModule } from '../../firestore.module';
+import { AbilityFactory } from '../../casl/ability.factory';
 import { ChecklistRepository } from '../checklist.repository';
 import { ChecklistService } from '../checklist.service';
 import {
@@ -278,6 +280,97 @@ describe('InstanceService', () => {
       await expect(
         service.markItemIncomplete(instanceId, instance!.items[0].id),
       ).rejects.toThrow(ConflictException);
+    });
+  });
+
+  describe('clearCompletedItems', () => {
+    async function seedInstanceWithMixedItems() {
+      const userId = randomUUID();
+      const checklist = await checklistRepository.create(
+        {
+          title: 'CL',
+          items: [
+            { title: 'Task 1', description: 'Do task 1' },
+            { title: 'Task 2', description: 'Do task 2' },
+            { title: 'Task 3', description: 'Do task 3' },
+            { title: 'Task 4', description: 'Do task 4' },
+          ],
+        },
+        userId,
+      );
+      const instanceId = await instanceRepository.create(
+        checklist.id,
+        userId,
+        'Test Instance',
+        checklist.items,
+      );
+      const instance = (await instanceRepository.findById(instanceId))!;
+      await service.completeItem(instanceId, instance.items[0].id);
+      await service.completeItem(instanceId, instance.items[2].id, 'done');
+      return { instance, userId };
+    }
+
+    it('should remove completed items and preserve incomplete items unchanged', async () => {
+      const { instance } = await seedInstanceWithMixedItems();
+
+      await service.clearCompletedItems(instance.id);
+
+      const updated = await service.findOne(instance.id);
+      expect(updated.items.map((item) => item.title)).toEqual([
+        'Task 2',
+        'Task 4',
+      ]);
+      expect(updated.items[0].description).toBe('Do task 2');
+      expect(updated.items[1].description).toBe('Do task 4');
+      expect(updated.items[0].completed).toBeNull();
+      expect(updated.items[1].completed).toBeNull();
+    });
+
+    it('should succeed as a no-op when no items are completed', async () => {
+      const userId = randomUUID();
+      const checklist = await checklistRepository.create(
+        { title: 'CL', items: [{ title: 'Task 1' }] },
+        userId,
+      );
+      const instanceId = await instanceRepository.create(
+        checklist.id,
+        userId,
+        'Test Instance',
+        checklist.items,
+      );
+
+      await service.clearCompletedItems(instanceId);
+
+      const updated = await service.findOne(instanceId);
+      expect(updated.items).toHaveLength(1);
+      expect(updated.items[0].title).toBe('Task 1');
+    });
+
+    it('should throw NotFoundException for unknown instance', async () => {
+      await expect(
+        service.clearCompletedItems('non-existent-instance'),
+      ).rejects.toThrow(NotFoundException);
+    });
+
+    it('should throw ForbiddenError when the user lacks write access', async () => {
+      const userId = randomUUID();
+      const checklist = await checklistRepository.create(
+        { title: 'CL', items: [] },
+        userId,
+      );
+      const instanceId = await instanceRepository.create(
+        checklist.id,
+        userId,
+        'Test Instance',
+        [],
+      );
+      const ability = new AbilityFactory().createForUser({
+        uid: 'other-user',
+      });
+
+      await expect(
+        service.clearCompletedItems(instanceId, ability),
+      ).rejects.toThrow(ForbiddenError);
     });
   });
 

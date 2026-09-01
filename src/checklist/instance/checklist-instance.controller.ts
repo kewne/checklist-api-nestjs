@@ -90,6 +90,23 @@ export class ChecklistInstanceController {
     );
   }
 
+  @Post(':instanceId/clear-completed-items')
+  async clearCompletedItems(
+    @Param('instanceId') instanceId: string,
+    @Ability() ability: AppAbility,
+    @Res({ passthrough: true }) res: Response,
+    @Hateoas() linkFactory: NestLinkFactory,
+  ) {
+    await this.instanceService.clearCompletedItems(instanceId, ability);
+    res.statusCode = 303;
+    res.setHeader(
+      'location',
+      linkFactory.toHandler(ChecklistInstanceController, 'findOne', {
+        params: { instanceId },
+      }),
+    );
+  }
+
   @Put(':instanceId')
   @HttpCode(204)
   @UsePipes(new ValidationPipe({ transform: true }))

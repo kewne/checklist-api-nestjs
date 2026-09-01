@@ -21,6 +21,7 @@ describe('ChecklistInstanceController', () => {
     findOne: jest.fn(),
     completeItem: jest.fn(),
     markItemIncomplete: jest.fn(),
+    clearCompletedItems: jest.fn(),
     remove: jest.fn(),
     replace: jest.fn(),
     addItem: jest.fn(),
@@ -129,6 +130,68 @@ describe('ChecklistInstanceController', () => {
       >;
       expect(links['complete-item']).toBeDefined();
       expect(links['mark-incomplete-item']).toBeDefined();
+    });
+
+    it('should include clear-completed-items update link when completed items exist', async () => {
+      service.findOne.mockResolvedValue({
+        id: '456',
+        checklistId: '123',
+        createdBy: 'test-user-id',
+        createdAt: new Date('2026-02-10T12:00:00Z'),
+        title: 'My Instance',
+        items: [
+          {
+            id: 'item-1',
+            title: 'Completed Item',
+            completed: { completed_at: '2026-04-20T10:00:00.000Z' },
+          },
+        ],
+      });
+
+      const response = await request(app.getHttpServer())
+        .get('/checklist-instances/456')
+        .expect(200);
+
+      const links = (response.body as Record<string, unknown>)._links as Record<
+        string,
+        { href: string; name?: string } | { href: string; name?: string }[]
+      >;
+      const updateLinks = Array.isArray(links.update)
+        ? links.update
+        : [links.update];
+      const clearLink = updateLinks.find(
+        (link) => link.name === 'clear-completed-items',
+      );
+      expect(clearLink).toBeDefined();
+      expect(clearLink!.href).toMatch(
+        /\/checklist-instances\/456\/clear-completed-items$/,
+      );
+    });
+
+    it('should omit clear-completed-items update link when no items are completed', async () => {
+      service.findOne.mockResolvedValue({
+        id: '456',
+        checklistId: '123',
+        createdBy: 'test-user-id',
+        createdAt: new Date('2026-02-10T12:00:00Z'),
+        title: 'My Instance',
+        items: [{ id: 'item-1', title: 'Incomplete Item' }],
+      });
+
+      const response = await request(app.getHttpServer())
+        .get('/checklist-instances/456')
+        .expect(200);
+
+      const links = (response.body as Record<string, unknown>)._links as Record<
+        string,
+        { href: string; name?: string } | { href: string; name?: string }[]
+      >;
+      const updateLinks = Array.isArray(links.update)
+        ? links.update
+        : [links.update];
+      expect(
+        updateLinks.find((link) => link?.name === 'clear-completed-items'),
+      ).toBeUndefined();
     });
 
     it('should return 404 when instance not found', async () => {
@@ -293,6 +356,47 @@ describe('ChecklistInstanceController', () => {
       await request(app.getHttpServer())
         .post('/checklist-instances/456/items/item-1/incomplete')
         .send({})
+        .expect(404);
+    });
+  });
+
+  describe('POST /checklist-instances/:instanceId/clear-completed-items', () => {
+    it('should return 303 with location header pointing to instance', async () => {
+      service.clearCompletedItems.mockResolvedValue(undefined);
+
+      const response = await request(app.getHttpServer())
+        .post('/checklist-instances/456/clear-completed-items')
+        .expect(303);
+
+      expect(service.clearCompletedItems).toHaveBeenCalledWith(
+        '456',
+        expect.any(Object),
+      );
+      expect(response.headers.location).toMatch(/\/checklist-instances\/456$/);
+    });
+
+    it('should return 403 when instance belongs to another user', async () => {
+      service.clearCompletedItems.mockImplementation(
+        (_id: string, ability: AppAbility) => {
+          ForbiddenError.from(ability).throwUnlessCan(
+            'update',
+            subject('ChecklistInstance', { createdBy: 'other-user' }),
+          );
+        },
+      );
+
+      await request(app.getHttpServer())
+        .post('/checklist-instances/456/clear-completed-items')
+        .expect(403);
+    });
+
+    it('should return 404 when instance not found', async () => {
+      service.clearCompletedItems.mockRejectedValue(
+        new NotFoundException('Checklist instance not found'),
+      );
+
+      await request(app.getHttpServer())
+        .post('/checklist-instances/non-existent/clear-completed-items')
         .expect(404);
     });
   });

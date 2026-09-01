@@ -199,6 +199,22 @@ export class InstanceRepository {
     await docRef.update({ items: data.items });
   }
 
+  async clearCompletedItems(instanceId: string): Promise<void> {
+    const docRef = this.firestore.collection(this.collection).doc(instanceId);
+    const doc = await docRef.get();
+
+    if (!doc.exists) {
+      throw new NotFoundException(
+        `Checklist instance with id ${instanceId} not found`,
+      );
+    }
+
+    const data = doc.data() as { items: InstanceItem[] };
+    const items = data.items.filter((item) => item.completed === null);
+
+    await docRef.update({ items });
+  }
+
   async markItemIncomplete(instanceId: string, itemId: string): Promise<void> {
     const docRef = this.firestore.collection(this.collection).doc(instanceId);
     const doc = await docRef.get();

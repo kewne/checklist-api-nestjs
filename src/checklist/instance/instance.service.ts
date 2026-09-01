@@ -96,6 +96,20 @@ export class InstanceService {
     await this.instanceRepository.markItemIncomplete(instanceId, itemId);
   }
 
+  async clearCompletedItems(
+    instanceId: string,
+    ability?: AppAbility,
+  ): Promise<void> {
+    const instance = await this.findOne(instanceId);
+    if (ability) {
+      ForbiddenError.from(ability).throwUnlessCan(
+        'update',
+        subject('ChecklistInstance', instance),
+      );
+    }
+    await this.instanceRepository.clearCompletedItems(instanceId);
+  }
+
   async remove(
     id: string,
     ability?: AppAbility,

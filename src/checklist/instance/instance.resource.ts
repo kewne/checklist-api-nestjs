@@ -69,6 +69,14 @@ export class InstanceResource {
           }),
         ),
       );
+
+      resource.withRel(
+        'update',
+        toHandler(ChecklistInstanceController, 'clearCompletedItems', {
+          name: 'clear-completed-items',
+          params: { instanceId: instance.id },
+        }),
+      );
     }
 
     const transformedInstance = {
