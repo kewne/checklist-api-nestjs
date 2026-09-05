@@ -131,6 +131,22 @@ describe('ChecklistInvitationController', () => {
       expect(item.title).toBe('Old Invite (expired)');
     });
 
+    it('should return 200 with up and related links to the checklist', async () => {
+      serviceMock.listInvitations.mockResolvedValue([]);
+
+      const response = await request(app.getHttpServer())
+        .get('/checklists/checklist-1/invitations')
+        .expect(200);
+
+      const body = response.body as PlainResource;
+      const up = body._links.up as LinkObject;
+      expect(up.href).toMatch(/\/checklists\/checklist-1$/);
+      expect(up.name).toBe('checklist');
+      const related = body._links.related as LinkObject;
+      expect(related.href).toMatch(/\/checklists\/checklist-1$/);
+      expect(related.name).toBe('checklist');
+    });
+
     it('should return 200 with no items key when list is empty', async () => {
       serviceMock.listInvitations.mockResolvedValue([]);
 

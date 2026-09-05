@@ -4,6 +4,7 @@ import { Ability } from '@app/casl/ability.decorator';
 import type { AppAbility } from '@app/casl/ability.factory';
 import { Hateoas, NestLinkFactory, toHandlerCall } from '@app/hateoas-nest';
 import { ForbiddenError, subject } from '@casl/ability';
+import { ChecklistController } from '../checklist.controller';
 import {
   Body,
   Controller,
@@ -79,6 +80,20 @@ export class ChecklistInvitationController {
             title: isExpired ? `${inv.title} (expired)` : inv.title,
           }).findOne({ params: { checklistId, id: inv.id } });
         }),
+      )
+      .withRel(
+        'up',
+        toHandlerCall({
+          controller: ChecklistController,
+          name: 'checklist',
+        }).findOne({ params: { id: checklistId } }),
+      )
+      .withRel(
+        'related',
+        toHandlerCall({
+          controller: ChecklistController,
+          name: 'checklist',
+        }).findOne({ params: { id: checklistId } }),
       )
       .toResource({});
   }

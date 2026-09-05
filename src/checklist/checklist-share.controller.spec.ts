@@ -99,6 +99,27 @@ describe('ChecklistShareController', () => {
       expect(items[1].title).toBe('Share A');
     });
 
+    it('should return 200 with related links to invitations and checklist and an up link to the checklist', async () => {
+      serviceMock.listShares.mockResolvedValue([]);
+
+      const response = await request(app.getHttpServer())
+        .get('/checklists/checklist-1/shares')
+        .expect(200);
+
+      const body = response.body as PlainResource;
+      const up = body._links.up as LinkObject;
+      expect(up.href).toMatch(/\/checklists\/checklist-1$/);
+      expect(up.name).toBe('checklist');
+      const related = body._links.related as LinkObject[];
+      expect(related).toHaveLength(2);
+      expect(related[0].href).toMatch(
+        /\/checklists\/checklist-1\/invitations$/,
+      );
+      expect(related[0].name).toBe('invitations');
+      expect(related[1].href).toMatch(/\/checklists\/checklist-1$/);
+      expect(related[1].name).toBe('checklist');
+    });
+
     it('should return 200 with no items key when list is empty', async () => {
       serviceMock.listShares.mockResolvedValue([]);
 
