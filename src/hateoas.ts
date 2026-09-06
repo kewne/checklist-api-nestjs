@@ -1,6 +1,6 @@
 import { Expose } from 'class-transformer';
 
-type Wrapped = object | void;
+type Wrapped = object;
 
 export type LinkObject = { href: string } & LinkOptions;
 export interface LinkOptions {
@@ -12,7 +12,7 @@ export interface PlainResource {
   [p: string]: unknown;
 }
 
-export class Resource<T extends Wrapped = void> {
+export class Resource<T extends Wrapped = Record<string, never>> {
   private wrapped?: T;
   @Expose({ name: '_links' })
   private links: Record<string, LinkObject | LinkObject[]>;
@@ -32,7 +32,7 @@ export class Resource<T extends Wrapped = void> {
 
 export interface ResourceBuilder {
   withRel(rel: string, ...links: LinkObject[]): this;
-  toResource<T extends Wrapped>(wrapped: T): PlainResource;
+  toResource(wrapped?: Wrapped): PlainResource;
 }
 
 export class BaseUrlResourceBuilder implements ResourceBuilder {
@@ -64,7 +64,7 @@ export class BaseUrlResourceBuilder implements ResourceBuilder {
     links.forEach((link) => this.addLink(rel, link));
     return this;
   }
-  toResource<T extends Wrapped>(wrapped?: T): PlainResource {
+  toResource(wrapped?: Wrapped): PlainResource {
     return {
       ...wrapped,
       _links: this.links,

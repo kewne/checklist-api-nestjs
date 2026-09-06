@@ -6,6 +6,7 @@ import { ChecklistService } from './checklist/checklist.service';
 import { ShareService } from './checklist/share.service';
 import { InstanceService } from './checklist/instance/instance.service';
 import { HateoasModule } from './hateoas/hateoas.module';
+import { resourceEnrichers, ResourceTypes } from './resource-enrichers';
 import { NestExpressApplication } from '@nestjs/platform-express';
 import request from 'supertest';
 import { USER_AUTH_KEY } from './auth/auth.constants';
@@ -19,7 +20,7 @@ describe('AppController', () => {
 
   beforeEach(async () => {
     const module: TestingModule = await Test.createTestingModule({
-      imports: [HateoasModule],
+      imports: [HateoasModule.registerEnrichers<ResourceTypes>(resourceEnrichers)],
       controllers: [
         AppController,
         UserChecklistController,

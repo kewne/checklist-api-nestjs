@@ -11,6 +11,7 @@ import { Test, TestingModule } from '@nestjs/testing';
 import { NextFunction, Request, Response } from 'express';
 import request from 'supertest';
 import { HateoasModule } from '../../hateoas/hateoas.module';
+import { resourceEnrichers, ResourceTypes } from '../../resource-enrichers';
 import { ChecklistInvitationController } from './checklist-invitation.controller';
 import { InvitationService } from './invitation.service';
 
@@ -41,7 +42,7 @@ describe('ChecklistInvitationController', () => {
     };
 
     const module: TestingModule = await Test.createTestingModule({
-      imports: [HateoasModule],
+      imports: [HateoasModule.registerEnrichers<ResourceTypes>(resourceEnrichers)],
       controllers: [ChecklistInvitationController],
       providers: [
         {

@@ -4,6 +4,7 @@ import { NestExpressApplication } from '@nestjs/platform-express';
 import { Test, TestingModule } from '@nestjs/testing';
 import request from 'supertest';
 import { HateoasModule } from '../../hateoas/hateoas.module';
+import { resourceEnrichers, ResourceTypes } from '../../resource-enrichers';
 import { InstanceService } from './instance.service';
 import { UserChecklistInstanceController } from './user-checklist-instance.controller';
 import { USER_AUTH_KEY } from '@app/auth/auth.constants';
@@ -32,7 +33,7 @@ describe('UserChecklistInstanceController', () => {
     };
 
     const module: TestingModule = await Test.createTestingModule({
-      imports: [HateoasModule],
+      imports: [HateoasModule.registerEnrichers<ResourceTypes>(resourceEnrichers)],
       controllers: [UserChecklistInstanceController],
       providers: [
         {

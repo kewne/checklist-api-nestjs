@@ -1,8 +1,9 @@
 import type { AuthUser } from '@app/auth/auth.guard';
 import { User } from '@app/auth/user.decorator';
-import { Hateoas, NestLinkFactory, toHandlerCall } from '@app/hateoas-nest';
+import { Hateoas, NestLinkFactory } from '@app/hateoas-nest';
 import { Body, Controller, Get, Param, Post, Query, Res } from '@nestjs/common';
 import type { Response } from 'express';
+import { ResourceTypes } from '@app/resource-enrichers';
 import { ChecklistInstance, CreateChecklistInstanceDto } from './dto';
 import { InstanceService } from './instance.service';
 import { UserChecklistController } from '../user-checklist.controller';
@@ -31,31 +32,13 @@ export class UserChecklistInstanceController {
   @Get()
   async findCreatedBy(
     @Param('userId') userId: string,
-    @Hateoas() linkFactory: NestLinkFactory,
+    @Hateoas() linkFactory: NestLinkFactory<ResourceTypes>,
   ) {
     const instances = await this.instanceService.findCreatedBy(userId);
 
-    const resource = linkFactory
-      .buildResource()
-      .withRel(
-        'items',
-        ...instances.map((instance) =>
-          toHandlerCall({
-            controller: ChecklistInstanceController,
-            name: instance.id,
-            title: instance.title,
-          }).findOne({ params: { instanceId: instance.id } }),
-        ),
-      )
-      .withRel(
-        'create',
-        toHandlerCall({
-          controller: UserChecklistInstanceController,
-        }).createInstance({ params: { userId } }),
-      )
-      .toResource({});
-
-    return resource;
+    return linkFactory
+      .buildResource('user-checklist-instances')
+      .toResource({ userId, instances });
   }
 
   @Post('create-from-checklist')

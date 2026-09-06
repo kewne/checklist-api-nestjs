@@ -3,8 +3,19 @@ import { PATH_METADATA } from '@nestjs/common/constants';
 import { ApplicationConfig, ModuleRef, Reflector } from '@nestjs/core';
 import { RoutePathFactory } from '@nestjs/core/router/route-path-factory';
 import { Request } from 'express';
-import { BaseUrlResourceBuilder, LinkObject, LinkOptions } from './hateoas';
+import { USER_AUTH_KEY } from './auth/auth.constants';
+import type { AuthUser } from './auth/auth.guard';
+import {
+  BaseUrlResourceBuilder,
+  LinkObject,
+  LinkOptions,
+  PlainResource,
+} from './hateoas';
 import { MODULE_KEY, REFLECTOR_KEY } from './hateoas/hateoas.interceptor';
+
+export const RESOURCE_ENRICHER_REGISTRY = Symbol(
+  'RESOURCE_ENRICHER_REGISTRY',
+);
 
 export const Hateoas = createParamDecorator(
   (_data: unknown, ctx: ExecutionContext) => {
@@ -13,29 +24,44 @@ export const Hateoas = createParamDecorator(
     const module = req[MODULE_KEY] as ModuleRef;
     const config = module.get(ApplicationConfig);
     const routePathFactory = new RoutePathFactory(config);
+    const enrichers = module.get<EnricherRegistry>(RESOURCE_ENRICHER_REGISTRY);
+    const userId = (req as Request & { [USER_AUTH_KEY]?: AuthUser })[
+      USER_AUTH_KEY
+    ]?.uid;
     return new NestLinkFactory(
       `${req.protocol}://${req.host}`,
       req.url,
       reflector,
       routePathFactory,
+      enrichers,
+      userId,
     );
   },
 );
 
-export class NestLinkFactory {
+export type ResourceMap = object;
+
+export class NestLinkFactory<M extends ResourceMap = never> {
   constructor(
     private baseUrl: string,
     private selfUrl: string,
     private reflector: Reflector,
     private routePathFactory: RoutePathFactory,
+    private enrichers?: EnricherRegistry,
+    private userId?: string,
   ) {}
 
-  public buildResource(): NestResourceBuilder {
-    return new NestResourceBuilder(
+  public buildResource<K extends keyof M>(
+    resourceKey?: K,
+  ): NestResourceBuilder<M[K] & object> {
+    return new NestResourceBuilder<M[K] & object>(
       this.baseUrl,
       this.selfUrl,
       this.reflector,
       this.routePathFactory,
+      resourceKey,
+      this.enrichers,
+      this.userId,
     );
   }
 
@@ -148,12 +174,29 @@ export function toHandler<C>(
   } as HandlerLink;
 }
 
-export class NestResourceBuilder extends BaseUrlResourceBuilder {
+export type ResourceLinkEnricher<
+  M extends ResourceMap,
+  K extends keyof M,
+> = (builder: NestResourceBuilder<M[K] & object>, resource: M[K]) => void;
+
+type AnyResourceLinkEnricher = (
+  builder: NestResourceBuilder<object>,
+  resource: unknown,
+) => void;
+
+export type EnricherRegistry<M extends ResourceMap = ResourceMap> = {
+  [K in keyof M]?: ResourceLinkEnricher<M, K>[];
+};
+
+export class NestResourceBuilder<W extends object = object> extends BaseUrlResourceBuilder {
   constructor(
     baseUrl: string,
     selfUrl: string,
     private reflector: Reflector,
     private routePathFactory: RoutePathFactory,
+    private resourceKey?: string | number | symbol,
+    private enrichers?: EnricherRegistry,
+    public readonly userId?: string,
   ) {
     super(baseUrl, selfUrl);
   }
@@ -200,5 +243,15 @@ export class NestResourceBuilder extends BaseUrlResourceBuilder {
       return this.addLinkToHandler(rel, link);
     });
     return this;
+  }
+
+  override toResource(wrapped: W | undefined): PlainResource {
+    if (this.resourceKey && wrapped !== undefined) {
+      const enrichers = this.enrichers?.[this.resourceKey] as
+        | AnyResourceLinkEnricher[]
+        | undefined;
+      enrichers?.forEach((enrich) => enrich(this, wrapped));
+    }
+    return super.toResource(wrapped);
   }
 }

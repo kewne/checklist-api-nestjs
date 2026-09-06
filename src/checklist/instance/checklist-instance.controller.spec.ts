@@ -12,6 +12,7 @@ import { AbilityFactory, AppAbility } from '../../casl/ability.factory';
 import { CaslForbiddenErrorFilter } from '../../casl/casl-forbidden-error.filter';
 import { ABILITY_KEY } from '../../casl/casl.interceptor';
 import { HateoasModule } from '../../hateoas/hateoas.module';
+import { resourceEnrichers, ResourceTypes } from '../../resource-enrichers';
 import { ChecklistInstanceController } from './checklist-instance.controller';
 import { InstanceService } from './instance.service';
 
@@ -31,7 +32,7 @@ describe('ChecklistInstanceController', () => {
 
   beforeEach(async () => {
     const module: TestingModule = await Test.createTestingModule({
-      imports: [HateoasModule],
+      imports: [HateoasModule.registerEnrichers<ResourceTypes>(resourceEnrichers)],
       controllers: [ChecklistInstanceController],
       providers: [
         {

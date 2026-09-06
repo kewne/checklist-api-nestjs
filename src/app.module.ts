@@ -11,6 +11,7 @@ import { InstanceModule } from './checklist/instance/instance.module';
 import { FirebaseAdminModule } from './firebase-admin.module';
 import { FirestoreModule } from './firestore.module';
 import { HateoasModule } from './hateoas/hateoas.module';
+import { resourceEnrichers, ResourceTypes } from './resource-enrichers';
 
 @Module({
   imports: [
@@ -22,7 +23,7 @@ import { HateoasModule } from './hateoas/hateoas.module';
     ChecklistModule,
     InstanceModule,
     InvitationModule,
-    HateoasModule,
+    HateoasModule.registerEnrichers<ResourceTypes>(resourceEnrichers),
     AuthModule,
     CaslModule,
   ],

@@ -1,6 +1,4 @@
-import type { AuthUser } from '@app/auth/auth.guard';
-import { User } from '@app/auth/user.decorator';
-import { Hateoas, NestLinkFactory, toHandlerCall } from '@app/hateoas-nest';
+import { Hateoas, NestLinkFactory } from '@app/hateoas-nest';
 import {
   Body,
   Controller,
@@ -11,10 +9,9 @@ import {
   UsePipes,
   ValidationPipe,
 } from '@nestjs/common';
-import { ChecklistShareController } from './checklist-share.controller';
+import { ResourceTypes } from '@app/resource-enrichers';
 import { ChecklistService } from './checklist.service';
 import { ReplaceChecklistDto } from './dto/update-checklist.dto';
-import { UserChecklistInstanceController } from './instance/user-checklist-instance.controller';
 
 @Controller('checklists')
 export class ChecklistController {
@@ -23,34 +20,13 @@ export class ChecklistController {
   @Get(':id')
   async findOne(
     @Param('id') id: string,
-    @User() user: AuthUser,
-    @Hateoas() linkFactory: NestLinkFactory,
+    @Hateoas() linkFactory: NestLinkFactory<ResourceTypes>,
   ) {
     const checklist = await this.checklistService.findOne(id);
     if (!checklist) {
       return null;
     }
-    const resource = linkFactory
-      .buildResource()
-      .withRel(
-        'create-from',
-        toHandlerCall({
-          controller: UserChecklistInstanceController,
-          name: 'instance',
-        }).createFromChecklist({
-          params: { userId: user.uid },
-          query: { checklist_id: checklist.id },
-        }),
-      )
-      .withRel(
-        'related',
-        toHandlerCall({
-          controller: ChecklistShareController,
-          name: 'shares',
-        }).list({ params: { checklistId: checklist.id } }),
-      )
-      .toResource(checklist);
-    return resource;
+    return linkFactory.buildResource('checklist').toResource(checklist);
   }
 
   @Delete(':id')

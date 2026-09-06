@@ -4,7 +4,7 @@ import { Ability } from '@app/casl/ability.decorator';
 import type { AppAbility } from '@app/casl/ability.factory';
 import { Hateoas, NestLinkFactory, toHandlerCall } from '@app/hateoas-nest';
 import { ForbiddenError, subject } from '@casl/ability';
-import { ChecklistController } from '../checklist.controller';
+import { ResourceTypes } from '@app/resource-enrichers';
 import {
   Body,
   Controller,
@@ -57,58 +57,28 @@ export class ChecklistInvitationController {
   async list(
     @Param('checklistId') checklistId: string,
     @Ability() ability: AppAbility,
-    @Hateoas() linkFactory: NestLinkFactory,
+    @Hateoas() linkFactory: NestLinkFactory<ResourceTypes>,
   ) {
     const invitations = await this.invitationService.listInvitations(
       checklistId,
       ability,
     );
     return linkFactory
-      .buildResource()
-      .withRel(
-        'create',
-        toHandlerCall({
-          controller: ChecklistInvitationController,
-        }).create({ params: { checklistId } }),
-      )
-      .withRel(
-        'items',
-        ...invitations.map((inv) => {
-          const isExpired = Date.now() > inv.expiresAt.getTime();
-          return toHandlerCall({
-            controller: ChecklistInvitationController,
-            title: isExpired ? `${inv.title} (expired)` : inv.title,
-          }).findOne({ params: { checklistId, id: inv.id } });
-        }),
-      )
-      .withRel(
-        'up',
-        toHandlerCall({
-          controller: ChecklistController,
-          name: 'checklist',
-        }).findOne({ params: { id: checklistId } }),
-      )
-      .withRel(
-        'related',
-        toHandlerCall({
-          controller: ChecklistController,
-          name: 'checklist',
-        }).findOne({ params: { id: checklistId } }),
-      )
-      .toResource({});
+      .buildResource('checklist-invitations')
+      .toResource({ checklistId, invitations });
   }
 
   @Get(':id')
   async findOne(
     @Param('checklistId') checklistId: string,
     @Param('id') id: string,
-    @Hateoas() linkFactory: NestLinkFactory,
+    @Hateoas() linkFactory: NestLinkFactory<ResourceTypes>,
   ) {
     const view = await this.invitationService.getInvitation(checklistId, id);
     const isExpired = Date.now() > view.expiresAt.getTime();
-    let builder = linkFactory.buildResource();
+    const builder = linkFactory.buildResource('invitation');
     if (!isExpired) {
-      builder = builder.withRel(
+      builder.withRel(
         'preview',
         toHandlerCall({
           controller: ChecklistInvitationController,
@@ -128,7 +98,7 @@ export class ChecklistInvitationController {
     @Param('checklistId') checklistId: string,
     @Param('id') id: string,
     @Ability() ability: AppAbility,
-    @Hateoas() linkFactory: NestLinkFactory,
+    @Hateoas() linkFactory: NestLinkFactory<ResourceTypes>,
   ) {
     const view = await this.invitationService.getInvitation(checklistId, id);
     const isExpired = Date.now() > view.expiresAt.getTime();
@@ -139,9 +109,9 @@ export class ChecklistInvitationController {
         shares: view.checklistShares,
       }),
     );
-    let builder = linkFactory.buildResource();
+    const builder = linkFactory.buildResource('invitation-preview');
     if (!isExpired && !alreadyHasAccess) {
-      builder = builder.withRel(
+      builder.withRel(
         'accept',
         toHandlerCall({
           controller: ChecklistInvitationController,

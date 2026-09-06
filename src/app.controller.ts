@@ -4,13 +4,14 @@ import { UserChecklistInstanceController } from './checklist/instance/user-check
 import { Hateoas, NestLinkFactory, toHandlerCall } from './hateoas-nest';
 import { User } from './auth/user.decorator';
 import type { AuthUser } from './auth/auth.guard';
+import { ResourceTypes } from './resource-enrichers';
 
 @Controller()
 export class AppController {
   @Get()
-  root(@User() user: AuthUser, @Hateoas() linkFactory: NestLinkFactory) {
+  root(@User() user: AuthUser, @Hateoas() linkFactory: NestLinkFactory<ResourceTypes>) {
     return linkFactory
-      .buildResource()
+      .buildResource('root')
       .withRel(
         'related',
         toHandlerCall({
@@ -33,6 +34,6 @@ export class AppController {
           name: 'checklist-instances',
         }).createInstance({ params: { userId: user.uid } }),
       )
-      .toResource();
+      .toResource({});
   }
 }

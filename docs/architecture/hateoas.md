@@ -38,3 +38,4 @@ Relations used across the API:
 ## Related Docs
 
 - [The `create` relation](rels/create.md)
+- [Resource link enrichers](resource-link-enrichers.md)

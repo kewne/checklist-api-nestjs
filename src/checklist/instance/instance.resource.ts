@@ -1,6 +1,6 @@
-import { NestLinkFactory, toHandler, toHandlerCall } from '@app/hateoas-nest';
+import { NestLinkFactory, toHandler } from '@app/hateoas-nest';
+import { ResourceTypes } from '@app/resource-enrichers';
 import { ChecklistInstanceController } from './checklist-instance.controller';
-import { ChecklistController } from '../checklist.controller';
 import { ChecklistInstanceDocument } from './instance.repository';
 import { UserChecklistInstanceController } from './user-checklist-instance.controller';
 
@@ -8,20 +8,9 @@ export class InstanceResource {
   static toResource(
     instance: ChecklistInstanceDocument,
     userId: string,
-    linkFactory: NestLinkFactory,
+    linkFactory: NestLinkFactory<ResourceTypes>,
   ) {
-    const resource = linkFactory.buildResource();
-
-    if (instance.checklistId) {
-      resource.withRel(
-        'related',
-        toHandlerCall({
-          controller: ChecklistController,
-          name: 'checklist',
-          title: instance.checklistId,
-        }).findOne({ params: { id: instance.checklistId } }),
-      );
-    }
+    const resource = linkFactory.buildResource('checklist-instance');
 
     resource.withRel(
       'update',

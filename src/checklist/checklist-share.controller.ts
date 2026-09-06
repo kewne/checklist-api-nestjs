@@ -1,9 +1,8 @@
 import { Ability } from '@app/casl/ability.decorator';
 import type { AppAbility } from '@app/casl/ability.factory';
-import { Hateoas, NestLinkFactory, toHandlerCall } from '@app/hateoas-nest';
+import { Hateoas, NestLinkFactory } from '@app/hateoas-nest';
 import { Controller, Get, Param, Delete, HttpCode } from '@nestjs/common';
-import { ChecklistController } from './checklist.controller';
-import { ChecklistInvitationController } from './invitation/checklist-invitation.controller';
+import { ResourceTypes } from '@app/resource-enrichers';
 import { ShareService } from './share.service';
 
 @Controller('checklists/:checklistId/shares')
@@ -14,42 +13,12 @@ export class ChecklistShareController {
   async list(
     @Param('checklistId') checklistId: string,
     @Ability() ability: AppAbility,
-    @Hateoas() linkFactory: NestLinkFactory,
+    @Hateoas() linkFactory: NestLinkFactory<ResourceTypes>,
   ) {
     const shares = await this.shareService.listShares(checklistId, ability);
     return linkFactory
-      .buildResource()
-      .withRel(
-        'items',
-        ...shares.map((share) =>
-          toHandlerCall({
-            controller: ChecklistShareController,
-            title: share.title,
-          }).findOne({ params: { checklistId, shareId: share.id } }),
-        ),
-      )
-      .withRel(
-        'related',
-        toHandlerCall({
-          controller: ChecklistInvitationController,
-          name: 'invitations',
-        }).list({ params: { checklistId } }),
-      )
-      .withRel(
-        'up',
-        toHandlerCall({
-          controller: ChecklistController,
-          name: 'checklist',
-        }).findOne({ params: { id: checklistId } }),
-      )
-      .withRel(
-        'related',
-        toHandlerCall({
-          controller: ChecklistController,
-          name: 'checklist',
-        }).findOne({ params: { id: checklistId } }),
-      )
-      .toResource({});
+      .buildResource('checklist-shares')
+      .toResource({ checklistId, shares });
   }
 
   @Get(':shareId')
@@ -57,14 +26,14 @@ export class ChecklistShareController {
     @Param('checklistId') checklistId: string,
     @Param('shareId') shareId: string,
     @Ability() ability: AppAbility,
-    @Hateoas() linkFactory: NestLinkFactory,
+    @Hateoas() linkFactory: NestLinkFactory<ResourceTypes>,
   ) {
     const share = await this.shareService.getShare(
       checklistId,
       shareId,
       ability,
     );
-    return linkFactory.buildResource().toResource({
+    return linkFactory.buildResource('share').toResource({
       userId: share.userId,
       title: share.title,
       createdAt: share.createdAt,
