@@ -27,7 +27,9 @@ describe('ChecklistController', () => {
     };
 
     const module: TestingModule = await Test.createTestingModule({
-      imports: [HateoasModule.registerEnrichers<ResourceTypes>(resourceEnrichers)],
+      imports: [
+        HateoasModule.registerEnrichers<ResourceTypes>(resourceEnrichers),
+      ],
       controllers: [ChecklistController],
       providers: [
         {

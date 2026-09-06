@@ -32,7 +32,9 @@ describe('ChecklistInstanceController', () => {
 
   beforeEach(async () => {
     const module: TestingModule = await Test.createTestingModule({
-      imports: [HateoasModule.registerEnrichers<ResourceTypes>(resourceEnrichers)],
+      imports: [
+        HateoasModule.registerEnrichers<ResourceTypes>(resourceEnrichers),
+      ],
       controllers: [ChecklistInstanceController],
       providers: [
         {
@@ -486,14 +488,12 @@ describe('ChecklistInstanceController', () => {
     });
 
     it('should return 403 when instance belongs to another user', async () => {
-      service.remove.mockImplementation(
-        (_id: string, ability: AppAbility) => {
-          ForbiddenError.from(ability).throwUnlessCan(
-            'delete',
-            subject('ChecklistInstance', { createdBy: 'other-user' }),
-          );
-        },
-      );
+      service.remove.mockImplementation((_id: string, ability: AppAbility) => {
+        ForbiddenError.from(ability).throwUnlessCan(
+          'delete',
+          subject('ChecklistInstance', { createdBy: 'other-user' }),
+        );
+      });
 
       await request(app.getHttpServer())
         .delete('/checklist-instances/456')

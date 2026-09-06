@@ -1,7 +1,10 @@
 import { EnricherRegistry, toHandlerCall } from './hateoas-nest';
 import { ChecklistController } from './checklist/checklist.controller';
 import { ChecklistShareController } from './checklist/checklist-share.controller';
-import { ChecklistDocument, ItemCompleted } from './checklist/checklist.repository';
+import {
+  ChecklistDocument,
+  ItemCompleted,
+} from './checklist/checklist.repository';
 import { ChecklistInvitationController } from './checklist/invitation/checklist-invitation.controller';
 import { ChecklistInstanceController } from './checklist/instance/checklist-instance.controller';
 import { ChecklistListItem } from './checklist/instance/instance.repository';

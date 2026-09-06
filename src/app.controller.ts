@@ -9,7 +9,10 @@ import { ResourceTypes } from './resource-enrichers';
 @Controller()
 export class AppController {
   @Get()
-  root(@User() user: AuthUser, @Hateoas() linkFactory: NestLinkFactory<ResourceTypes>) {
+  root(
+    @User() user: AuthUser,
+    @Hateoas() linkFactory: NestLinkFactory<ResourceTypes>,
+  ) {
     return linkFactory
       .buildResource('root')
       .withRel(

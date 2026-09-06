@@ -13,9 +13,7 @@ import {
 } from './hateoas';
 import { MODULE_KEY, REFLECTOR_KEY } from './hateoas/hateoas.interceptor';
 
-export const RESOURCE_ENRICHER_REGISTRY = Symbol(
-  'RESOURCE_ENRICHER_REGISTRY',
-);
+export const RESOURCE_ENRICHER_REGISTRY = Symbol('RESOURCE_ENRICHER_REGISTRY');
 
 export const Hateoas = createParamDecorator(
   (_data: unknown, ctx: ExecutionContext) => {
@@ -174,10 +172,10 @@ export function toHandler<C>(
   } as HandlerLink;
 }
 
-export type ResourceLinkEnricher<
-  M extends ResourceMap,
-  K extends keyof M,
-> = (builder: NestResourceBuilder<M[K] & object>, resource: M[K]) => void;
+export type ResourceLinkEnricher<M extends ResourceMap, K extends keyof M> = (
+  builder: NestResourceBuilder<M[K] & object>,
+  resource: M[K],
+) => void;
 
 type AnyResourceLinkEnricher = (
   builder: NestResourceBuilder<object>,
@@ -188,7 +186,9 @@ export type EnricherRegistry<M extends ResourceMap = ResourceMap> = {
   [K in keyof M]?: ResourceLinkEnricher<M, K>[];
 };
 
-export class NestResourceBuilder<W extends object = object> extends BaseUrlResourceBuilder {
+export class NestResourceBuilder<
+  W extends object = object,
+> extends BaseUrlResourceBuilder {
   constructor(
     baseUrl: string,
     selfUrl: string,

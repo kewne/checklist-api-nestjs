@@ -30,7 +30,9 @@ describe('ChecklistShareController', () => {
     };
 
     const module: TestingModule = await Test.createTestingModule({
-      imports: [HateoasModule.registerEnrichers<ResourceTypes>(resourceEnrichers)],
+      imports: [
+        HateoasModule.registerEnrichers<ResourceTypes>(resourceEnrichers),
+      ],
       controllers: [ChecklistShareController],
       providers: [
         {

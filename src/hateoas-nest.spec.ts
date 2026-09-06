@@ -118,9 +118,7 @@ describe('resource link enrichment (HTTP)', () => {
   class TestResourceController {
     @Get(':id')
     findOne(@Hateoas() linkFactory: NestLinkFactory<TestMap>) {
-      return linkFactory
-        .buildResource('test-resource')
-        .toResource({ id: '1' });
+      return linkFactory.buildResource('test-resource').toResource({ id: '1' });
     }
   }
 
