@@ -1,5 +1,7 @@
 {
   "projects": {
-    "default": "checklists-486418"
+    "default": "checklists-486418",
+    "production": "checklists-486418",
+    "staging": "checklists-staging-486418"
   }
 }
