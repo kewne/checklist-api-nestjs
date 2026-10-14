@@ -59,4 +59,4 @@ For operations where authorization is tightly coupled with business logic or dep
 
 ## Related Docs
 
-- [HATEOAS](hateoas.md) — CASL abilities inform which links are included in responses
+- [HATEOAS](hateoas.md): successful representations are independent of the caller; authorization is enforced when linked destinations are requested
