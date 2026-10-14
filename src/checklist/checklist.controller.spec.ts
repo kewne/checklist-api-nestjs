@@ -80,9 +80,7 @@ describe('ChecklistController', () => {
 
       (serviceMock.findOne as jest.Mock).mockResolvedValue(checklist);
 
-      const response = await testRequest
-        .get('/checklists/123')
-        .expect(200);
+      const response = await testRequest.get('/checklists/123').expect(200);
 
       expect(serviceMock.findOne).toHaveBeenCalledWith('123');
       expect(response.body).toHaveProperty(
@@ -162,9 +160,7 @@ describe('ChecklistController', () => {
 
       serviceMock.findOne.mockResolvedValue(checklist);
 
-      const response = await testRequest
-        .get('/checklists/124')
-        .expect(200);
+      const response = await testRequest.get('/checklists/124').expect(200);
 
       expect((response.body as Record<string, unknown>).items).toEqual([]);
     });
@@ -173,9 +169,7 @@ describe('ChecklistController', () => {
       serviceMock.findOne.mockResolvedValue(null);
 
       // Act & Assert
-      const response = await testRequest
-        .get('/checklists/999')
-        .expect(200);
+      const response = await testRequest.get('/checklists/999').expect(200);
 
       expect(serviceMock.findOne).toHaveBeenCalledWith('999');
       expect(response.body).toEqual({});
