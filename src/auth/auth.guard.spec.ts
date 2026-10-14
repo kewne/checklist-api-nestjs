@@ -1,7 +1,7 @@
 import { Test, TestingModule } from '@nestjs/testing';
 import { Controller, Get, UseGuards } from '@nestjs/common';
 import { NestExpressApplication } from '@nestjs/platform-express';
-import request from 'supertest';
+import { testRequest as createTestRequest } from '../../test/http-request';
 import { AuthGuard, AuthUser } from './auth.guard';
 import { Auth } from 'firebase-admin/auth';
 import { User } from './user.decorator';
@@ -22,6 +22,7 @@ class TestController {
 
 describe('AuthGuard', () => {
   let app: NestExpressApplication;
+  let testRequest: ReturnType<typeof createTestRequest>;
   const authMock = {
     verifyIdToken: jest.fn(),
   };
@@ -40,6 +41,7 @@ describe('AuthGuard', () => {
 
     app = module.createNestApplication<NestExpressApplication>();
     await app.init();
+    testRequest = createTestRequest(app.getHttpServer());
   });
 
   afterEach(async () => {
@@ -49,9 +51,7 @@ describe('AuthGuard', () => {
 
   describe('GET /test/protected', () => {
     it('should return 401 when no authorization header', async () => {
-      const response = await request(app.getHttpServer())
-        .get('/test/protected')
-        .expect(401);
+      const response = await testRequest.get('/test/protected').expect(401);
 
       expect(response.body).toHaveProperty(
         'message',
@@ -60,7 +60,7 @@ describe('AuthGuard', () => {
     });
 
     it('should return 401 when authorization header is malformed', async () => {
-      const response = await request(app.getHttpServer())
+      const response = await testRequest
         .get('/test/protected')
         .set('Authorization', 'InvalidFormat')
         .expect(401);
@@ -72,7 +72,7 @@ describe('AuthGuard', () => {
     });
 
     it('should return 401 when token is missing', async () => {
-      const response = await request(app.getHttpServer())
+      const response = await testRequest
         .get('/test/protected')
         .set('Authorization', 'Bearer')
         .expect(401);
@@ -84,7 +84,7 @@ describe('AuthGuard', () => {
     });
 
     it('should return 401 when token is empty', async () => {
-      const response = await request(app.getHttpServer())
+      const response = await testRequest
         .get('/test/protected')
         .set('Authorization', 'Bearer ')
         .expect(401);
@@ -98,7 +98,7 @@ describe('AuthGuard', () => {
     it('should return 401 when token verification fails', async () => {
       authMock.verifyIdToken.mockRejectedValue(new Error('Invalid token'));
 
-      const response = await request(app.getHttpServer())
+      const response = await testRequest
         .get('/test/protected')
         .set('Authorization', 'Bearer invalid-token')
         .expect(401);
@@ -117,7 +117,7 @@ describe('AuthGuard', () => {
 
       authMock.verifyIdToken.mockResolvedValue(mockDecodedToken);
 
-      const response = await request(app.getHttpServer())
+      const response = await testRequest
         .get('/test/protected')
         .set('Authorization', 'Bearer valid-token')
         .expect(200);
@@ -133,9 +133,7 @@ describe('AuthGuard', () => {
 
   describe('GET /test/public', () => {
     it('should return 200 without authorization', async () => {
-      const response = await request(app.getHttpServer())
-        .get('/test/public')
-        .expect(200);
+      const response = await testRequest.get('/test/public').expect(200);
 
       expect(response.body).toEqual({ message: 'public' });
       expect(authMock.verifyIdToken).not.toHaveBeenCalled();
