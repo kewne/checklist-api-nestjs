@@ -2,7 +2,7 @@ import { PlainResource } from '@app/hateoas';
 import { NotFoundException } from '@nestjs/common';
 import { NestExpressApplication } from '@nestjs/platform-express';
 import { Test, TestingModule } from '@nestjs/testing';
-import request from 'supertest';
+import { testRequest as createTestRequest } from '../../../test/http-request';
 import { HateoasModule } from '../../hateoas/hateoas.module';
 import { resourceEnrichers, ResourceTypes } from '../../resource-enrichers';
 import { InstanceService } from './instance.service';
@@ -13,6 +13,7 @@ import { Request, Response, NextFunction } from 'express';
 
 describe('UserChecklistInstanceController', () => {
   let app: NestExpressApplication;
+  let testRequest: ReturnType<typeof createTestRequest>;
   let serviceMock: jest.Mocked<
     Omit<InstanceService, 'checklistService' | 'instanceRepository'>
   >;
@@ -59,6 +60,7 @@ describe('UserChecklistInstanceController', () => {
     );
 
     await app.init();
+    testRequest = createTestRequest(app.getHttpServer());
   });
 
   afterEach(async () => {
@@ -93,7 +95,7 @@ describe('UserChecklistInstanceController', () => {
       (serviceMock.findCreatedBy as jest.Mock).mockResolvedValue(instances);
 
       // Act & Assert
-      const response = await request(app.getHttpServer())
+      const response = await testRequest
         .get(`/users/${userId}/checklist-instances`)
         .expect(200);
 
@@ -121,7 +123,7 @@ describe('UserChecklistInstanceController', () => {
     it('should return empty items array when user has no instances', async () => {
       (serviceMock.findCreatedBy as jest.Mock).mockResolvedValue([]);
 
-      const response = await request(app.getHttpServer())
+      const response = await testRequest
         .get(`/users/${userId}/checklist-instances`)
         .expect(200);
 
@@ -136,7 +138,7 @@ describe('UserChecklistInstanceController', () => {
     it('should create instance with provided title and return 201 with location header', async () => {
       serviceMock.createInstance.mockResolvedValue('456');
 
-      const response = await request(app.getHttpServer())
+      const response = await testRequest
         .post(
           `/users/${userId}/checklist-instances/create-from-checklist?checklist_id=123`,
         )
@@ -154,7 +156,7 @@ describe('UserChecklistInstanceController', () => {
     it('should create instance without title and return 201 with location header', async () => {
       serviceMock.createInstance.mockResolvedValue('456');
 
-      const response = await request(app.getHttpServer())
+      const response = await testRequest
         .post(
           `/users/${userId}/checklist-instances/create-from-checklist?checklist_id=123`,
         )
@@ -174,7 +176,7 @@ describe('UserChecklistInstanceController', () => {
         throw new NotFoundException('Checklist not found');
       });
 
-      await request(app.getHttpServer())
+      await testRequest
         .post(
           `/users/${userId}/checklist-instances/create-from-checklist?checklist_id=999`,
         )
@@ -197,7 +199,7 @@ describe('UserChecklistInstanceController', () => {
       };
       serviceMock.createFromData.mockResolvedValue('new-instance-id');
 
-      const response = await request(app.getHttpServer())
+      const response = await testRequest
         .post(`/users/${userId}/checklist-instances/create`)
         .send(dto)
         .expect(201);
