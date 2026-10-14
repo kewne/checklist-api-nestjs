@@ -1,4 +1,5 @@
 import { ConflictException, NotFoundException } from '@nestjs/common';
+import { PlainResource } from '@app/hateoas';
 import { ForbiddenError, subject } from '@casl/ability';
 import { APP_GUARD } from '@nestjs/core';
 import { NestExpressApplication } from '@nestjs/platform-express';
@@ -31,6 +32,7 @@ describe('ChecklistInstanceController', () => {
   const abilityFactory = new AbilityFactory();
 
   beforeEach(async () => {
+    mockUser.uid = 'test-user-id';
     const module: TestingModule = await Test.createTestingModule({
       imports: [
         HateoasModule.registerEnrichers<ResourceTypes>(resourceEnrichers),
@@ -65,6 +67,7 @@ describe('ChecklistInstanceController', () => {
   });
 
   afterEach(async () => {
+    jest.restoreAllMocks();
     jest.clearAllMocks();
     if (app) {
       await app.close();
@@ -84,6 +87,7 @@ describe('ChecklistInstanceController', () => {
 
       const response = await request(app.getHttpServer())
         .get('/checklist-instances/456')
+        .set('Host', 'api.example.test')
         .expect(200);
 
       expect(service.findOne).toHaveBeenCalledWith('456');
@@ -100,9 +104,57 @@ describe('ChecklistInstanceController', () => {
       expect(links['create-from']).toBeDefined();
       const createFromLink = links['create-from'] as Record<string, unknown>;
       expect(createFromLink.name).toBe('checklist');
-      expect(createFromLink.href as string).toMatch(
-        /\/checklist-instances\/.*\/create-checklist/,
+      expect(createFromLink.href).toBe(
+        'http://api.example.test/my/checklist-instances/456/create-checklist',
       );
+    });
+
+    it('keeps the representation independent of the caller when both are authorized', async () => {
+      const instance = {
+        id: '456',
+        checklistId: '123',
+        createdBy: 'test-user-id',
+        createdAt: new Date('2026-02-10T12:00:00Z'),
+        title: 'My Instance',
+        items: [],
+      };
+      service.findOne.mockResolvedValue(instance);
+      const ability = abilityFactory.createForUser(mockUser);
+      jest.spyOn(abilityFactory, 'createForUser').mockReturnValue(ability);
+
+      const resources: PlainResource[] = [];
+      for (const userId of ['first-reader', 'second-reader']) {
+        mockUser.uid = userId;
+        const response = await request(app.getHttpServer())
+          .get('/checklist-instances/456')
+          .set('Host', 'api.example.test')
+          .expect(200);
+        resources.push(response.body as PlainResource);
+      }
+
+      expect(resources[0]).toEqual<PlainResource>({
+        ...instance,
+        createdAt: instance.createdAt.toISOString(),
+        _links: {
+          self: {
+            href: 'http://api.example.test/checklist-instances/456',
+          },
+          update: {
+            name: 'add-item',
+            href: 'http://api.example.test/checklist-instances/456/add-item',
+          },
+          'create-from': {
+            name: 'checklist',
+            href: 'http://api.example.test/my/checklist-instances/456/create-checklist',
+          },
+          related: {
+            name: 'checklist',
+            title: '123',
+            href: 'http://api.example.test/checklists/123',
+          },
+        },
+      });
+      expect(resources[0]).toEqual(resources[1]);
     });
 
     it('should include mark-incomplete-item links for completed items', async () => {
@@ -125,6 +177,7 @@ describe('ChecklistInstanceController', () => {
 
       const response = await request(app.getHttpServer())
         .get('/checklist-instances/456')
+        .set('Host', 'api.example.test')
         .expect(200);
 
       const links = (response.body as Record<string, unknown>)._links as Record<
@@ -153,6 +206,7 @@ describe('ChecklistInstanceController', () => {
 
       const response = await request(app.getHttpServer())
         .get('/checklist-instances/456')
+        .set('Host', 'api.example.test')
         .expect(200);
 
       const links = (response.body as Record<string, unknown>)._links as Record<
@@ -166,8 +220,8 @@ describe('ChecklistInstanceController', () => {
         (link) => link.name === 'clear-completed-items',
       );
       expect(clearLink).toBeDefined();
-      expect(clearLink!.href).toMatch(
-        /\/checklist-instances\/456\/clear-completed-items$/,
+      expect(clearLink!.href).toBe(
+        'http://api.example.test/checklist-instances/456/clear-completed-items',
       );
     });
 
@@ -183,6 +237,7 @@ describe('ChecklistInstanceController', () => {
 
       const response = await request(app.getHttpServer())
         .get('/checklist-instances/456')
+        .set('Host', 'api.example.test')
         .expect(200);
 
       const links = (response.body as Record<string, unknown>)._links as Record<
@@ -204,6 +259,7 @@ describe('ChecklistInstanceController', () => {
 
       await request(app.getHttpServer())
         .get('/checklist-instances/non-existent')
+        .set('Host', 'api.example.test')
         .expect(404);
 
       expect(service.findOne).toHaveBeenCalledWith('non-existent');
@@ -221,6 +277,7 @@ describe('ChecklistInstanceController', () => {
 
       await request(app.getHttpServer())
         .get('/checklist-instances/456')
+        .set('Host', 'api.example.test')
         .expect(403);
     });
   });
@@ -231,6 +288,7 @@ describe('ChecklistInstanceController', () => {
 
       const response = await request(app.getHttpServer())
         .post('/checklist-instances/456/items/item-1/complete')
+        .set('Host', 'api.example.test')
         .send({})
         .expect(303);
 
@@ -240,7 +298,9 @@ describe('ChecklistInstanceController', () => {
         undefined,
         expect.any(Object),
       );
-      expect(response.headers.location).toMatch(/\/checklist-instances\/456$/);
+      expect(response.headers.location).toBe(
+        'http://api.example.test/checklist-instances/456',
+      );
     });
 
     it('should pass note to service when provided', async () => {
@@ -248,6 +308,7 @@ describe('ChecklistInstanceController', () => {
 
       await request(app.getHttpServer())
         .post('/checklist-instances/456/items/item-1/complete')
+        .set('Host', 'api.example.test')
         .send({ note: 'Well done' })
         .expect(303);
 
@@ -271,6 +332,7 @@ describe('ChecklistInstanceController', () => {
 
       await request(app.getHttpServer())
         .post('/checklist-instances/456/items/item-1/complete')
+        .set('Host', 'api.example.test')
         .send({})
         .expect(403);
     });
@@ -282,6 +344,7 @@ describe('ChecklistInstanceController', () => {
 
       await request(app.getHttpServer())
         .post('/checklist-instances/456/items/item-1/complete')
+        .set('Host', 'api.example.test')
         .send({})
         .expect(409);
     });
@@ -293,6 +356,7 @@ describe('ChecklistInstanceController', () => {
 
       await request(app.getHttpServer())
         .post('/checklist-instances/456/items/item-1/complete')
+        .set('Host', 'api.example.test')
         .send({})
         .expect(404);
     });
@@ -300,6 +364,7 @@ describe('ChecklistInstanceController', () => {
     it('should return 400 when note exceeds 500 characters', async () => {
       await request(app.getHttpServer())
         .post('/checklist-instances/456/items/item-1/complete')
+        .set('Host', 'api.example.test')
         .send({ note: 'a'.repeat(501) })
         .expect(400);
 
@@ -313,6 +378,7 @@ describe('ChecklistInstanceController', () => {
 
       const response = await request(app.getHttpServer())
         .post('/checklist-instances/456/items/item-1/incomplete')
+        .set('Host', 'api.example.test')
         .send({})
         .expect(303);
 
@@ -321,7 +387,9 @@ describe('ChecklistInstanceController', () => {
         'item-1',
         expect.any(Object),
       );
-      expect(response.headers.location).toMatch(/\/checklist-instances\/456$/);
+      expect(response.headers.location).toBe(
+        'http://api.example.test/checklist-instances/456',
+      );
     });
 
     it('should return 403 when instance belongs to another user', async () => {
@@ -336,6 +404,7 @@ describe('ChecklistInstanceController', () => {
 
       await request(app.getHttpServer())
         .post('/checklist-instances/456/items/item-1/incomplete')
+        .set('Host', 'api.example.test')
         .send({})
         .expect(403);
     });
@@ -347,6 +416,7 @@ describe('ChecklistInstanceController', () => {
 
       await request(app.getHttpServer())
         .post('/checklist-instances/456/items/item-1/incomplete')
+        .set('Host', 'api.example.test')
         .send({})
         .expect(409);
     });
@@ -358,6 +428,7 @@ describe('ChecklistInstanceController', () => {
 
       await request(app.getHttpServer())
         .post('/checklist-instances/456/items/item-1/incomplete')
+        .set('Host', 'api.example.test')
         .send({})
         .expect(404);
     });
@@ -369,13 +440,16 @@ describe('ChecklistInstanceController', () => {
 
       const response = await request(app.getHttpServer())
         .post('/checklist-instances/456/clear-completed-items')
+        .set('Host', 'api.example.test')
         .expect(303);
 
       expect(service.clearCompletedItems).toHaveBeenCalledWith(
         '456',
         expect.any(Object),
       );
-      expect(response.headers.location).toMatch(/\/checklist-instances\/456$/);
+      expect(response.headers.location).toBe(
+        'http://api.example.test/checklist-instances/456',
+      );
     });
 
     it('should return 403 when instance belongs to another user', async () => {
@@ -390,6 +464,7 @@ describe('ChecklistInstanceController', () => {
 
       await request(app.getHttpServer())
         .post('/checklist-instances/456/clear-completed-items')
+        .set('Host', 'api.example.test')
         .expect(403);
     });
 
@@ -400,6 +475,7 @@ describe('ChecklistInstanceController', () => {
 
       await request(app.getHttpServer())
         .post('/checklist-instances/non-existent/clear-completed-items')
+        .set('Host', 'api.example.test')
         .expect(404);
     });
   });
@@ -410,6 +486,7 @@ describe('ChecklistInstanceController', () => {
 
       const response = await request(app.getHttpServer())
         .put('/checklist-instances/456')
+        .set('Host', 'api.example.test')
         .send({ title: 'Updated Title', items: [{ title: 'Updated Item' }] })
         .expect(204);
 
@@ -433,6 +510,7 @@ describe('ChecklistInstanceController', () => {
 
       await request(app.getHttpServer())
         .put('/checklist-instances/456')
+        .set('Host', 'api.example.test')
         .send({ title: 'Updated Title', items: [{ title: 'Updated Item' }] })
         .expect(403);
     });
@@ -444,6 +522,7 @@ describe('ChecklistInstanceController', () => {
 
       await request(app.getHttpServer())
         .put('/checklist-instances/non-existent')
+        .set('Host', 'api.example.test')
         .send({ title: 'Title', items: [] })
         .expect(404);
     });
@@ -451,6 +530,7 @@ describe('ChecklistInstanceController', () => {
     it('should return 400 when title is missing', async () => {
       await request(app.getHttpServer())
         .put('/checklist-instances/456')
+        .set('Host', 'api.example.test')
         .send({ items: [] })
         .expect(400);
 
@@ -460,6 +540,7 @@ describe('ChecklistInstanceController', () => {
     it('should return 400 when items is missing', async () => {
       await request(app.getHttpServer())
         .put('/checklist-instances/456')
+        .set('Host', 'api.example.test')
         .send({ title: 'Title' })
         .expect(400);
 
@@ -469,6 +550,7 @@ describe('ChecklistInstanceController', () => {
     it('should return 400 when an item title is missing', async () => {
       await request(app.getHttpServer())
         .put('/checklist-instances/456')
+        .set('Host', 'api.example.test')
         .send({ title: 'Title', items: [{ name: 'item-1' }] })
         .expect(400);
 
@@ -482,6 +564,7 @@ describe('ChecklistInstanceController', () => {
 
       await request(app.getHttpServer())
         .delete('/checklist-instances/456')
+        .set('Host', 'api.example.test')
         .expect(200);
 
       expect(service.remove).toHaveBeenCalledWith('456', expect.any(Object));
@@ -497,6 +580,7 @@ describe('ChecklistInstanceController', () => {
 
       await request(app.getHttpServer())
         .delete('/checklist-instances/456')
+        .set('Host', 'api.example.test')
         .expect(403);
     });
 
@@ -507,6 +591,7 @@ describe('ChecklistInstanceController', () => {
 
       await request(app.getHttpServer())
         .delete('/checklist-instances/non-existent')
+        .set('Host', 'api.example.test')
         .expect(404);
 
       expect(service.remove).toHaveBeenCalledWith(
@@ -536,6 +621,7 @@ describe('ChecklistInstanceController', () => {
 
       const response = await request(app.getHttpServer())
         .post('/checklist-instances/456/add-item')
+        .set('Host', 'api.example.test')
         .send({ title: 'New Item', description: 'New Description' })
         .expect(200);
 
@@ -552,6 +638,10 @@ describe('ChecklistInstanceController', () => {
         'My Instance',
       );
       expect((response.body as Record<string, unknown>)._links).toBeDefined();
+      expect(response.body).toHaveProperty('_links.create-from', {
+        name: 'checklist',
+        href: 'http://api.example.test/my/checklist-instances/456/create-checklist',
+      });
     });
 
     it('should add item with title only', async () => {
@@ -566,6 +656,7 @@ describe('ChecklistInstanceController', () => {
 
       const response = await request(app.getHttpServer())
         .post('/checklist-instances/456/add-item')
+        .set('Host', 'api.example.test')
         .send({ title: 'New Item' })
         .expect(200);
 
@@ -582,6 +673,7 @@ describe('ChecklistInstanceController', () => {
     it('should return 400 when title is missing', async () => {
       await request(app.getHttpServer())
         .post('/checklist-instances/456/add-item')
+        .set('Host', 'api.example.test')
         .send({ description: 'Just a description' })
         .expect(400);
 
@@ -595,6 +687,7 @@ describe('ChecklistInstanceController', () => {
 
       await request(app.getHttpServer())
         .post('/checklist-instances/non-existent/add-item')
+        .set('Host', 'api.example.test')
         .send({ title: 'New Item' })
         .expect(404);
 

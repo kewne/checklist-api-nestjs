@@ -2,12 +2,11 @@ import { NestLinkFactory, toHandler } from '@app/hateoas-nest';
 import { ResourceTypes } from '@app/resource-enrichers';
 import { ChecklistInstanceController } from './checklist-instance.controller';
 import { ChecklistInstanceDocument } from './instance.repository';
-import { UserChecklistInstanceController } from './user-checklist-instance.controller';
+import { MyChecklistInstanceController } from './my-checklist-instance.controller';
 
 export class InstanceResource {
   static toResource(
     instance: ChecklistInstanceDocument,
-    userId: string,
     linkFactory: NestLinkFactory<ResourceTypes>,
   ) {
     const resource = linkFactory.buildResource('checklist-instance');
@@ -22,14 +21,10 @@ export class InstanceResource {
 
     resource.withRel(
       'create-from',
-      toHandler(
-        UserChecklistInstanceController,
-        'createChecklistFromInstance',
-        {
-          name: 'checklist',
-          params: { userId, instanceId: instance.id },
-        },
-      ),
+      toHandler(MyChecklistInstanceController, 'createChecklistFromInstance', {
+        name: 'checklist',
+        params: { instanceId: instance.id },
+      }),
     );
 
     const incompleteItems = instance.items.filter((item) => !item.completed);

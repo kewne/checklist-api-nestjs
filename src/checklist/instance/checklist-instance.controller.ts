@@ -1,5 +1,3 @@
-import type { AuthUser } from '@app/auth/auth.guard';
-import { User } from '@app/auth/user.decorator';
 import { Ability } from '@app/casl/ability.decorator';
 import type { AppAbility } from '@app/casl/ability.factory';
 import { Hateoas, NestLinkFactory } from '@app/hateoas-nest';
@@ -30,7 +28,6 @@ export class ChecklistInstanceController {
   @Get(':instanceId')
   async findOne(
     @Param('instanceId') instanceId: string,
-    @User() user: AuthUser,
     @Ability() ability: AppAbility,
     @Hateoas() linkFactory: NestLinkFactory,
   ) {
@@ -39,7 +36,7 @@ export class ChecklistInstanceController {
       'read',
       subject('ChecklistInstance', instance),
     );
-    return InstanceResource.toResource(instance, user.uid, linkFactory);
+    return InstanceResource.toResource(instance, linkFactory);
   }
 
   @Post(':instanceId/items/:itemId/complete')
@@ -76,11 +73,7 @@ export class ChecklistInstanceController {
     @Res({ passthrough: true }) res: Response,
     @Hateoas() linkFactory: NestLinkFactory,
   ) {
-    await this.instanceService.markItemIncomplete(
-      instanceId,
-      itemId,
-      ability,
-    );
+    await this.instanceService.markItemIncomplete(instanceId, itemId, ability);
     res.statusCode = 303;
     res.setHeader(
       'location',
@@ -115,11 +108,7 @@ export class ChecklistInstanceController {
     @Body() dto: ReplaceChecklistInstanceDto,
     @Ability() ability: AppAbility,
   ): Promise<void> {
-    await this.instanceService.replace(
-      instanceId,
-      dto,
-      ability,
-    );
+    await this.instanceService.replace(instanceId, dto, ability);
   }
 
   @Post(':instanceId/add-item')
@@ -128,7 +117,6 @@ export class ChecklistInstanceController {
   async addItem(
     @Param('instanceId') instanceId: string,
     @Body() dto: CreateItemDto,
-    @User() user: AuthUser,
     @Ability() ability: AppAbility,
     @Hateoas() linkFactory: NestLinkFactory,
   ) {
@@ -141,7 +129,7 @@ export class ChecklistInstanceController {
           subject('ChecklistInstanceItem', { instance: inst }),
         ),
     );
-    return InstanceResource.toResource(instance, user.uid, linkFactory);
+    return InstanceResource.toResource(instance, linkFactory);
   }
 
   @Delete(':instanceId')

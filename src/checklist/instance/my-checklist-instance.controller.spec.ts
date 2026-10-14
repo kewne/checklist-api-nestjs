@@ -98,6 +98,43 @@ describe('MyChecklistInstanceController', () => {
     });
   });
 
+  describe('POST /my/checklist-instances/:instanceId/create-checklist', () => {
+    it.each(['user-1', 'user-2'])(
+      'redirects %s to canonical checklist creation from the selected instance',
+      async (userId) => {
+        const response = await request(app.getHttpServer())
+          .post('/my/checklist-instances/456/create-checklist')
+          .set('Host', 'api.example.test')
+          .auth(userId, { type: 'bearer' })
+          .expect(307);
+
+        expect(response.headers.location).toBe(
+          `http://api.example.test/users/${userId}/checklist-instances/456/create-checklist`,
+        );
+      },
+    );
+
+    it('preserves the instance ID and resolves only the authenticated user', async () => {
+      const response = await request(app.getHttpServer())
+        .post('/my/checklist-instances/instance-2/create-checklist')
+        .set('Host', 'api.example.test')
+        .query({ userId: 'user-2' })
+        .auth('user-1', { type: 'bearer' })
+        .expect(307);
+
+      expect(response.headers.location).toBe(
+        'http://api.example.test/users/user-1/checklist-instances/instance-2/create-checklist',
+      );
+    });
+
+    it('rejects an anonymous request', async () => {
+      await request(app.getHttpServer())
+        .post('/my/checklist-instances/456/create-checklist')
+        .set('Host', 'api.example.test')
+        .expect(401);
+    });
+  });
+
   describe('POST /my/checklist-instances/create-from-checklist', () => {
     it.each(['user-1', 'user-2'])(
       'redirects %s to canonical creation from the selected checklist',

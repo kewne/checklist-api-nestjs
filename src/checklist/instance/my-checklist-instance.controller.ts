@@ -1,7 +1,7 @@
 import type { AuthUser } from '@app/auth/auth.guard';
 import { User } from '@app/auth/user.decorator';
 import { Hateoas, NestLinkFactory } from '@app/hateoas-nest';
-import { Controller, Get, Post, Query, Res } from '@nestjs/common';
+import { Controller, Get, Param, Post, Query, Res } from '@nestjs/common';
 import type { Response } from 'express';
 import { UserChecklistInstanceController } from './user-checklist-instance.controller';
 
@@ -54,6 +54,24 @@ export class MyChecklistInstanceController {
           params: { userId: user.uid },
           query: { checklist_id: checklistId },
         },
+      ),
+    );
+  }
+
+  @Post(':instanceId/create-checklist')
+  createChecklistFromInstance(
+    @Param('instanceId') instanceId: string,
+    @User() user: AuthUser,
+    @Hateoas() linkFactory: NestLinkFactory,
+    @Res({ passthrough: true }) response: Response,
+  ) {
+    response.statusCode = 307;
+    response.setHeader(
+      'location',
+      linkFactory.toHandler(
+        UserChecklistInstanceController,
+        'createChecklistFromInstance',
+        { params: { userId: user.uid, instanceId } },
       ),
     );
   }
