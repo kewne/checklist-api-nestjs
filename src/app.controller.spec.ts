@@ -8,17 +8,18 @@ import { InstanceService } from './checklist/instance/instance.service';
 import { HateoasModule } from './hateoas/hateoas.module';
 import { resourceEnrichers, ResourceTypes } from './resource-enrichers';
 import { NestExpressApplication } from '@nestjs/platform-express';
-import request from 'supertest';
+import { testRequest as createTestRequest } from '../test/http-request';
 import { USER_AUTH_KEY } from './auth/auth.constants';
 import { AuthUser } from './auth/auth.guard';
 import { Request, Response, NextFunction } from 'express';
-import { LinkObject, PlainResource } from '@app/hateoas';
+import { PlainResource } from '@app/hateoas';
 import { MySubscriptionController } from './subscription/my-subscription.controller';
 import { MyChecklistController } from './checklist/my-checklist.controller';
 import { MyChecklistInstanceController } from './checklist/instance/my-checklist-instance.controller';
 
 describe('AppController', () => {
   let app: NestExpressApplication;
+  let testRequest: ReturnType<typeof createTestRequest>;
   const mockUser: AuthUser = { uid: 'test-user-id' };
 
   beforeEach(async () => {
@@ -57,6 +58,7 @@ describe('AppController', () => {
     );
 
     await app.init();
+    testRequest = createTestRequest(app.getHttpServer());
   });
 
   afterEach(async () => {
@@ -67,37 +69,33 @@ describe('AppController', () => {
 
   describe('GET /', () => {
     it('returns stable discovery and creation links', async () => {
-      const response = await request(app.getHttpServer()).get('/').expect(200);
+      const response = await testRequest.get('/').expect(200);
 
       expect(response.body).toEqual<PlainResource>({
         _links: {
-          self: { href: expect.stringMatching(/\/$/) as string },
+          self: { href: 'http://api.example.test/' },
           related: [
             {
               name: 'checklists',
-              href: expect.stringMatching(/\/my\/checklists$/) as string,
+              href: 'http://api.example.test/my/checklists',
             },
             {
               name: 'checklist-instances',
-              href: expect.stringMatching(
-                /\/my\/checklist-instances$/,
-              ) as string,
+              href: 'http://api.example.test/my/checklist-instances',
             },
             {
               name: 'subscription',
-              href: expect.stringMatching(/\/my\/subscription$/) as string,
+              href: 'http://api.example.test/my/subscription',
             },
           ],
           create: [
             {
               name: 'checklists',
-              href: expect.stringMatching(/\/my\/checklists$/) as string,
+              href: 'http://api.example.test/my/checklists',
             },
             {
               name: 'checklist-instances',
-              href: expect.stringMatching(
-                /\/my\/checklist-instances\/create$/,
-              ) as string,
+              href: 'http://api.example.test/my/checklist-instances/create',
             },
           ],
         },
@@ -106,27 +104,12 @@ describe('AppController', () => {
 
     it('keeps the entire representation independent of the authenticated user', async () => {
       const resources: PlainResource[] = [];
-      const withoutOrigin = (link: LinkObject): LinkObject => {
-        const url = new URL(link.href);
-        return { ...link, href: `${url.pathname}${url.search}${url.hash}` };
-      };
       for (const userId of ['first-user', 'second-user']) {
-        const response = await request(app.getHttpServer())
+        const response = await testRequest
           .get('/')
           .set('x-test-user', userId)
           .expect(200);
-        const resource = response.body as PlainResource;
-        resources.push({
-          ...resource,
-          _links: Object.fromEntries(
-            Object.entries(resource._links).map(([relation, links]) => [
-              relation,
-              Array.isArray(links)
-                ? links.map(withoutOrigin)
-                : withoutOrigin(links),
-            ]),
-          ),
-        });
+        resources.push(response.body as PlainResource);
       }
       expect(resources[0]).toEqual(resources[1]);
     });
