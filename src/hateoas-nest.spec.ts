@@ -3,7 +3,7 @@ import { Test, TestingModule } from '@nestjs/testing';
 import { ApplicationConfig, Reflector } from '@nestjs/core';
 import { RoutePathFactory } from '@nestjs/core/router/route-path-factory';
 import { NestExpressApplication } from '@nestjs/platform-express';
-import request from 'supertest';
+import { testRequest as createTestRequest } from '../test/http-request';
 import { PlainResource, LinkObject } from './hateoas';
 import {
   EnricherRegistry,
@@ -123,6 +123,7 @@ describe('resource link enrichment (HTTP)', () => {
   }
 
   let app: NestExpressApplication;
+  let testRequest: ReturnType<typeof createTestRequest>;
 
   beforeEach(async () => {
     const module: TestingModule = await Test.createTestingModule({
@@ -140,6 +141,7 @@ describe('resource link enrichment (HTTP)', () => {
 
     app = module.createNestApplication<NestExpressApplication>();
     await app.init();
+    testRequest = createTestRequest(app.getHttpServer());
   });
 
   afterEach(async () => {
@@ -149,15 +151,13 @@ describe('resource link enrichment (HTTP)', () => {
   });
 
   it('enriches the response with links registered for the resource key', async () => {
-    const response = await request(app.getHttpServer())
-      .get('/test-resources/1')
-      .expect(200);
+    const response = await testRequest.get('/test-resources/1').expect(200);
 
     const resource = response.body as PlainResource;
     const docs = resource._links.docs as LinkObject;
 
     expect(docs).toEqual({
-      href: expect.stringMatching(/\/docs\/1$/) as string,
+      href: 'http://api.example.test/docs/1',
     });
   });
 });
