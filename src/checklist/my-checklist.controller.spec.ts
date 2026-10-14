@@ -3,11 +3,12 @@ import { HateoasModule } from '@app/hateoas/hateoas.module';
 import { NestExpressApplication } from '@nestjs/platform-express';
 import { Test } from '@nestjs/testing';
 import { Auth } from 'firebase-admin/auth';
-import request from 'supertest';
+import { testRequest as createTestRequest } from '../../test/http-request';
 import { MyChecklistController } from './my-checklist.controller';
 
 describe('MyChecklistController', () => {
   let app: NestExpressApplication;
+  let testRequest: ReturnType<typeof createTestRequest>;
 
   beforeEach(async () => {
     const module = await Test.createTestingModule({
@@ -31,6 +32,7 @@ describe('MyChecklistController', () => {
     app = module.createNestApplication<NestExpressApplication>();
     app.useGlobalGuards(module.get(AuthGuard));
     await app.init();
+    testRequest = createTestRequest(app.getHttpServer());
   });
 
   afterEach(async () => {
@@ -41,15 +43,14 @@ describe('MyChecklistController', () => {
     it.each(['user-1', 'user-2'])(
       'redirects %s to their canonical collection',
       async (userId) => {
-        const response = await request(app.getHttpServer())
+        const response = await testRequest
           .get('/my/checklists')
           .auth(userId, { type: 'bearer' })
           .expect(303);
 
-        expect(new URL(response.headers.location).pathname).toBe(
-          `/users/${userId}/checklists`,
+        expect(response.headers.location).toBe(
+          `http://api.example.test/users/${userId}/checklists`,
         );
-        expect(new URL(response.headers.location).search).toBe('');
       },
     );
   });
@@ -58,15 +59,14 @@ describe('MyChecklistController', () => {
     it.each(['user-1', 'user-2'])(
       'redirects %s to canonical creation',
       async (userId) => {
-        const response = await request(app.getHttpServer())
+        const response = await testRequest
           .post('/my/checklists')
           .auth(userId, { type: 'bearer' })
           .expect(307);
 
-        expect(new URL(response.headers.location).pathname).toBe(
-          `/users/${userId}/checklists`,
+        expect(response.headers.location).toBe(
+          `http://api.example.test/users/${userId}/checklists`,
         );
-        expect(new URL(response.headers.location).search).toBe('');
       },
     );
 
@@ -75,15 +75,17 @@ describe('MyChecklistController', () => {
         JSON.stringify({ title: 'Template & defaults', items: [] }),
       ).toString('base64');
 
-      const response = await request(app.getHttpServer())
+      const response = await testRequest
         .post('/my/checklists')
         .query({ base, userId: 'user-2' })
         .auth('user-1', { type: 'bearer' })
         .expect(307);
 
-      const destination = new URL(response.headers.location);
-      expect(destination.pathname).toBe('/users/user-1/checklists');
-      expect([...destination.searchParams.entries()]).toEqual([['base', base]]);
+      const destination = new URL(
+        'http://api.example.test/users/user-1/checklists',
+      );
+      destination.searchParams.set('base', base);
+      expect(response.headers.location).toBe(destination.href);
     });
   });
 
@@ -91,13 +93,11 @@ describe('MyChecklistController', () => {
     '%s /my/checklists authentication',
     (method) => {
       it('rejects an anonymous request', async () => {
-        const client = request(app.getHttpServer());
-        await client[method]('/my/checklists').expect(401);
+        await testRequest[method]('/my/checklists').expect(401);
       });
 
       it('rejects an invalid token', async () => {
-        const client = request(app.getHttpServer());
-        await client[method]('/my/checklists')
+        await testRequest[method]('/my/checklists')
           .auth('invalid', { type: 'bearer' })
           .expect(401);
       });
