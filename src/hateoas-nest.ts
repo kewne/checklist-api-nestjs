@@ -3,8 +3,6 @@ import { PATH_METADATA } from '@nestjs/common/constants';
 import { ApplicationConfig, ModuleRef, Reflector } from '@nestjs/core';
 import { RoutePathFactory } from '@nestjs/core/router/route-path-factory';
 import { Request } from 'express';
-import { USER_AUTH_KEY } from './auth/auth.constants';
-import type { AuthUser } from './auth/auth.guard';
 import {
   BaseUrlResourceBuilder,
   LinkObject,
@@ -23,16 +21,12 @@ export const Hateoas = createParamDecorator(
     const config = module.get(ApplicationConfig);
     const routePathFactory = new RoutePathFactory(config);
     const enrichers = module.get<EnricherRegistry>(RESOURCE_ENRICHER_REGISTRY);
-    const userId = (req as Request & { [USER_AUTH_KEY]?: AuthUser })[
-      USER_AUTH_KEY
-    ]?.uid;
     return new NestLinkFactory(
       `${req.protocol}://${req.host}`,
       req.url,
       reflector,
       routePathFactory,
       enrichers,
-      userId,
     );
   },
 );
@@ -46,7 +40,6 @@ export class NestLinkFactory<M extends ResourceMap = never> {
     private reflector: Reflector,
     private routePathFactory: RoutePathFactory,
     private enrichers?: EnricherRegistry,
-    private userId?: string,
   ) {}
 
   public buildResource<K extends keyof M>(
@@ -59,7 +52,6 @@ export class NestLinkFactory<M extends ResourceMap = never> {
       this.routePathFactory,
       resourceKey,
       this.enrichers,
-      this.userId,
     );
   }
 
@@ -196,7 +188,6 @@ export class NestResourceBuilder<
     private routePathFactory: RoutePathFactory,
     private resourceKey?: string | number | symbol,
     private enrichers?: EnricherRegistry,
-    public readonly userId?: string,
   ) {
     super(baseUrl, selfUrl);
   }
