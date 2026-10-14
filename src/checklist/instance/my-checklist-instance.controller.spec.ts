@@ -3,11 +3,12 @@ import { HateoasModule } from '@app/hateoas/hateoas.module';
 import { NestExpressApplication } from '@nestjs/platform-express';
 import { Test } from '@nestjs/testing';
 import { Auth } from 'firebase-admin/auth';
-import request from 'supertest';
+import { testRequest as createTestRequest } from '../../../test/http-request';
 import { MyChecklistInstanceController } from './my-checklist-instance.controller';
 
 describe('MyChecklistInstanceController', () => {
   let app: NestExpressApplication;
+  let testRequest: ReturnType<typeof createTestRequest>;
 
   beforeEach(async () => {
     const module = await Test.createTestingModule({
@@ -31,6 +32,7 @@ describe('MyChecklistInstanceController', () => {
     app = module.createNestApplication<NestExpressApplication>();
     app.useGlobalGuards(module.get(AuthGuard));
     await app.init();
+    testRequest = createTestRequest(app.getHttpServer());
   });
 
   afterEach(async () => {
@@ -41,9 +43,8 @@ describe('MyChecklistInstanceController', () => {
     it.each(['user-1', 'user-2'])(
       'redirects %s to their canonical collection',
       async (userId) => {
-        const response = await request(app.getHttpServer())
+        const response = await testRequest
           .get('/my/checklist-instances')
-          .set('Host', 'api.example.test')
           .auth(userId, { type: 'bearer' })
           .expect(303);
 
@@ -54,10 +55,7 @@ describe('MyChecklistInstanceController', () => {
     );
 
     it('rejects an anonymous request', async () => {
-      await request(app.getHttpServer())
-        .get('/my/checklist-instances')
-        .set('Host', 'api.example.test')
-        .expect(401);
+      await testRequest.get('/my/checklist-instances').expect(401);
     });
   });
 
@@ -65,9 +63,8 @@ describe('MyChecklistInstanceController', () => {
     it.each(['user-1', 'user-2'])(
       'redirects %s to canonical creation',
       async (userId) => {
-        const response = await request(app.getHttpServer())
+        const response = await testRequest
           .post('/my/checklist-instances/create')
-          .set('Host', 'api.example.test')
           .auth(userId, { type: 'bearer' })
           .expect(307);
 
@@ -78,9 +75,8 @@ describe('MyChecklistInstanceController', () => {
     );
 
     it('ignores a supplied destination user and uses the authenticated user', async () => {
-      const response = await request(app.getHttpServer())
+      const response = await testRequest
         .post('/my/checklist-instances/create')
-        .set('Host', 'api.example.test')
         .query({ userId: 'user-2' })
         .auth('user-1', { type: 'bearer' })
         .expect(307);
@@ -91,10 +87,7 @@ describe('MyChecklistInstanceController', () => {
     });
 
     it('rejects an anonymous request', async () => {
-      await request(app.getHttpServer())
-        .post('/my/checklist-instances/create')
-        .set('Host', 'api.example.test')
-        .expect(401);
+      await testRequest.post('/my/checklist-instances/create').expect(401);
     });
   });
 
@@ -102,9 +95,8 @@ describe('MyChecklistInstanceController', () => {
     it.each(['user-1', 'user-2'])(
       'redirects %s to canonical checklist creation from the selected instance',
       async (userId) => {
-        const response = await request(app.getHttpServer())
+        const response = await testRequest
           .post('/my/checklist-instances/456/create-checklist')
-          .set('Host', 'api.example.test')
           .auth(userId, { type: 'bearer' })
           .expect(307);
 
@@ -115,9 +107,8 @@ describe('MyChecklistInstanceController', () => {
     );
 
     it('preserves the instance ID and resolves only the authenticated user', async () => {
-      const response = await request(app.getHttpServer())
+      const response = await testRequest
         .post('/my/checklist-instances/instance-2/create-checklist')
-        .set('Host', 'api.example.test')
         .query({ userId: 'user-2' })
         .auth('user-1', { type: 'bearer' })
         .expect(307);
@@ -128,9 +119,8 @@ describe('MyChecklistInstanceController', () => {
     });
 
     it('rejects an anonymous request', async () => {
-      await request(app.getHttpServer())
+      await testRequest
         .post('/my/checklist-instances/456/create-checklist')
-        .set('Host', 'api.example.test')
         .expect(401);
     });
   });
@@ -139,9 +129,8 @@ describe('MyChecklistInstanceController', () => {
     it.each(['user-1', 'user-2'])(
       'redirects %s to canonical creation from the selected checklist',
       async (userId) => {
-        const response = await request(app.getHttpServer())
+        const response = await testRequest
           .post('/my/checklist-instances/create-from-checklist')
-          .set('Host', 'api.example.test')
           .query({ checklist_id: 'checklist-1' })
           .auth(userId, { type: 'bearer' })
           .expect(307);
@@ -154,9 +143,8 @@ describe('MyChecklistInstanceController', () => {
 
     it('preserves the checklist query and resolves only the authenticated user', async () => {
       const checklistId = 'checklist + &/?=';
-      const response = await request(app.getHttpServer())
+      const response = await testRequest
         .post('/my/checklist-instances/create-from-checklist')
-        .set('Host', 'api.example.test')
         .query({ checklist_id: checklistId, userId: 'user-2' })
         .auth('user-1', { type: 'bearer' })
         .expect(307);
@@ -167,9 +155,8 @@ describe('MyChecklistInstanceController', () => {
     });
 
     it('rejects an anonymous request', async () => {
-      await request(app.getHttpServer())
+      await testRequest
         .post('/my/checklist-instances/create-from-checklist')
-        .set('Host', 'api.example.test')
         .query({ checklist_id: 'checklist-1' })
         .expect(401);
     });
