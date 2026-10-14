@@ -5,7 +5,7 @@ import { NotFoundException } from '@nestjs/common';
 import { NestExpressApplication } from '@nestjs/platform-express';
 import { Test, TestingModule } from '@nestjs/testing';
 import { NextFunction, Request, Response } from 'express';
-import request from 'supertest';
+import { testRequest as createTestRequest } from '../../test/http-request';
 import { HateoasModule } from '../hateoas/hateoas.module';
 import { resourceEnrichers, ResourceTypes } from '../resource-enrichers';
 import { ChecklistController } from './checklist.controller';
@@ -13,6 +13,7 @@ import { ChecklistService } from './checklist.service';
 
 describe('ChecklistController', () => {
   let app: NestExpressApplication;
+  let testRequest: ReturnType<typeof createTestRequest>;
   let serviceMock: jest.Mocked<Omit<ChecklistService, 'repository'>>;
   const mockUser: AuthUser = { uid: 'test-user-id' };
 
@@ -55,6 +56,7 @@ describe('ChecklistController', () => {
     );
 
     await app.init();
+    testRequest = createTestRequest(app.getHttpServer());
   });
 
   afterEach(async () => {
@@ -78,9 +80,8 @@ describe('ChecklistController', () => {
 
       (serviceMock.findOne as jest.Mock).mockResolvedValue(checklist);
 
-      const response = await request(app.getHttpServer())
+      const response = await testRequest
         .get('/checklists/123')
-        .set('Host', 'api.example.test')
         .expect(200);
 
       expect(serviceMock.findOne).toHaveBeenCalledWith('123');
@@ -123,9 +124,8 @@ describe('ChecklistController', () => {
 
       const resources: PlainResource[] = [];
       for (const userId of ['owner', 'recipient']) {
-        const response = await request(app.getHttpServer())
+        const response = await testRequest
           .get('/checklists/123')
-          .set('Host', 'api.example.test')
           .set('x-test-user', userId)
           .expect(200);
         resources.push(response.body as PlainResource);
@@ -162,9 +162,8 @@ describe('ChecklistController', () => {
 
       serviceMock.findOne.mockResolvedValue(checklist);
 
-      const response = await request(app.getHttpServer())
+      const response = await testRequest
         .get('/checklists/124')
-        .set('Host', 'api.example.test')
         .expect(200);
 
       expect((response.body as Record<string, unknown>).items).toEqual([]);
@@ -174,9 +173,8 @@ describe('ChecklistController', () => {
       serviceMock.findOne.mockResolvedValue(null);
 
       // Act & Assert
-      const response = await request(app.getHttpServer())
+      const response = await testRequest
         .get('/checklists/999')
-        .set('Host', 'api.example.test')
         .expect(200);
 
       expect(serviceMock.findOne).toHaveBeenCalledWith('999');
@@ -190,10 +188,7 @@ describe('ChecklistController', () => {
       (serviceMock.remove as jest.Mock).mockResolvedValue(undefined);
 
       // Act & Assert
-      await request(app.getHttpServer())
-        .delete('/checklists/123')
-        .set('Host', 'api.example.test')
-        .expect(200);
+      await testRequest.delete('/checklists/123').expect(200);
 
       expect(serviceMock.remove).toHaveBeenCalledWith('123');
     });
@@ -217,9 +212,8 @@ describe('ChecklistController', () => {
       (serviceMock.replace as jest.Mock).mockResolvedValue(updatedChecklist);
 
       // Act & Assert
-      const response = await request(app.getHttpServer())
+      const response = await testRequest
         .put('/checklists/123')
-        .set('Host', 'api.example.test')
         .send({
           title: 'Updated Checklist',
           items: [
@@ -246,9 +240,8 @@ describe('ChecklistController', () => {
       );
 
       // Act & Assert
-      await request(app.getHttpServer())
+      await testRequest
         .put('/checklists/nonexistent')
-        .set('Host', 'api.example.test')
         .send({ title: 'Updated Checklist' })
         .expect(404);
     });
