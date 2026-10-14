@@ -7,9 +7,15 @@ import { ChecklistShareController } from './checklist-share.controller';
 import { ShareRepository } from './share.repository';
 import { ShareService } from './share.service';
 import { UserChecklistController } from './user-checklist.controller';
+import { MyChecklistController } from './my-checklist.controller';
 
 @Module({
-  controllers: [ChecklistController, UserChecklistController, ChecklistShareController],
+  controllers: [
+    ChecklistController,
+    UserChecklistController,
+    ChecklistShareController,
+    MyChecklistController,
+  ],
   providers: [
     ChecklistService,
     ChecklistRepository,
@@ -17,6 +23,11 @@ import { UserChecklistController } from './user-checklist.controller';
     ShareRepository,
   ],
   imports: [HateoasModule],
-  exports: [ChecklistService, ShareService, ChecklistRepository, ShareRepository],
+  exports: [
+    ChecklistService,
+    ShareService,
+    ChecklistRepository,
+    ShareRepository,
+  ],
 })
 export class ChecklistModule {}

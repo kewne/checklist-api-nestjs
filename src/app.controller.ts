@@ -1,31 +1,26 @@
 import { Controller, Get } from '@nestjs/common';
-import { UserChecklistController } from './checklist/user-checklist.controller';
-import { UserChecklistInstanceController } from './checklist/instance/user-checklist-instance.controller';
+import { MyChecklistController } from './checklist/my-checklist.controller';
+import { MyChecklistInstanceController } from './checklist/instance/my-checklist-instance.controller';
 import { Hateoas, NestLinkFactory, toHandlerCall } from './hateoas-nest';
-import { User } from './auth/user.decorator';
-import type { AuthUser } from './auth/auth.guard';
 import { ResourceTypes } from './resource-enrichers';
 import { MySubscriptionController } from './subscription/my-subscription.controller';
 
 @Controller()
 export class AppController {
   @Get()
-  root(
-    @User() user: AuthUser,
-    @Hateoas() linkFactory: NestLinkFactory<ResourceTypes>,
-  ) {
+  root(@Hateoas() linkFactory: NestLinkFactory<ResourceTypes>) {
     return linkFactory
       .buildResource('root')
       .withRel(
         'related',
         toHandlerCall({
-          controller: UserChecklistController,
+          controller: MyChecklistController,
           name: 'checklists',
-        }).findAllCreatedBy({ params: { userId: user.uid } }),
+        }).resolve({}),
         toHandlerCall({
-          controller: UserChecklistInstanceController,
+          controller: MyChecklistInstanceController,
           name: 'checklist-instances',
-        }).findCreatedBy({ params: { userId: user.uid } }),
+        }).resolve({}),
         toHandlerCall({
           controller: MySubscriptionController,
           name: 'subscription',
@@ -34,13 +29,13 @@ export class AppController {
       .withRel(
         'create',
         toHandlerCall({
-          controller: UserChecklistController,
+          controller: MyChecklistController,
           name: 'checklists',
-        }).create({ params: { userId: user.uid } }),
+        }).create({}),
         toHandlerCall({
-          controller: UserChecklistInstanceController,
+          controller: MyChecklistInstanceController,
           name: 'checklist-instances',
-        }).createInstance({ params: { userId: user.uid } }),
+        }).createInstance({}),
       )
       .toResource({});
   }

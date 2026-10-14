@@ -12,8 +12,10 @@ import request from 'supertest';
 import { USER_AUTH_KEY } from './auth/auth.constants';
 import { AuthUser } from './auth/auth.guard';
 import { Request, Response, NextFunction } from 'express';
-import { PlainResource, LinkObject } from '@app/hateoas';
+import { LinkObject, PlainResource } from '@app/hateoas';
 import { MySubscriptionController } from './subscription/my-subscription.controller';
+import { MyChecklistController } from './checklist/my-checklist.controller';
+import { MyChecklistInstanceController } from './checklist/instance/my-checklist-instance.controller';
 
 describe('AppController', () => {
   let app: NestExpressApplication;
@@ -29,6 +31,8 @@ describe('AppController', () => {
         UserChecklistController,
         UserChecklistInstanceController,
         MySubscriptionController,
+        MyChecklistController,
+        MyChecklistInstanceController,
       ],
       providers: [
         { provide: ChecklistService, useValue: {} },
@@ -62,52 +66,69 @@ describe('AppController', () => {
   });
 
   describe('GET /', () => {
-    it('should return 200 with related links for checklists and checklist-instances', async () => {
+    it('returns stable discovery and creation links', async () => {
       const response = await request(app.getHttpServer()).get('/').expect(200);
 
-      const resource = response.body as PlainResource;
-      const related = resource._links.related as LinkObject[];
-
-      expect(related).toEqual([
-        {
-          name: 'checklists',
-          href: expect.stringMatching(
-            '/users/test-user-id/checklists',
-          ) as string,
+      expect(response.body).toEqual<PlainResource>({
+        _links: {
+          self: { href: expect.stringMatching(/\/$/) as string },
+          related: [
+            {
+              name: 'checklists',
+              href: expect.stringMatching(/\/my\/checklists$/) as string,
+            },
+            {
+              name: 'checklist-instances',
+              href: expect.stringMatching(
+                /\/my\/checklist-instances$/,
+              ) as string,
+            },
+            {
+              name: 'subscription',
+              href: expect.stringMatching(/\/my\/subscription$/) as string,
+            },
+          ],
+          create: [
+            {
+              name: 'checklists',
+              href: expect.stringMatching(/\/my\/checklists$/) as string,
+            },
+            {
+              name: 'checklist-instances',
+              href: expect.stringMatching(
+                /\/my\/checklist-instances\/create$/,
+              ) as string,
+            },
+          ],
         },
-        {
-          name: 'checklist-instances',
-          href: expect.stringMatching(
-            /\/users\/test-user-id\/checklist-instances$/,
-          ) as string,
-        },
-        {
-          name: 'subscription',
-          href: expect.stringMatching(/\/my\/subscription$/) as string,
-        },
-      ]);
+      });
     });
 
-    it('keeps subscription discovery independent of the authenticated user', async () => {
-      const subscriptionLinks: LinkObject[] = [];
+    it('keeps the entire representation independent of the authenticated user', async () => {
+      const resources: PlainResource[] = [];
+      const withoutOrigin = (link: LinkObject): LinkObject => {
+        const url = new URL(link.href);
+        return { ...link, href: `${url.pathname}${url.search}${url.hash}` };
+      };
       for (const userId of ['first-user', 'second-user']) {
         const response = await request(app.getHttpServer())
           .get('/')
           .set('x-test-user', userId)
           .expect(200);
         const resource = response.body as PlainResource;
-        const related = resource._links.related as LinkObject[];
-        const link = related.find((entry) => entry.name === 'subscription');
-        expect(link).toEqual({
-          name: 'subscription',
-          href: expect.stringMatching(/\/my\/subscription$/) as string,
-        });
-        subscriptionLinks.push({
-          ...link!,
-          href: new URL(link!.href).pathname,
+        resources.push({
+          ...resource,
+          _links: Object.fromEntries(
+            Object.entries(resource._links).map(([relation, links]) => [
+              relation,
+              Array.isArray(links)
+                ? links.map(withoutOrigin)
+                : withoutOrigin(links),
+            ]),
+          ),
         });
       }
-      expect(subscriptionLinks[0]).toEqual(subscriptionLinks[1]);
+      expect(resources[0]).toEqual(resources[1]);
     });
   });
 });

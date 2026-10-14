@@ -5,10 +5,15 @@ import { UserChecklistInstanceController } from './user-checklist-instance.contr
 import { InstanceService } from './instance.service';
 import { InstanceRepository } from './instance.repository';
 import { ChecklistModule } from '../checklist.module';
+import { MyChecklistInstanceController } from './my-checklist-instance.controller';
 
 @Module({
   imports: [HateoasModule, ChecklistModule],
-  controllers: [ChecklistInstanceController, UserChecklistInstanceController],
+  controllers: [
+    ChecklistInstanceController,
+    UserChecklistInstanceController,
+    MyChecklistInstanceController,
+  ],
   providers: [InstanceService, InstanceRepository],
   exports: [InstanceService, InstanceRepository],
 })
