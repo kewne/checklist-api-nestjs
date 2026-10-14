@@ -16,6 +16,34 @@ describe('AbilityFactory', () => {
   describe('createForUser', () => {
     const user = { uid: 'user-1' };
 
+    it('allows reading only the user own subscription', () => {
+      const ability = factory.createForUser(user);
+
+      expect(
+        ability.can('read', subject('UserSubscription', { userId: user.uid })),
+      ).toBe(true);
+      expect(
+        ability.can(
+          'read',
+          subject('UserSubscription', { userId: 'other-user' }),
+        ),
+      ).toBe(false);
+    });
+
+    it.each(['create', 'update', 'delete'] as const)(
+      'does not allow %s on subscriptions',
+      (action) => {
+        const ability = factory.createForUser(user);
+
+        expect(
+          ability.can(
+            action,
+            subject('UserSubscription', { userId: user.uid }),
+          ),
+        ).toBe(false);
+      },
+    );
+
     it('should create an ability instance', () => {
       const ability = factory.createForUser(user);
 
@@ -117,42 +145,60 @@ describe('AbilityFactory', () => {
     it('should allow owner to read a ChecklistInstance', () => {
       const ability = factory.createForUser(user);
       expect(
-        ability.can('read', subject('ChecklistInstance', { createdBy: user.uid })),
+        ability.can(
+          'read',
+          subject('ChecklistInstance', { createdBy: user.uid }),
+        ),
       ).toBe(true);
     });
 
     it('should not allow non-owner to read a ChecklistInstance', () => {
       const ability = factory.createForUser(user);
       expect(
-        ability.can('read', subject('ChecklistInstance', { createdBy: 'other-user' })),
+        ability.can(
+          'read',
+          subject('ChecklistInstance', { createdBy: 'other-user' }),
+        ),
       ).toBe(false);
     });
 
     it('should allow owner to update a ChecklistInstance', () => {
       const ability = factory.createForUser(user);
       expect(
-        ability.can('update', subject('ChecklistInstance', { createdBy: user.uid })),
+        ability.can(
+          'update',
+          subject('ChecklistInstance', { createdBy: user.uid }),
+        ),
       ).toBe(true);
     });
 
     it('should not allow non-owner to update a ChecklistInstance', () => {
       const ability = factory.createForUser(user);
       expect(
-        ability.can('update', subject('ChecklistInstance', { createdBy: 'other-user' })),
+        ability.can(
+          'update',
+          subject('ChecklistInstance', { createdBy: 'other-user' }),
+        ),
       ).toBe(false);
     });
 
     it('should allow owner to delete a ChecklistInstance', () => {
       const ability = factory.createForUser(user);
       expect(
-        ability.can('delete', subject('ChecklistInstance', { createdBy: user.uid })),
+        ability.can(
+          'delete',
+          subject('ChecklistInstance', { createdBy: user.uid }),
+        ),
       ).toBe(true);
     });
 
     it('should not allow non-owner to delete a ChecklistInstance', () => {
       const ability = factory.createForUser(user);
       expect(
-        ability.can('delete', subject('ChecklistInstance', { createdBy: 'other-user' })),
+        ability.can(
+          'delete',
+          subject('ChecklistInstance', { createdBy: 'other-user' }),
+        ),
       ).toBe(false);
     });
   });

@@ -5,6 +5,7 @@ import { Hateoas, NestLinkFactory, toHandlerCall } from './hateoas-nest';
 import { User } from './auth/user.decorator';
 import type { AuthUser } from './auth/auth.guard';
 import { ResourceTypes } from './resource-enrichers';
+import { MySubscriptionController } from './subscription/my-subscription.controller';
 
 @Controller()
 export class AppController {
@@ -25,6 +26,10 @@ export class AppController {
           controller: UserChecklistInstanceController,
           name: 'checklist-instances',
         }).findCreatedBy({ params: { userId: user.uid } }),
+        toHandlerCall({
+          controller: MySubscriptionController,
+          name: 'subscription',
+        }).resolve({}),
       )
       .withRel(
         'create',

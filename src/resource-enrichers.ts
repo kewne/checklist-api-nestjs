@@ -70,7 +70,12 @@ export interface ChecklistInstanceResource {
   items: ChecklistInstanceResourceItem[];
 }
 
+export type SubscriptionResource =
+  | { status: 'ACTIVE'; endDate: string }
+  | { status: 'INACTIVE' };
+
 export interface ResourceTypes {
+  subscription: SubscriptionResource;
   checklist: ChecklistDocument;
   'checklist-instance': ChecklistInstanceResource;
   'checklist-shares': ChecklistSharesResource;

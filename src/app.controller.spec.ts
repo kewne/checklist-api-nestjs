@@ -13,6 +13,7 @@ import { USER_AUTH_KEY } from './auth/auth.constants';
 import { AuthUser } from './auth/auth.guard';
 import { Request, Response, NextFunction } from 'express';
 import { PlainResource, LinkObject } from '@app/hateoas';
+import { MySubscriptionController } from './subscription/my-subscription.controller';
 
 describe('AppController', () => {
   let app: NestExpressApplication;
@@ -27,6 +28,7 @@ describe('AppController', () => {
         AppController,
         UserChecklistController,
         UserChecklistInstanceController,
+        MySubscriptionController,
       ],
       providers: [
         { provide: ChecklistService, useValue: {} },
@@ -43,7 +45,9 @@ describe('AppController', () => {
         _res: Response,
         next: NextFunction,
       ) => {
-        req[USER_AUTH_KEY] = mockUser;
+        const requestedUser = req.headers['x-test-user'];
+        req[USER_AUTH_KEY] =
+          typeof requestedUser === 'string' ? { uid: requestedUser } : mockUser;
         next();
       },
     );
@@ -77,7 +81,33 @@ describe('AppController', () => {
             /\/users\/test-user-id\/checklist-instances$/,
           ) as string,
         },
+        {
+          name: 'subscription',
+          href: expect.stringMatching(/\/my\/subscription$/) as string,
+        },
       ]);
+    });
+
+    it('keeps subscription discovery independent of the authenticated user', async () => {
+      const subscriptionLinks: LinkObject[] = [];
+      for (const userId of ['first-user', 'second-user']) {
+        const response = await request(app.getHttpServer())
+          .get('/')
+          .set('x-test-user', userId)
+          .expect(200);
+        const resource = response.body as PlainResource;
+        const related = resource._links.related as LinkObject[];
+        const link = related.find((entry) => entry.name === 'subscription');
+        expect(link).toEqual({
+          name: 'subscription',
+          href: expect.stringMatching(/\/my\/subscription$/) as string,
+        });
+        subscriptionLinks.push({
+          ...link!,
+          href: new URL(link!.href).pathname,
+        });
+      }
+      expect(subscriptionLinks[0]).toEqual(subscriptionLinks[1]);
     });
   });
 });

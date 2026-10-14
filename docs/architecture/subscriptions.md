@@ -19,10 +19,13 @@ Deriving status from the end date avoids storing two values that could contradic
 - The end date represents the end of the known validity period, not a promise of renewal.
 - Time comparisons use the application's trusted clock and compare absolute instants, independent of the user's time zone.
 - A missing or invalid end date cannot establish an active subscription.
+- Active subscription state includes the end of its known validity period. Inactive state has no end date and does not distinguish an absent entry from an expired entry or one with an unusable date.
 - Reading subscription state does not mutate it; the passage of time can change whether it is currently active without changing the stored record.
 - An absent subscription and a failure to retrieve subscription information remain distinct outcomes. Retrieval failure must not be presented as absence or establish an active subscription.
+- Current-user navigation resolves to the canonical user-owned resource through a redirect. Resolution requires authentication but no separate ownership check because the destination always belongs to the authenticated user. It does not retrieve subscription state; the canonical resource independently enforces authorization.
 
 ## Related Docs
 
 - [View My Subscription](../stories/view-my-subscription.md)
 - [Authorization](authorization.md)
+- [HATEOAS](hateoas.md)
