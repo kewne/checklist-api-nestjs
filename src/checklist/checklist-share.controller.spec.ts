@@ -9,7 +9,7 @@ import { NotFoundException } from '@nestjs/common';
 import { NestExpressApplication } from '@nestjs/platform-express';
 import { Test, TestingModule } from '@nestjs/testing';
 import { NextFunction, Request, Response } from 'express';
-import request from 'supertest';
+import { testRequest as createTestRequest } from '../../test/http-request';
 import { HateoasModule } from '../hateoas/hateoas.module';
 import { resourceEnrichers, ResourceTypes } from '../resource-enrichers';
 import { ChecklistShareController } from './checklist-share.controller';
@@ -17,6 +17,7 @@ import { ShareService } from './share.service';
 
 describe('ChecklistShareController', () => {
   let app: NestExpressApplication;
+  let testRequest: ReturnType<typeof createTestRequest>;
   let serviceMock: jest.Mocked<
     Pick<ShareService, 'listShares' | 'getShare' | 'removeShare'>
   >;
@@ -58,6 +59,7 @@ describe('ChecklistShareController', () => {
     );
 
     await app.init();
+    testRequest = createTestRequest(app.getHttpServer());
   });
 
   afterEach(async () => {
@@ -85,7 +87,7 @@ describe('ChecklistShareController', () => {
         },
       ]);
 
-      const response = await request(app.getHttpServer())
+      const response = await testRequest
         .get('/checklists/checklist-1/shares')
         .expect(200);
 
@@ -105,7 +107,7 @@ describe('ChecklistShareController', () => {
     it('should return 200 with related links to invitations and checklist and an up link to the checklist', async () => {
       serviceMock.listShares.mockResolvedValue([]);
 
-      const response = await request(app.getHttpServer())
+      const response = await testRequest
         .get('/checklists/checklist-1/shares')
         .expect(200);
 
@@ -126,7 +128,7 @@ describe('ChecklistShareController', () => {
     it('should return 200 with no items key when list is empty', async () => {
       serviceMock.listShares.mockResolvedValue([]);
 
-      const response = await request(app.getHttpServer())
+      const response = await testRequest
         .get('/checklists/checklist-1/shares')
         .expect(200);
 
@@ -137,9 +139,7 @@ describe('ChecklistShareController', () => {
     it('should return 404 when checklist does not exist', async () => {
       serviceMock.listShares.mockRejectedValue(new NotFoundException());
 
-      await request(app.getHttpServer())
-        .get('/checklists/non-existent/shares')
-        .expect(404);
+      await testRequest.get('/checklists/non-existent/shares').expect(404);
     });
 
     it('should return 403 when caller is not the checklist owner', async () => {
@@ -153,9 +153,7 @@ describe('ChecklistShareController', () => {
         return Promise.resolve([]);
       });
 
-      await request(app.getHttpServer())
-        .get('/checklists/checklist-1/shares')
-        .expect(403);
+      await testRequest.get('/checklists/checklist-1/shares').expect(403);
     });
   });
 
@@ -170,7 +168,7 @@ describe('ChecklistShareController', () => {
         createdAt,
       });
 
-      const response = await request(app.getHttpServer())
+      const response = await testRequest
         .get('/checklists/checklist-1/shares/share-1')
         .expect(200);
 
@@ -183,7 +181,7 @@ describe('ChecklistShareController', () => {
     it('should return 404 when share does not exist', async () => {
       serviceMock.getShare.mockRejectedValue(new NotFoundException());
 
-      await request(app.getHttpServer())
+      await testRequest
         .get('/checklists/checklist-1/shares/non-existent')
         .expect(404);
     });
@@ -207,7 +205,7 @@ describe('ChecklistShareController', () => {
         },
       );
 
-      await request(app.getHttpServer())
+      await testRequest
         .get('/checklists/checklist-1/shares/share-1')
         .expect(403);
     });
@@ -217,7 +215,7 @@ describe('ChecklistShareController', () => {
     it('should return 204 on successful deletion', async () => {
       serviceMock.removeShare = jest.fn().mockResolvedValue(undefined);
 
-      await request(app.getHttpServer())
+      await testRequest
         .delete('/checklists/checklist-1/shares/share-1')
         .expect(204);
 
@@ -241,7 +239,7 @@ describe('ChecklistShareController', () => {
           return Promise.resolve(undefined);
         });
 
-      await request(app.getHttpServer())
+      await testRequest
         .delete('/checklists/checklist-1/shares/share-1')
         .expect(403);
     });
@@ -253,7 +251,7 @@ describe('ChecklistShareController', () => {
           new NotFoundException('Checklist checklist-1 not found'),
         );
 
-      await request(app.getHttpServer())
+      await testRequest
         .delete('/checklists/checklist-1/shares/share-1')
         .expect(404);
     });
@@ -261,7 +259,7 @@ describe('ChecklistShareController', () => {
     it('should return 204 even when share does not exist (idempotency)', async () => {
       serviceMock.removeShare = jest.fn().mockResolvedValue(undefined);
 
-      await request(app.getHttpServer())
+      await testRequest
         .delete('/checklists/checklist-1/shares/non-existent-share')
         .expect(204);
     });
