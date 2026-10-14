@@ -10,7 +10,7 @@ Standard IANA link relations do not define a semantics for modifying a resource 
 
 ## Behaviour and Invariants
 
-- An `update` link is only present when the authenticated user has write access to the resource
+- An `update` link describes a modification possibility based on resource state, independently of the caller's permissions; authorization is enforced when the destination is requested
 - A resource may expose several `update` links; each carries a `name` identifying the specific update affordance
 - Following an `update` link changes the resource and redirects back to it, so clients can re-fetch the updated representation
 

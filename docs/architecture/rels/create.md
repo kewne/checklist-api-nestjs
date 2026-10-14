@@ -10,7 +10,7 @@ Standard IANA link relations cover navigation and resource relationships but do 
 
 ## Behaviour and Invariants
 
-- A `create` link is only present when the authenticated user has permission to create the subordinate resource
+- A `create` link describes a creation possibility based on resource state, independently of the caller's permissions; authorization is enforced when the destination is requested
 - Following a `create` link produces a new resource; the response includes a `self` link pointing to the newly created resource
 - The relation may appear on collection resources (to create a member) or on individual resources (to create a dependent resource)
 

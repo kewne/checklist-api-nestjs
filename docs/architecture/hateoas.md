@@ -2,7 +2,7 @@
 
 ## Overview
 
-Every resource response embeds hypermedia links describing navigation and actions associated with that resource. Successful representations do not vary with the authenticated user; user-dependent destinations are resolved through redirect endpoints with the `/my/` path prefix.
+Every resource response embeds hypermedia links describing navigation and actions associated with that resource. Successful representations do not vary with the authenticated user, except for acceptance-link visibility in invitation previews. User-dependent destinations are resolved through redirect endpoints with the `/my/` path prefix.
 
 ## Rationale
 
@@ -12,7 +12,11 @@ HATEOAS moves navigation knowledge to the server. Clients follow the links suppl
 
 Filtering links by the caller's permissions or embedding caller-specific destinations would make the same resource's successful representation depend on who requested it. Keeping representations stable separates resource state from caller identity and avoids coupling shared navigation to a particular user's permissions.
 
+Invitation previews deliberately make one exception: they hide the acceptance link from checklist owners and existing share recipients, for whom accepting would not provide access they lack. This exception affects only acceptance-link visibility, not preview data or other links, and does not permit permission-based filtering elsewhere.
+
 When a destination depends on the current user, a stable link to a `/my/` endpoint preserves discoverability without embedding that user's identity in the originating representation. The endpoint resolves the authenticated user's destination and redirects to its canonical endpoint. This adds a navigation round trip, but keeps identity resolution in one place and preserves canonical resource addresses.
+
+Resolvers only identify the canonical destination; they do not return personalized resource representations or perform the destination's mutation. Navigation redirects lead to retrieval of the canonical resource. Action redirects preserve the original request method and body so that resolution cannot turn a mutation into retrieval or discard submitted data. Existing canonical endpoints remain available and retain responsibility for authorization and operation outcomes.
 
 The alternative, a static API reference that clients implement against, embeds routing knowledge in every client and can break silently when the server changes.
 
@@ -20,8 +24,9 @@ The alternative, a static API reference that clients implement against, embeds r
 
 - Every resource response includes a `_links` object
 - A `self` link is always present, pointing to the canonical URL of the resource
-- For the same resource state, a successful response's content and links are independent of the authenticated user
-- Links may reflect resource state, but are not added, removed, or rewritten according to the caller's identity or permissions
+- For the same resource state, a successful response's content and links are independent of the authenticated user, except for invitation-preview acceptance-link visibility
+- Links may reflect resource state, but are not added, removed, or rewritten according to the caller's identity or permissions outside that exception
+- An invitation preview exposes an acceptance link only while the invitation is unexpired and the caller does not already have read access as the checklist owner or an existing share recipient; its data and `self` link remain independent of the caller
 - Links to destinations determined by the authenticated user point to endpoints with the `/my/` path prefix; those endpoints redirect to the correct canonical endpoint for that user rather than returning a personalized resource representation
 - User-dependent resolution happens when the `/my/` endpoint is requested, not when the originating representation is built
 - Authorization still applies to both resolution and access to the destination; a link or redirect does not grant access, and failed authorization remains an error
@@ -48,3 +53,4 @@ Relations used across the API:
 - [The `create` relation](rels/create.md)
 - [Resource link enrichers](resource-link-enrichers.md)
 - [Authorization](authorization.md)
+- [View received invitation](../stories/view-received-invitation.md)
