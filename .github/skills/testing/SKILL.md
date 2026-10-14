@@ -19,6 +19,31 @@ Write focused tests using existing project conventions and run them against a re
 4. Cover relevant success, failure, and boundary cases. Reuse nearby fixtures and helpers rather than introducing a new testing framework.
 5. Run the changed tests using the procedure below. Repair failures in the touched behavior and rerun the same focused check.
 
+## Controller Request Example
+
+Use the shared `testRequest` wrapper from `test/http-request.ts` rather than importing Supertest directly. For a spec under `src/checklist`:
+
+```typescript
+import { testRequest as createTestRequest } from '../../test/http-request';
+
+let testRequest: ReturnType<typeof createTestRequest>;
+```
+
+Initialize it in the existing per-test setup after the app is ready:
+
+```typescript
+await app.init();
+testRequest = createTestRequest(app.getHttpServer());
+```
+
+Reuse the variable in tests:
+
+```typescript
+const response = await testRequest.get('/checklists/123').expect(200);
+```
+
+The wrapper sets `Host` to `api.example.test`; assert complete links and redirect URLs using that host. Adjust the relative import for the spec's directory and follow the [controller test guide](./references/controller-tests.md) for lifecycle, chaining, and authorization conventions.
+
 ## Run Tests
 
 1. From the workspace root, inspect `firebase.json`, `src/setup-env.ts`, and `jest.config.ts` for the configured emulator ports and test environment. Currently Firestore uses `127.0.0.1:8080`, Auth uses port `9099`, and tests use project `demo-test`.
