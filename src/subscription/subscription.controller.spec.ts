@@ -5,13 +5,14 @@ import { resourceEnrichers, ResourceTypes } from '@app/resource-enrichers';
 import { NestExpressApplication } from '@nestjs/platform-express';
 import { Test } from '@nestjs/testing';
 import { Auth } from 'firebase-admin/auth';
-import request from 'supertest';
+import { testRequest as createTestRequest } from '../../test/http-request';
 import { MySubscriptionController } from './my-subscription.controller';
 import { SubscriptionController } from './subscription.controller';
 import { SubscriptionService } from './subscription.service';
 
 describe('Subscription HTTP endpoints', () => {
   let app: NestExpressApplication;
+  let testRequest: ReturnType<typeof createTestRequest>;
   let service: jest.Mocked<Pick<SubscriptionService, 'getSubscription'>>;
 
   beforeEach(async () => {
@@ -41,6 +42,7 @@ describe('Subscription HTTP endpoints', () => {
     app = module.createNestApplication<NestExpressApplication>();
     app.useGlobalGuards(module.get(AuthGuard));
     await app.init();
+    testRequest = createTestRequest(app.getHttpServer());
   });
 
   afterEach(async () => {
@@ -55,7 +57,7 @@ describe('Subscription HTTP endpoints', () => {
         endDate: new Date('2027-01-01T00:00:00Z'),
       });
 
-      const response = await request(app.getHttpServer())
+      const response = await testRequest
         .get('/users/user-1/subscription')
         .auth('user-1', { type: 'bearer' })
         .expect(200);
@@ -78,7 +80,7 @@ describe('Subscription HTTP endpoints', () => {
     it('returns an inactive subscription without an end date', async () => {
       service.getSubscription.mockResolvedValue({ status: 'INACTIVE' });
 
-      const response = await request(app.getHttpServer())
+      const response = await testRequest
         .get('/users/user-1/subscription')
         .auth('user-1', { type: 'bearer' })
         .expect(200);
@@ -98,7 +100,7 @@ describe('Subscription HTTP endpoints', () => {
     });
 
     it('denies another user before retrieving any subscription', async () => {
-      await request(app.getHttpServer())
+      await testRequest
         .get('/users/user-2/subscription')
         .auth('user-1', { type: 'bearer' })
         .expect(403);
@@ -107,38 +109,40 @@ describe('Subscription HTTP endpoints', () => {
     });
 
     it('does not allow anonymous users to access the subscription', async () => {
-      await request(app.getHttpServer())
-        .get('/users/user-1/subscription')
-        .expect(401);
+      await testRequest.get('/users/user-1/subscription').expect(401);
       expect(service.getSubscription).not.toHaveBeenCalled();
     });
   });
 
   describe('GET /my/subscription', () => {
     it('redirects the first user without retrieving subscription data', async () => {
-      const response = await request(app.getHttpServer())
+      const response = await testRequest
         .get('/my/subscription')
         .auth('user-1', { type: 'bearer' })
         .expect(303);
 
-      expect(response.headers.location).toMatch(/\/users\/user-1\/subscription$/);
+      expect(response.headers.location).toMatch(
+        /\/users\/user-1\/subscription$/,
+      );
       expect(response.text).toBe('');
       expect(service.getSubscription).not.toHaveBeenCalled();
     });
 
     it('redirects the second user to their own subscription without retrieving data', async () => {
-      const response = await request(app.getHttpServer())
+      const response = await testRequest
         .get('/my/subscription')
         .auth('user-2', { type: 'bearer' })
         .expect(303);
 
-      expect(response.headers.location).toMatch(/\/users\/user-2\/subscription$/);
+      expect(response.headers.location).toMatch(
+        /\/users\/user-2\/subscription$/,
+      );
       expect(response.text).toBe('');
       expect(service.getSubscription).not.toHaveBeenCalled();
     });
 
     it('does not allow anonymous users to access the subscription', async () => {
-      await request(app.getHttpServer()).get('/my/subscription').expect(401);
+      await testRequest.get('/my/subscription').expect(401);
       expect(service.getSubscription).not.toHaveBeenCalled();
     });
   });
