@@ -9,7 +9,7 @@ import { GoneException, NotFoundException } from '@nestjs/common';
 import { NestExpressApplication } from '@nestjs/platform-express';
 import { Test, TestingModule } from '@nestjs/testing';
 import { NextFunction, Request, Response } from 'express';
-import request from 'supertest';
+import { testRequest as createTestRequest } from '../../../test/http-request';
 import { HateoasModule } from '../../hateoas/hateoas.module';
 import { resourceEnrichers, ResourceTypes } from '../../resource-enrichers';
 import { ChecklistInvitationController } from './checklist-invitation.controller';
@@ -17,6 +17,7 @@ import { InvitationService } from './invitation.service';
 
 describe('ChecklistInvitationController', () => {
   let app: NestExpressApplication;
+  let testRequest: ReturnType<typeof createTestRequest>;
   let serviceMock: jest.Mocked<
     Pick<
       InvitationService,
@@ -70,6 +71,7 @@ describe('ChecklistInvitationController', () => {
     );
 
     await app.init();
+    testRequest = createTestRequest(app.getHttpServer());
   });
 
   afterEach(async () => {
@@ -98,7 +100,7 @@ describe('ChecklistInvitationController', () => {
         },
       ]);
 
-      const response = await request(app.getHttpServer())
+      const response = await testRequest
         .get('/checklists/checklist-1/invitations')
         .expect(200);
 
@@ -125,7 +127,7 @@ describe('ChecklistInvitationController', () => {
         },
       ]);
 
-      const response = await request(app.getHttpServer())
+      const response = await testRequest
         .get('/checklists/checklist-1/invitations')
         .expect(200);
 
@@ -137,7 +139,7 @@ describe('ChecklistInvitationController', () => {
     it('should return 200 with up and related links to the checklist', async () => {
       serviceMock.listInvitations.mockResolvedValue([]);
 
-      const response = await request(app.getHttpServer())
+      const response = await testRequest
         .get('/checklists/checklist-1/invitations')
         .expect(200);
 
@@ -153,7 +155,7 @@ describe('ChecklistInvitationController', () => {
     it('should return 200 with no items key when list is empty', async () => {
       serviceMock.listInvitations.mockResolvedValue([]);
 
-      const response = await request(app.getHttpServer())
+      const response = await testRequest
         .get('/checklists/checklist-1/invitations')
         .expect(200);
 
@@ -164,9 +166,7 @@ describe('ChecklistInvitationController', () => {
     it('should return 404 when checklist does not exist', async () => {
       serviceMock.listInvitations.mockRejectedValue(new NotFoundException());
 
-      await request(app.getHttpServer())
-        .get('/checklists/non-existent/invitations')
-        .expect(404);
+      await testRequest.get('/checklists/non-existent/invitations').expect(404);
     });
 
     it('should return 403 when caller is not the checklist owner', async () => {
@@ -182,9 +182,7 @@ describe('ChecklistInvitationController', () => {
         },
       );
 
-      await request(app.getHttpServer())
-        .get('/checklists/checklist-1/invitations')
-        .expect(403);
+      await testRequest.get('/checklists/checklist-1/invitations').expect(403);
     });
   });
 
@@ -192,7 +190,7 @@ describe('ChecklistInvitationController', () => {
     it('should create an invitation and return 201 with Location header', async () => {
       serviceMock.createInvitation.mockResolvedValue('inv-123');
 
-      const response = await request(app.getHttpServer())
+      const response = await testRequest
         .post('/checklists/checklist-1/invitations')
         .send({ title: 'My Invitation' })
         .expect(201);
@@ -210,7 +208,7 @@ describe('ChecklistInvitationController', () => {
     it('should return 404 when checklist does not exist', async () => {
       serviceMock.createInvitation.mockRejectedValue(new NotFoundException());
 
-      await request(app.getHttpServer())
+      await testRequest
         .post('/checklists/non-existent/invitations')
         .send({ title: 'My Invitation' })
         .expect(404);
@@ -231,7 +229,7 @@ describe('ChecklistInvitationController', () => {
         },
       );
 
-      await request(app.getHttpServer())
+      await testRequest
         .post('/checklists/checklist-1/invitations')
         .send({ title: 'My Invitation' })
         .expect(403);
@@ -251,7 +249,7 @@ describe('ChecklistInvitationController', () => {
         expiresAt,
       });
 
-      const response = await request(app.getHttpServer())
+      const response = await testRequest
         .get('/checklists/checklist-1/invitations/inv-1')
         .expect(200);
 
@@ -283,7 +281,7 @@ describe('ChecklistInvitationController', () => {
         expiresAt,
       });
 
-      const response = await request(app.getHttpServer())
+      const response = await testRequest
         .get('/checklists/checklist-1/invitations/inv-1')
         .expect(200);
 
@@ -301,7 +299,7 @@ describe('ChecklistInvitationController', () => {
     it('should return 404 when invitation does not exist', async () => {
       serviceMock.getInvitation.mockRejectedValue(new NotFoundException());
 
-      await request(app.getHttpServer())
+      await testRequest
         .get('/checklists/checklist-1/invitations/non-existent')
         .expect(404);
     });
@@ -319,7 +317,7 @@ describe('ChecklistInvitationController', () => {
         expiresAt,
       });
 
-      const response = await request(app.getHttpServer())
+      const response = await testRequest
         .get('/checklists/checklist-1/invitations/inv-1/preview')
         .expect(200);
 
@@ -348,7 +346,7 @@ describe('ChecklistInvitationController', () => {
         expiresAt,
       });
 
-      const response = await request(app.getHttpServer())
+      const response = await testRequest
         .get('/checklists/checklist-1/invitations/inv-1/preview')
         .expect(200);
 
@@ -364,7 +362,7 @@ describe('ChecklistInvitationController', () => {
     it('should return 404 when invitation does not exist', async () => {
       serviceMock.getInvitation.mockRejectedValue(new NotFoundException());
 
-      await request(app.getHttpServer())
+      await testRequest
         .get('/checklists/checklist-1/invitations/non-existent/preview')
         .expect(404);
     });
@@ -380,7 +378,7 @@ describe('ChecklistInvitationController', () => {
         expiresAt,
       });
 
-      const response = await request(app.getHttpServer())
+      const response = await testRequest
         .get('/checklists/checklist-1/invitations/inv-1/preview')
         .expect(200);
 
@@ -412,7 +410,7 @@ describe('ChecklistInvitationController', () => {
         expiresAt,
       });
 
-      const response = await request(app.getHttpServer())
+      const response = await testRequest
         .get('/checklists/checklist-1/invitations/inv-1/preview')
         .expect(200);
 
@@ -430,7 +428,7 @@ describe('ChecklistInvitationController', () => {
     it('should return 204 on successful acceptance', async () => {
       serviceMock.acceptInvitation.mockResolvedValue(undefined);
 
-      await request(app.getHttpServer())
+      await testRequest
         .post('/checklists/checklist-1/invitations/inv-1/accept')
         .expect(204);
 
@@ -444,7 +442,7 @@ describe('ChecklistInvitationController', () => {
     it('should return 404 when invitation does not exist', async () => {
       serviceMock.acceptInvitation.mockRejectedValue(new NotFoundException());
 
-      await request(app.getHttpServer())
+      await testRequest
         .post('/checklists/checklist-1/invitations/non-existent/accept')
         .expect(404);
     });
@@ -452,7 +450,7 @@ describe('ChecklistInvitationController', () => {
     it('should return 410 when invitation is expired', async () => {
       serviceMock.acceptInvitation.mockRejectedValue(new GoneException());
 
-      await request(app.getHttpServer())
+      await testRequest
         .post('/checklists/checklist-1/invitations/expired-inv/accept')
         .expect(410);
     });
@@ -462,7 +460,7 @@ describe('ChecklistInvitationController', () => {
     it('should return 204 on successful deletion', async () => {
       serviceMock.deleteInvitation.mockResolvedValue(undefined);
 
-      await request(app.getHttpServer())
+      await testRequest
         .delete('/checklists/checklist-1/invitations/inv-1')
         .expect(204);
 
@@ -476,7 +474,7 @@ describe('ChecklistInvitationController', () => {
     it('should return 204 even when invitation does not exist (idempotency)', async () => {
       serviceMock.deleteInvitation.mockResolvedValue(undefined);
 
-      await request(app.getHttpServer())
+      await testRequest
         .delete('/checklists/checklist-1/invitations/non-existent')
         .expect(204);
     });
@@ -494,7 +492,7 @@ describe('ChecklistInvitationController', () => {
         },
       );
 
-      await request(app.getHttpServer())
+      await testRequest
         .delete('/checklists/checklist-1/invitations/inv-1')
         .expect(403);
     });
@@ -502,7 +500,7 @@ describe('ChecklistInvitationController', () => {
     it('should return 404 when checklist does not exist', async () => {
       serviceMock.deleteInvitation.mockRejectedValue(new NotFoundException());
 
-      await request(app.getHttpServer())
+      await testRequest
         .delete('/checklists/non-existent/invitations/inv-1')
         .expect(404);
     });
@@ -512,7 +510,7 @@ describe('ChecklistInvitationController', () => {
     it('should return 204 on successful dismiss', async () => {
       serviceMock.dismissInvitation.mockResolvedValue(undefined);
 
-      await request(app.getHttpServer())
+      await testRequest
         .delete('/checklists/checklist-1/invitations/inv-1/preview')
         .expect(204);
 
@@ -525,7 +523,7 @@ describe('ChecklistInvitationController', () => {
     it('should return 204 when invitation does not exist (idempotency)', async () => {
       serviceMock.dismissInvitation.mockResolvedValue(undefined);
 
-      await request(app.getHttpServer())
+      await testRequest
         .delete('/checklists/checklist-1/invitations/non-existent/preview')
         .expect(204);
     });
