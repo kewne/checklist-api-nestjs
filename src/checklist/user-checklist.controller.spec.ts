@@ -9,7 +9,7 @@ import { CreateChecklistDto } from './dto/create-checklist.dto';
 import { HateoasModule } from '../hateoas/hateoas.module';
 import { resourceEnrichers, ResourceTypes } from '../resource-enrichers';
 import { NestExpressApplication } from '@nestjs/platform-express';
-import request from 'supertest';
+import { testRequest as createTestRequest } from '../../test/http-request';
 import { PlainResource, LinkObject } from '@app/hateoas';
 import { USER_AUTH_KEY } from '@app/auth/auth.constants';
 import { AuthUser } from '@app/auth/auth.guard';
@@ -20,6 +20,7 @@ import { NextFunction, Request, Response } from 'express';
 
 describe('UserChecklistController', () => {
   let app: NestExpressApplication;
+  let testRequest: ReturnType<typeof createTestRequest>;
   let serviceMock: jest.Mocked<Omit<ChecklistService, 'repository'>>;
   let shareServiceMock: jest.Mocked<
     Pick<ShareService, 'listChecklistsSharedWithUser'>
@@ -77,6 +78,7 @@ describe('UserChecklistController', () => {
     );
 
     await app.init();
+    testRequest = createTestRequest(app.getHttpServer());
   });
 
   afterEach(async () => {
@@ -100,7 +102,7 @@ describe('UserChecklistController', () => {
 
       serviceMock.create.mockResolvedValue(createdChecklist);
 
-      const response = await request(app.getHttpServer())
+      const response = await testRequest
         .post(`/users/${userId}/checklists`)
         .send(createDto)
         .expect(201);
@@ -135,7 +137,7 @@ describe('UserChecklistController', () => {
       ];
       (serviceMock.findAllByUser as jest.Mock).mockResolvedValue(checklists);
 
-      const response = await request(app.getHttpServer())
+      const response = await testRequest
         .get(`/users/${userId}/checklists`)
         .expect(200);
 
@@ -165,7 +167,7 @@ describe('UserChecklistController', () => {
       (serviceMock.findAllByUser as jest.Mock).mockResolvedValue([]);
 
       // Act & Assert
-      const response = await request(app.getHttpServer())
+      const response = await testRequest
         .get(`/users/${userId}/checklists`)
         .expect(200);
 
@@ -179,7 +181,7 @@ describe('UserChecklistController', () => {
     it('should include a related link to the shared checklists endpoint', async () => {
       (serviceMock.findAllByUser as jest.Mock).mockResolvedValue([]);
 
-      const response = await request(app.getHttpServer())
+      const response = await testRequest
         .get(`/users/${userId}/checklists`)
         .expect(200);
 
@@ -216,7 +218,7 @@ describe('UserChecklistController', () => {
         checklists,
       );
 
-      const response = await request(app.getHttpServer())
+      const response = await testRequest
         .get(`/users/${userId}/checklists/shared`)
         .expect(200);
 
@@ -234,7 +236,7 @@ describe('UserChecklistController', () => {
     it('should return 200 with no items rel when no checklists are shared', async () => {
       shareServiceMock.listChecklistsSharedWithUser.mockResolvedValue([]);
 
-      const response = await request(app.getHttpServer())
+      const response = await testRequest
         .get(`/users/${userId}/checklists/shared`)
         .expect(200);
 
@@ -252,9 +254,7 @@ describe('UserChecklistController', () => {
         ),
       );
 
-      await request(app.getHttpServer())
-        .get(`/users/other-user/checklists/shared`)
-        .expect(403);
+      await testRequest.get(`/users/other-user/checklists/shared`).expect(403);
     });
   });
 });
