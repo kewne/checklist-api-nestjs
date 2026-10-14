@@ -47,7 +47,9 @@ describe('ChecklistController', () => {
         _res: Response,
         next: NextFunction,
       ) => {
-        req[USER_AUTH_KEY] = mockUser;
+        const requestedUser = req.headers['x-test-user'];
+        req[USER_AUTH_KEY] =
+          typeof requestedUser === 'string' ? { uid: requestedUser } : mockUser;
         next();
       },
     );
@@ -78,6 +80,7 @@ describe('ChecklistController', () => {
 
       const response = await request(app.getHttpServer())
         .get('/checklists/123')
+        .set('Host', 'api.example.test')
         .expect(200);
 
       expect(serviceMock.findOne).toHaveBeenCalledWith('123');
@@ -94,19 +97,57 @@ describe('ChecklistController', () => {
       const resource = response.body as PlainResource;
       expect(resource._links).toEqual<PlainResource['_links']>({
         self: {
-          href: expect.stringMatching(/checklists\/123$/) as string,
+          href: 'http://api.example.test/checklists/123',
         },
         'create-from': {
           name: 'instance',
-          href: expect.stringMatching(
-            /\/users\/test-user-id\/checklist-instances\/create-from-checklist\?checklist_id=123$/,
-          ) as string,
+          href: 'http://api.example.test/my/checklist-instances/create-from-checklist?checklist_id=123',
         },
         related: {
           name: 'shares',
-          href: expect.stringMatching(/\/checklists\/123\/shares$/) as string,
+          href: 'http://api.example.test/checklists/123/shares',
         },
       });
+    });
+
+    it('keeps the entire representation independent of the authenticated user', async () => {
+      const checklist = {
+        id: '123',
+        title: 'Shared Checklist',
+        items: [],
+        createdBy: 'owner',
+        createdAt: new Date('2026-10-01T00:00:00Z'),
+        updatedAt: new Date('2026-10-02T00:00:00Z'),
+      };
+      serviceMock.findOne.mockResolvedValue(checklist);
+
+      const resources: PlainResource[] = [];
+      for (const userId of ['owner', 'recipient']) {
+        const response = await request(app.getHttpServer())
+          .get('/checklists/123')
+          .set('Host', 'api.example.test')
+          .set('x-test-user', userId)
+          .expect(200);
+        resources.push(response.body as PlainResource);
+      }
+
+      expect(resources[0]).toEqual<PlainResource>({
+        ...checklist,
+        createdAt: checklist.createdAt.toISOString(),
+        updatedAt: checklist.updatedAt.toISOString(),
+        _links: {
+          self: { href: 'http://api.example.test/checklists/123' },
+          'create-from': {
+            name: 'instance',
+            href: 'http://api.example.test/my/checklist-instances/create-from-checklist?checklist_id=123',
+          },
+          related: {
+            name: 'shares',
+            href: 'http://api.example.test/checklists/123/shares',
+          },
+        },
+      });
+      expect(resources[0]).toEqual(resources[1]);
     });
 
     it('should return a checklist with empty items array when no items exist', async () => {
@@ -123,6 +164,7 @@ describe('ChecklistController', () => {
 
       const response = await request(app.getHttpServer())
         .get('/checklists/124')
+        .set('Host', 'api.example.test')
         .expect(200);
 
       expect((response.body as Record<string, unknown>).items).toEqual([]);
@@ -134,6 +176,7 @@ describe('ChecklistController', () => {
       // Act & Assert
       const response = await request(app.getHttpServer())
         .get('/checklists/999')
+        .set('Host', 'api.example.test')
         .expect(200);
 
       expect(serviceMock.findOne).toHaveBeenCalledWith('999');
@@ -147,7 +190,10 @@ describe('ChecklistController', () => {
       (serviceMock.remove as jest.Mock).mockResolvedValue(undefined);
 
       // Act & Assert
-      await request(app.getHttpServer()).delete('/checklists/123').expect(200);
+      await request(app.getHttpServer())
+        .delete('/checklists/123')
+        .set('Host', 'api.example.test')
+        .expect(200);
 
       expect(serviceMock.remove).toHaveBeenCalledWith('123');
     });
@@ -173,6 +219,7 @@ describe('ChecklistController', () => {
       // Act & Assert
       const response = await request(app.getHttpServer())
         .put('/checklists/123')
+        .set('Host', 'api.example.test')
         .send({
           title: 'Updated Checklist',
           items: [
@@ -201,6 +248,7 @@ describe('ChecklistController', () => {
       // Act & Assert
       await request(app.getHttpServer())
         .put('/checklists/nonexistent')
+        .set('Host', 'api.example.test')
         .send({ title: 'Updated Checklist' })
         .expect(404);
     });

@@ -9,6 +9,7 @@ import { ChecklistInvitationController } from './checklist/invitation/checklist-
 import { ChecklistInstanceController } from './checklist/instance/checklist-instance.controller';
 import { ChecklistListItem } from './checklist/instance/instance.repository';
 import { UserChecklistInstanceController } from './checklist/instance/user-checklist-instance.controller';
+import { MyChecklistInstanceController } from './checklist/instance/my-checklist-instance.controller';
 import { ShareDocument } from './checklist/share.repository';
 import { UserChecklistController } from './checklist/user-checklist.controller';
 
@@ -95,10 +96,9 @@ export const resourceEnrichers: EnricherRegistry<ResourceTypes> = {
       builder.withRel(
         'create-from',
         toHandlerCall({
-          controller: UserChecklistInstanceController,
+          controller: MyChecklistInstanceController,
           name: 'instance',
         }).createFromChecklist({
-          params: { userId: builder.userId ?? '' },
           query: { checklist_id: checklist.id },
         }),
       );

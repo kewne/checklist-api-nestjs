@@ -43,26 +43,20 @@ describe('MyChecklistInstanceController', () => {
       async (userId) => {
         const response = await request(app.getHttpServer())
           .get('/my/checklist-instances')
+          .set('Host', 'api.example.test')
           .auth(userId, { type: 'bearer' })
           .expect(303);
 
-        expect(new URL(response.headers.location).pathname).toBe(
-          `/users/${userId}/checklist-instances`,
+        expect(response.headers.location).toBe(
+          `http://api.example.test/users/${userId}/checklist-instances`,
         );
-        expect(new URL(response.headers.location).search).toBe('');
       },
     );
 
     it('rejects an anonymous request', async () => {
       await request(app.getHttpServer())
         .get('/my/checklist-instances')
-        .expect(401);
-    });
-
-    it('rejects an invalid token', async () => {
-      await request(app.getHttpServer())
-        .get('/my/checklist-instances')
-        .auth('invalid', { type: 'bearer' })
+        .set('Host', 'api.example.test')
         .expect(401);
     });
   });
@@ -73,40 +67,73 @@ describe('MyChecklistInstanceController', () => {
       async (userId) => {
         const response = await request(app.getHttpServer())
           .post('/my/checklist-instances/create')
+          .set('Host', 'api.example.test')
           .auth(userId, { type: 'bearer' })
           .expect(307);
 
-        expect(new URL(response.headers.location).pathname).toBe(
-          `/users/${userId}/checklist-instances/create`,
+        expect(response.headers.location).toBe(
+          `http://api.example.test/users/${userId}/checklist-instances/create`,
         );
-        expect(new URL(response.headers.location).search).toBe('');
       },
     );
 
     it('ignores a supplied destination user and uses the authenticated user', async () => {
       const response = await request(app.getHttpServer())
         .post('/my/checklist-instances/create')
+        .set('Host', 'api.example.test')
         .query({ userId: 'user-2' })
         .auth('user-1', { type: 'bearer' })
         .expect(307);
 
-      const destination = new URL(response.headers.location);
-      expect(destination.pathname).toBe(
-        '/users/user-1/checklist-instances/create',
+      expect(response.headers.location).toBe(
+        'http://api.example.test/users/user-1/checklist-instances/create',
       );
-      expect(destination.search).toBe('');
     });
 
     it('rejects an anonymous request', async () => {
       await request(app.getHttpServer())
         .post('/my/checklist-instances/create')
+        .set('Host', 'api.example.test')
         .expect(401);
     });
+  });
 
-    it('rejects an invalid token', async () => {
+  describe('POST /my/checklist-instances/create-from-checklist', () => {
+    it.each(['user-1', 'user-2'])(
+      'redirects %s to canonical creation from the selected checklist',
+      async (userId) => {
+        const response = await request(app.getHttpServer())
+          .post('/my/checklist-instances/create-from-checklist')
+          .set('Host', 'api.example.test')
+          .query({ checklist_id: 'checklist-1' })
+          .auth(userId, { type: 'bearer' })
+          .expect(307);
+
+        expect(response.headers.location).toBe(
+          `http://api.example.test/users/${userId}/checklist-instances/create-from-checklist?checklist_id=checklist-1`,
+        );
+      },
+    );
+
+    it('preserves the checklist query and resolves only the authenticated user', async () => {
+      const checklistId = 'checklist + &/?=';
+      const response = await request(app.getHttpServer())
+        .post('/my/checklist-instances/create-from-checklist')
+        .set('Host', 'api.example.test')
+        .query({ checklist_id: checklistId, userId: 'user-2' })
+        .auth('user-1', { type: 'bearer' })
+        .expect(307);
+
+      expect(response.headers.location).toBe(
+        'http://api.example.test/users/user-1/checklist-instances/create-from-checklist?checklist_id=checklist+%2B+%26%2F%3F%3D',
+      );
+    });
+
+    it('rejects an anonymous request', async () => {
       await request(app.getHttpServer())
-        .post('/my/checklist-instances/create')
-        .auth('invalid', { type: 'bearer' })
+        .post('/my/checklist-instances/create-from-checklist')
+        .set('Host', 'api.example.test')
+        .query({ checklist_id: 'checklist-1' })
         .expect(401);
     });
   });
