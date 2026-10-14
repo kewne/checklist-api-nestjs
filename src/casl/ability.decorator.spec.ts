@@ -2,7 +2,7 @@ import { Controller, Get } from '@nestjs/common';
 import { NestExpressApplication } from '@nestjs/platform-express';
 import { Test } from '@nestjs/testing';
 import { NextFunction, Request, Response } from 'express';
-import request from 'supertest';
+import { testRequest as createTestRequest } from '../../test/http-request';
 import { Ability } from './ability.decorator';
 import type { AppAbility } from './ability.factory';
 import { ABILITY_KEY } from './casl.interceptor';
@@ -17,6 +17,7 @@ class TestController {
 
 describe('@Ability() decorator', () => {
   let app: NestExpressApplication;
+  let testRequest: ReturnType<typeof createTestRequest>;
 
   afterEach(async () => {
     await app?.close();
@@ -43,20 +44,19 @@ describe('@Ability() decorator', () => {
     );
 
     await app.init();
+    testRequest = createTestRequest(app.getHttpServer());
   };
 
   it('returns 200 and the ability is received when the key is set', async () => {
     const ability = {} as AppAbility;
     await buildApp(ability);
 
-    await request(app.getHttpServer())
-      .get('/test')
-      .expect(200, { received: true });
+    await testRequest.get('/test').expect(200, { received: true });
   });
 
   it('returns 401 when the ability key is absent', async () => {
     await buildApp();
 
-    await request(app.getHttpServer()).get('/test').expect(401);
+    await testRequest.get('/test').expect(401);
   });
 });
