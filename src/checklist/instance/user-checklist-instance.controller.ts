@@ -1,6 +1,6 @@
 import type { AuthUser } from '@app/auth/auth.guard';
 import { User } from '@app/auth/user.decorator';
-import { Hateoas, NestLinkFactory } from '@app/hateoas-nest';
+import { Hateoas, NestLinkFactory, toHandlerCall } from '@app/hateoas-nest';
 import { Body, Controller, Get, Param, Post, Query, Res } from '@nestjs/common';
 import type { Response } from 'express';
 import { ResourceTypes } from '@app/resource-enrichers';
@@ -21,9 +21,9 @@ export class UserChecklistInstanceController {
     @Hateoas() linkFactory: NestLinkFactory,
   ) {
     const instanceId = await this.instanceService.createFromData(userId, dto);
-    res.status(201).setHeader(
-      'location',
-      linkFactory.toHandler(ChecklistInstanceController, 'findOne', {
+    res.status(201);
+    linkFactory.setLocation(
+      toHandlerCall({ controller: ChecklistInstanceController }).findOne({
         params: { instanceId },
       }),
     );
@@ -46,7 +46,6 @@ export class UserChecklistInstanceController {
     @Param('userId') userId: string,
     @Query('checklist_id') checklistId: string,
     @Body() createInstanceDto: CreateChecklistInstanceDto,
-    @Res({ passthrough: true }) res: Response,
     @Hateoas() linkFactory: NestLinkFactory,
   ) {
     const instanceId = await this.instanceService.createInstance(
@@ -54,9 +53,8 @@ export class UserChecklistInstanceController {
       userId,
       createInstanceDto.title,
     );
-    res.setHeader(
-      'location',
-      linkFactory.toHandler(ChecklistInstanceController, 'findOne', {
+    linkFactory.setLocation(
+      toHandlerCall({ controller: ChecklistInstanceController }).findOne({
         params: { instanceId },
       }),
     );
@@ -81,19 +79,17 @@ export class UserChecklistInstanceController {
       items,
     };
 
-    const createLink = linkFactory.toHandler(
-      UserChecklistController,
-      'create',
-      {
-        params: {
-          userId: user.uid,
-        },
-        query: {
-          base: Buffer.from(JSON.stringify(baseDto)).toString('base64'),
-        },
+    const createLink = toHandlerCall({
+      controller: UserChecklistController,
+    }).create({
+      params: {
+        userId: user.uid,
       },
-    );
+      query: {
+        base: Buffer.from(JSON.stringify(baseDto)).toString('base64'),
+      },
+    });
     res.statusCode = 307;
-    res.setHeader('location', createLink);
+    linkFactory.setLocation(createLink);
   }
 }

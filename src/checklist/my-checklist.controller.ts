@@ -1,6 +1,6 @@
 import type { AuthUser } from '@app/auth/auth.guard';
 import { User } from '@app/auth/user.decorator';
-import { Hateoas, NestLinkFactory } from '@app/hateoas-nest';
+import { Hateoas, NestLinkFactory, toHandlerCall } from '@app/hateoas-nest';
 import { Controller, Get, Post, Query, Res } from '@nestjs/common';
 import type { Response } from 'express';
 import { UserChecklistController } from './user-checklist.controller';
@@ -14,9 +14,8 @@ export class MyChecklistController {
     @Res({ passthrough: true }) response: Response,
   ) {
     response.statusCode = 303;
-    response.setHeader(
-      'location',
-      linkFactory.toHandler(UserChecklistController, 'findAllCreatedBy', {
+    linkFactory.setLocation(
+      toHandlerCall({ controller: UserChecklistController }).findAllCreatedBy({
         params: { userId: user.uid },
       }),
     );
@@ -30,9 +29,8 @@ export class MyChecklistController {
     @Res({ passthrough: true }) response: Response,
   ) {
     response.statusCode = 307;
-    response.setHeader(
-      'location',
-      linkFactory.toHandler(UserChecklistController, 'create', {
+    linkFactory.setLocation(
+      toHandlerCall({ controller: UserChecklistController }).create({
         params: { userId: user.uid },
         query: base === undefined ? undefined : { base },
       }),

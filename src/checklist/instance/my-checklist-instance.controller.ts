@@ -1,6 +1,6 @@
 import type { AuthUser } from '@app/auth/auth.guard';
 import { User } from '@app/auth/user.decorator';
-import { Hateoas, NestLinkFactory } from '@app/hateoas-nest';
+import { Hateoas, NestLinkFactory, toHandlerCall } from '@app/hateoas-nest';
 import { Controller, Get, Param, Post, Query, Res } from '@nestjs/common';
 import type { Response } from 'express';
 import { UserChecklistInstanceController } from './user-checklist-instance.controller';
@@ -14,9 +14,10 @@ export class MyChecklistInstanceController {
     @Res({ passthrough: true }) response: Response,
   ) {
     response.statusCode = 303;
-    response.setHeader(
-      'location',
-      linkFactory.toHandler(UserChecklistInstanceController, 'findCreatedBy', {
+    linkFactory.setLocation(
+      toHandlerCall({
+        controller: UserChecklistInstanceController,
+      }).findCreatedBy({
         params: { userId: user.uid },
       }),
     );
@@ -29,9 +30,10 @@ export class MyChecklistInstanceController {
     @Res({ passthrough: true }) response: Response,
   ) {
     response.statusCode = 307;
-    response.setHeader(
-      'location',
-      linkFactory.toHandler(UserChecklistInstanceController, 'createInstance', {
+    linkFactory.setLocation(
+      toHandlerCall({
+        controller: UserChecklistInstanceController,
+      }).createInstance({
         params: { userId: user.uid },
       }),
     );
@@ -45,16 +47,13 @@ export class MyChecklistInstanceController {
     @Res({ passthrough: true }) response: Response,
   ) {
     response.statusCode = 307;
-    response.setHeader(
-      'location',
-      linkFactory.toHandler(
-        UserChecklistInstanceController,
-        'createFromChecklist',
-        {
-          params: { userId: user.uid },
-          query: { checklist_id: checklistId },
-        },
-      ),
+    linkFactory.setLocation(
+      toHandlerCall({
+        controller: UserChecklistInstanceController,
+      }).createFromChecklist({
+        params: { userId: user.uid },
+        query: { checklist_id: checklistId },
+      }),
     );
   }
 
@@ -66,13 +65,12 @@ export class MyChecklistInstanceController {
     @Res({ passthrough: true }) response: Response,
   ) {
     response.statusCode = 307;
-    response.setHeader(
-      'location',
-      linkFactory.toHandler(
-        UserChecklistInstanceController,
-        'createChecklistFromInstance',
-        { params: { userId: user.uid, instanceId } },
-      ),
+    linkFactory.setLocation(
+      toHandlerCall({
+        controller: UserChecklistInstanceController,
+      }).createChecklistFromInstance({
+        params: { userId: user.uid, instanceId },
+      }),
     );
   }
 }

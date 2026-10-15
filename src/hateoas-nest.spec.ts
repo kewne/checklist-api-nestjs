@@ -1,8 +1,9 @@
-import { Controller, Get } from '@nestjs/common';
+import { Controller, Get, Res } from '@nestjs/common';
 import { Test, TestingModule } from '@nestjs/testing';
 import { ApplicationConfig, Reflector } from '@nestjs/core';
 import { RoutePathFactory } from '@nestjs/core/router/route-path-factory';
 import { NestExpressApplication } from '@nestjs/platform-express';
+import type { Response } from 'express';
 import { testRequest as createTestRequest } from '../test/http-request';
 import { PlainResource, LinkObject } from './hateoas';
 import {
@@ -11,6 +12,7 @@ import {
   NestLinkFactory,
   NestResourceBuilder,
   ResourceLinkEnricher,
+  toHandlerCall,
 } from './hateoas-nest';
 import { HateoasModule } from './hateoas/hateoas.module';
 
@@ -113,9 +115,50 @@ describe('NestResourceBuilder', () => {
   });
 });
 
-describe('resource link enrichment (HTTP)', () => {
+describe('HATEOAS (HTTP)', () => {
   @Controller('test-resources')
   class TestResourceController {
+    @Get()
+    findAll() {
+      return [];
+    }
+
+    @Get('location/plain')
+    setPlainLocation(
+      @Res({ passthrough: true }) response: Response,
+      @Hateoas() linkFactory: NestLinkFactory,
+    ) {
+      response.statusCode = 202;
+      response.setHeader('location', '/previous');
+      linkFactory.setLocation(
+        toHandlerCall({ controller: TestResourceController }).findAll({}),
+      );
+      return { accepted: true };
+    }
+
+    @Get('location/parameterized')
+    setParameterizedLocation(@Hateoas() linkFactory: NestLinkFactory) {
+      linkFactory.setLocation(
+        toHandlerCall({ controller: TestResourceController }).findOne({
+          params: { id: 42 },
+        }),
+      );
+    }
+
+    @Get('location/query')
+    setQueryLocation(@Hateoas() linkFactory: NestLinkFactory) {
+      linkFactory.setLocation(
+        toHandlerCall({
+          controller: TestResourceController,
+          name: 'resource',
+          title: 'Test resource',
+        }).findOne({
+          params: { id: 'abc' },
+          query: { base: 'a+b/c=', search: 'milk & bread' },
+        }),
+      );
+    }
+
     @Get(':id')
     findOne(@Hateoas() linkFactory: NestLinkFactory<TestMap>) {
       return linkFactory.buildResource('test-resource').toResource({ id: '1' });
@@ -159,5 +202,36 @@ describe('resource link enrichment (HTTP)', () => {
     expect(docs).toEqual({
       href: 'http://api.example.test/docs/1',
     });
+  });
+
+  it('sets an absolute Location, replacing the old header without changing status or body', async () => {
+    const response = await testRequest
+      .get('/test-resources/location/plain')
+      .expect(202);
+
+    expect(response.headers.location).toBe(
+      'http://api.example.test/test-resources',
+    );
+    expect(response.body).toEqual({ accepted: true });
+  });
+
+  it('substitutes numeric route parameters in Location', async () => {
+    const response = await testRequest
+      .get('/test-resources/location/parameterized')
+      .expect(200);
+
+    expect(response.headers.location).toBe(
+      'http://api.example.test/test-resources/42',
+    );
+  });
+
+  it('substitutes string parameters and encodes query values without link metadata', async () => {
+    const response = await testRequest
+      .get('/test-resources/location/query')
+      .expect(200);
+
+    expect(response.headers.location).toBe(
+      'http://api.example.test/test-resources/abc?base=a%2Bb%2Fc%3D&search=milk+%26+bread',
+    );
   });
 });

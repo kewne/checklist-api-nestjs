@@ -1,7 +1,7 @@
 import { DecodeBase64JsonPipe } from '@app/common/pipes';
 import { Ability } from '@app/casl/ability.decorator';
 import type { AppAbility } from '@app/casl/ability.factory';
-import { Hateoas, NestLinkFactory } from '@app/hateoas-nest';
+import { Hateoas, NestLinkFactory, toHandlerCall } from '@app/hateoas-nest';
 import {
   BadRequestException,
   Body,
@@ -10,11 +10,9 @@ import {
   Param,
   Post,
   Query,
-  Res,
 } from '@nestjs/common';
 import { plainToInstance } from 'class-transformer';
 import { validate } from 'class-validator';
-import { type Response } from 'express';
 import { ResourceTypes } from '@app/resource-enrichers';
 import { ChecklistController } from './checklist.controller';
 import { ChecklistService } from './checklist.service';
@@ -34,7 +32,6 @@ export class UserChecklistController {
     @Body() createChecklistDto: CreateChecklistDto,
     @Query('base', new DecodeBase64JsonPipe<CreateChecklistDto>())
     decodedBase: CreateChecklistDto | undefined,
-    @Res({ passthrough: true }) res: Response,
     @Hateoas() linkFactory: NestLinkFactory,
   ) {
     const finalDto: CreateChecklistDto = decodedBase
@@ -54,9 +51,8 @@ export class UserChecklistController {
     }
 
     const checklist = await this.checklistService.create(finalDto, userId);
-    res.setHeader(
-      'location',
-      linkFactory.toHandler(ChecklistController, 'findOne', {
+    linkFactory.setLocation(
+      toHandlerCall({ controller: ChecklistController }).findOne({
         params: { id: checklist.id },
       }),
     );

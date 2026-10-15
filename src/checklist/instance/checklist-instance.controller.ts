@@ -1,6 +1,6 @@
 import { Ability } from '@app/casl/ability.decorator';
 import type { AppAbility } from '@app/casl/ability.factory';
-import { Hateoas, NestLinkFactory } from '@app/hateoas-nest';
+import { Hateoas, NestLinkFactory, toHandlerCall } from '@app/hateoas-nest';
 import {
   Body,
   Controller,
@@ -56,9 +56,8 @@ export class ChecklistInstanceController {
       ability,
     );
     res.statusCode = 303;
-    res.setHeader(
-      'location',
-      linkFactory.toHandler(ChecklistInstanceController, 'findOne', {
+    linkFactory.setLocation(
+      toHandlerCall({ controller: ChecklistInstanceController }).findOne({
         params: { instanceId },
       }),
     );
@@ -75,9 +74,8 @@ export class ChecklistInstanceController {
   ) {
     await this.instanceService.markItemIncomplete(instanceId, itemId, ability);
     res.statusCode = 303;
-    res.setHeader(
-      'location',
-      linkFactory.toHandler(ChecklistInstanceController, 'findOne', {
+    linkFactory.setLocation(
+      toHandlerCall({ controller: ChecklistInstanceController }).findOne({
         params: { instanceId },
       }),
     );
@@ -92,9 +90,8 @@ export class ChecklistInstanceController {
   ) {
     await this.instanceService.clearCompletedItems(instanceId, ability);
     res.statusCode = 303;
-    res.setHeader(
-      'location',
-      linkFactory.toHandler(ChecklistInstanceController, 'findOne', {
+    linkFactory.setLocation(
+      toHandlerCall({ controller: ChecklistInstanceController }).findOne({
         params: { instanceId },
       }),
     );

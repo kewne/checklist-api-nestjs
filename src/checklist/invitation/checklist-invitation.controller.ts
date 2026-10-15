@@ -13,11 +13,9 @@ import {
   HttpCode,
   Param,
   Post,
-  Res,
   UsePipes,
   ValidationPipe,
 } from '@nestjs/common';
-import { type Response } from 'express';
 import { CreateShareInvitationDto } from './create-share-invitation.dto';
 import { InvitationService } from './invitation.service';
 
@@ -32,7 +30,6 @@ export class ChecklistInvitationController {
     @Param('checklistId') checklistId: string,
     @Body() dto: CreateShareInvitationDto,
     @Ability() ability: AppAbility,
-    @Res({ passthrough: true }) res: Response,
     @Hateoas() linkFactory: NestLinkFactory,
   ) {
     const invitationId = await this.invitationService.createInvitation(
@@ -45,9 +42,8 @@ export class ChecklistInvitationController {
         );
       },
     );
-    res.setHeader(
-      'location',
-      linkFactory.toHandler(ChecklistInvitationController, 'findOne', {
+    linkFactory.setLocation(
+      toHandlerCall({ controller: ChecklistInvitationController }).findOne({
         params: { checklistId, id: invitationId },
       }),
     );

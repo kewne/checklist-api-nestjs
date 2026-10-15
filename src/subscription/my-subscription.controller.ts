@@ -1,6 +1,6 @@
 import type { AuthUser } from '@app/auth/auth.guard';
 import { User } from '@app/auth/user.decorator';
-import { Hateoas, NestLinkFactory } from '@app/hateoas-nest';
+import { Hateoas, NestLinkFactory, toHandlerCall } from '@app/hateoas-nest';
 import { Controller, Get, Res } from '@nestjs/common';
 import type { Response } from 'express';
 import { SubscriptionController } from './subscription.controller';
@@ -14,9 +14,8 @@ export class MySubscriptionController {
     @Res({ passthrough: true }) response: Response,
   ) {
     response.statusCode = 303;
-    response.setHeader(
-      'location',
-      linkFactory.toHandler(SubscriptionController, 'findOne', {
+    linkFactory.setLocation(
+      toHandlerCall({ controller: SubscriptionController }).findOne({
         params: { userId: user.uid },
       }),
     );

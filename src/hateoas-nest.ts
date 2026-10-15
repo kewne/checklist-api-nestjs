@@ -2,7 +2,7 @@ import { createParamDecorator, ExecutionContext, Type } from '@nestjs/common';
 import { PATH_METADATA } from '@nestjs/common/constants';
 import { ApplicationConfig, ModuleRef, Reflector } from '@nestjs/core';
 import { RoutePathFactory } from '@nestjs/core/router/route-path-factory';
-import { Request } from 'express';
+import { Request, Response } from 'express';
 import {
   BaseUrlResourceBuilder,
   LinkObject,
@@ -22,6 +22,7 @@ export const Hateoas = createParamDecorator(
     const routePathFactory = new RoutePathFactory(config);
     const enrichers = module.get<EnricherRegistry>(RESOURCE_ENRICHER_REGISTRY);
     return new NestLinkFactory(
+      ctx.switchToHttp().getResponse<Response>(),
       `${req.protocol}://${req.host}`,
       req.url,
       reflector,
@@ -35,6 +36,7 @@ export type ResourceMap = object;
 
 export class NestLinkFactory<M extends ResourceMap = never> {
   constructor(
+    private response: Response,
     private baseUrl: string,
     private selfUrl: string,
     private reflector: Reflector,
@@ -55,15 +57,8 @@ export class NestLinkFactory<M extends ResourceMap = never> {
     );
   }
 
-  public toHandler<C>(
-    controller: Type<C>,
-    handler: ClassMethodName<C>,
-    options?: {
-      params?: Record<string, string | number>;
-      query?: Record<string, string>;
-    },
-  ): string {
-    const { params, query } = options ?? {};
+  public setLocation(link: HandlerLink): void {
+    const { controller, handler, params, query } = link;
     const [href] = this.routePathFactory.create({
       ctrlPath: this.reflector.get<string | undefined>(
         PATH_METADATA,
@@ -94,17 +89,9 @@ export class NestLinkFactory<M extends ResourceMap = never> {
       });
     }
 
-    return url.toString();
+    this.response.setHeader('location', url.toString());
   }
 }
-
-export type MethodsOnly<C> = {
-  [Property in keyof C as C[Property] extends (...args: never[]) => void
-    ? Property
-    : never]: C[Property];
-};
-
-export type ClassMethodName<C> = keyof MethodsOnly<C>;
 
 declare const __handlerLink: unique symbol;
 type HandlerLink = Omit<LinkObject, 'href'> & {
