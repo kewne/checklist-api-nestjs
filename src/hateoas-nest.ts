@@ -146,18 +146,6 @@ export function toHandlerCall<C>(
   });
 }
 
-export function toHandler<C>(
-  controller: Type<C>,
-  handler: ClassMethodName<C>,
-  options?: LinkOptions & Pick<HandlerLink, 'params' | 'query'>,
-): HandlerLink {
-  return {
-    ...options,
-    controller,
-    handler,
-  } as HandlerLink;
-}
-
 export type ResourceLinkEnricher<M extends ResourceMap, K extends keyof M> = (
   builder: NestResourceBuilder<M[K] & object>,
   resource: M[K],

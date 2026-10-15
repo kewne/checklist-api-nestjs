@@ -1,4 +1,4 @@
-import { NestLinkFactory, toHandler } from '@app/hateoas-nest';
+import { NestLinkFactory, toHandlerCall } from '@app/hateoas-nest';
 import { ResourceTypes } from '@app/resource-enrichers';
 import { ChecklistInstanceController } from './checklist-instance.controller';
 import { ChecklistInstanceDocument } from './instance.repository';
@@ -13,16 +13,20 @@ export class InstanceResource {
 
     resource.withRel(
       'update',
-      toHandler(ChecklistInstanceController, 'addItem', {
+      toHandlerCall({
+        controller: ChecklistInstanceController,
         name: 'add-item',
+      }).addItem({
         params: { instanceId: instance.id },
       }),
     );
 
     resource.withRel(
       'create-from',
-      toHandler(MyChecklistInstanceController, 'createChecklistFromInstance', {
+      toHandlerCall({
+        controller: MyChecklistInstanceController,
         name: 'checklist',
+      }).createChecklistFromInstance({
         params: { instanceId: instance.id },
       }),
     );
@@ -32,9 +36,11 @@ export class InstanceResource {
       resource.withRel(
         'complete-item',
         ...incompleteItems.map((item) =>
-          toHandler(ChecklistInstanceController, 'completeItem', {
+          toHandlerCall({
+            controller: ChecklistInstanceController,
             name: item.id,
             title: item.title,
+          }).completeItem({
             params: { instanceId: instance.id, itemId: item.id },
           }),
         ),
@@ -46,9 +52,11 @@ export class InstanceResource {
       resource.withRel(
         'mark-incomplete-item',
         ...completedItems.map((item) =>
-          toHandler(ChecklistInstanceController, 'markItemIncomplete', {
+          toHandlerCall({
+            controller: ChecklistInstanceController,
             name: item.id,
             title: item.title,
+          }).markItemIncomplete({
             params: { instanceId: instance.id, itemId: item.id },
           }),
         ),
@@ -56,8 +64,10 @@ export class InstanceResource {
 
       resource.withRel(
         'update',
-        toHandler(ChecklistInstanceController, 'clearCompletedItems', {
+        toHandlerCall({
+          controller: ChecklistInstanceController,
           name: 'clear-completed-items',
+        }).clearCompletedItems({
           params: { instanceId: instance.id },
         }),
       );

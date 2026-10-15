@@ -183,8 +183,16 @@ describe('ChecklistInstanceController', () => {
         string,
         unknown
       >;
-      expect(links['complete-item']).toBeDefined();
-      expect(links['mark-incomplete-item']).toBeDefined();
+      expect(links['complete-item']).toEqual({
+        name: 'item-1',
+        title: 'Incomplete Item',
+        href: 'http://api.example.test/checklist-instances/456/items/item-1/complete',
+      });
+      expect(links['mark-incomplete-item']).toEqual({
+        name: 'item-2',
+        title: 'Completed Item',
+        href: 'http://api.example.test/checklist-instances/456/items/item-2/incomplete',
+      });
     });
 
     it('should include clear-completed-items update link when completed items exist', async () => {
