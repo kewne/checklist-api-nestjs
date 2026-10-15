@@ -96,12 +96,6 @@ export class NestLinkFactory<M extends ResourceMap = never> {
 
     return url.toString();
   }
-
-  public toAbsolute(relativePath: string): LinkObject {
-    return {
-      href: new URL(relativePath, this.baseUrl).toString(),
-    };
-  }
 }
 
 export type MethodsOnly<C> = {
