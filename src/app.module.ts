@@ -13,6 +13,8 @@ import { FirestoreModule } from './firestore.module';
 import { HateoasModule } from './hateoas/hateoas.module';
 import { resourceEnrichers, ResourceTypes } from './resource-enrichers';
 import { SubscriptionModule } from './subscription/subscription.module';
+import { ServeStaticModule } from '@nestjs/serve-static';
+import { join } from 'path';
 
 @Module({
   imports: [
@@ -28,6 +30,15 @@ import { SubscriptionModule } from './subscription/subscription.module';
     HateoasModule.registerEnrichers<ResourceTypes>(resourceEnrichers),
     AuthModule,
     CaslModule,
+    ServeStaticModule.forRoot({
+      rootPath: join(__dirname, '..', '..', 'restspec'),
+      exclude: ['/{*any}'],
+      serveStaticOptions: {
+        extensions: ['yml', 'json'],
+        index: false,
+        redirect: false,
+      },
+    }),
   ],
   controllers: [AppController],
   providers: [

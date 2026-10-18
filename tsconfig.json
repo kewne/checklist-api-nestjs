@@ -21,7 +21,7 @@
     "sourceMap": true,
     "strictBindCallApply": false,
     "strictNullChecks": true,
-    "target": "ES2023",
+    "target": "esnext",
     "types": ["jest"]
   }
 }
