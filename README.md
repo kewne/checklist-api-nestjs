@@ -1,98 +1,144 @@
-<p align="center">
-  <a href="http://nestjs.com/" target="blank"><img src="https://nestjs.com/img/logo-small.svg" width="120" alt="Nest Logo" /></a>
-</p>
+# Checklist API
 
-[circleci-image]: https://img.shields.io/circleci/build/github/nestjs/nest/master?token=abc123def456
-[circleci-url]: https://circleci.com/gh/nestjs/nest
+A [NestJS](https://nestjs.com/) REST API for managing checklists, checklist instances, sharing invitations, and subscriptions, backed by Google Cloud Firestore and Firebase Authentication.
 
-  <p align="center">A progressive <a href="http://nodejs.org" target="_blank">Node.js</a> framework for building efficient and scalable server-side applications.</p>
-    <p align="center">
-<a href="https://www.npmjs.com/~nestjscore" target="_blank"><img src="https://img.shields.io/npm/v/@nestjs/core.svg" alt="NPM Version" /></a>
-<a href="https://www.npmjs.com/~nestjscore" target="_blank"><img src="https://img.shields.io/npm/l/@nestjs/core.svg" alt="Package License" /></a>
-<a href="https://www.npmjs.com/~nestjscore" target="_blank"><img src="https://img.shields.io/npm/dm/@nestjs/common.svg" alt="NPM Downloads" /></a>
-<a href="https://circleci.com/gh/nestjs/nest" target="_blank"><img src="https://img.shields.io/circleci/build/github/nestjs/nest/master" alt="CircleCI" /></a>
-<a href="https://discord.gg/G7Qnnhy" target="_blank"><img src="https://img.shields.io/badge/discord-online-brightgreen.svg" alt="Discord"/></a>
-<a href="https://opencollective.com/nest#backer" target="_blank"><img src="https://opencollective.com/nest/backers/badge.svg" alt="Backers on Open Collective" /></a>
-<a href="https://opencollective.com/nest#sponsor" target="_blank"><img src="https://opencollective.com/nest/sponsors/badge.svg" alt="Sponsors on Open Collective" /></a>
-  <a href="https://paypal.me/kamilmysliwiec" target="_blank"><img src="https://img.shields.io/badge/Donate-PayPal-ff3f59.svg" alt="Donate us"/></a>
-    <a href="https://opencollective.com/nest#sponsor"  target="_blank"><img src="https://img.shields.io/badge/Support%20us-Open%20Collective-41B883.svg" alt="Support us"></a>
-  <a href="https://twitter.com/nestframework" target="_blank"><img src="https://img.shields.io/twitter/follow/nestframework.svg?style=social&label=Follow" alt="Follow us on Twitter"></a>
-</p>
-  <!--[![Backers on Open Collective](https://opencollective.com/nest/backers/badge.svg)](https://opencollective.com/nest#backer)
-  [![Sponsors on Open Collective](https://opencollective.com/nest/sponsors/badge.svg)](https://opencollective.com/nest#sponsor)-->
+## Prerequisites
 
-## Description
+- **Node.js** (v24 recommended, matching `app.yaml`)
+- **pnpm** (`v10+`)
+- **Firebase CLI** (`firebase-tools`) and **Java** (for local Firebase emulators)
+- **Google Cloud SDK** (`gcloud`) for deploying to Google App Engine
 
-[Nest](https://github.com/nestjs/nest) framework TypeScript starter repository.
-
-## Project setup
+## Project Setup
 
 ```bash
-$ pnpm install
+pnpm install
 ```
 
-## Compile and run the project
+## Running the Application
+
+Start the local Firebase emulators (Auth on port `9099`, Firestore on port `8080`, Emulator UI on port `4000`):
+
+```bash
+firebase emulators:start --project demo-test
+```
+
+Run the NestJS server:
 
 ```bash
 # development
-$ pnpm run start
+pnpm run start
 
 # watch mode
-$ pnpm run start:dev
+pnpm run start:dev
 
-# production mode
-$ pnpm run start:prod
+# build and run production bundle
+pnpm run build
+pnpm run start:prod
 ```
 
-## Run tests
+## Testing
 
-```bash
-# unit tests
-$ pnpm run test
+Tests run with Jest against the local Firebase emulators (`FIRESTORE_EMULATOR_HOST=127.0.0.1:8080`, project `demo-test`).
 
-# e2e tests
-$ pnpm run test:e2e
+1. Ensure the Firebase emulators are running:
 
-# test coverage
-$ pnpm run test:cov
-```
+   ```bash
+   firebase emulators:start --project demo-test
+   ```
+
+2. Run tests and linting:
+
+   ```bash
+   # run all tests
+   pnpm test
+
+   # run a specific test file
+   pnpm exec jest --runTestsByPath src/app.controller.spec.ts
+
+   # run tests with coverage
+   pnpm run test:cov
+
+   # lint
+   pnpm lint
+   ```
 
 ## Deployment
 
-When you're ready to deploy your NestJS application to production, there are some key steps you can take to ensure it runs as efficiently as possible. Check out the [deployment documentation](https://docs.nestjs.com/deployment) for more information.
+The API is deployed to **Google App Engine** (`default` service) using `app.yaml`.
 
-If you are looking for a cloud-based platform to deploy your NestJS application, check out [Mau](https://mau.nestjs.com), our official platform for deploying NestJS applications on AWS. Mau makes deployment straightforward and fast, requiring just a few simple steps:
+| Environment | Google Cloud Project        | Service   | Hostname                                     |
+| ----------- | --------------------------- | --------- | -------------------------------------------- |
+| Staging     | `checklists-staging-486418` | `default` | `checklists-staging-486418.ew.r.appspot.com` |
+| Production  | `checklists-486418`         | `default` | `checklists-486418.ew.r.appspot.com`         |
+
+> **Note:** Always pass `--project` explicitly to `gcloud` commands. App Engine deployment (`gcloud app deploy`) uploads local files (configured via `.gcloudignore`) and does not deploy Firestore rules or indexes.
+
+### 1. Preflight Checks
+
+Before deploying to either environment:
+
+1. Check the working tree (`git status --short --branch`) to verify what local files will be uploaded.
+2. Ensure you are authenticated with Google Cloud (`gcloud auth list`, or sign in via `gcloud auth login`).
+3. Verify access to the target App Engine application and obtain its `defaultHostname`:
+
+   ```bash
+   gcloud app describe --project=PROJECT_ID --format='yaml(id,defaultHostname,servingStatus)'
+   ```
+
+4. Build a fresh production bundle (`app.yaml` runs `node dist/src/main`):
+
+   ```bash
+   pnpm build
+   ```
+
+### 2. Deploy to Staging
+
+Deploy to the staging project and promote the new version to receive all traffic:
 
 ```bash
-$ pnpm install -g @nestjs/mau
-$ mau deploy
+gcloud app deploy app.yaml --project=checklists-staging-486418 --promote --quiet
 ```
 
-With Mau, you can deploy your application in just a few clicks, allowing you to focus on building features rather than managing infrastructure.
+Verify the staging deployment:
 
-## Resources
+```bash
+# Confirm traffic split assigns 1.0 to the new version
+gcloud app services describe default --project=checklists-staging-486418 --format='yaml(id,split)'
 
-Check out a few resources that may come in handy when working with NestJS:
+# Verify the live endpoint responds (returns HTTP 401 without credentials)
+curl --silent --show-error --max-time 60 --include https://checklists-staging-486418.ew.r.appspot.com/
+```
 
-- Visit the [NestJS Documentation](https://docs.nestjs.com) to learn more about the framework.
-- For questions and support, please visit our [Discord channel](https://discord.gg/G7Qnnhy).
-- To dive deeper and get more hands-on experience, check out our official video [courses](https://courses.nestjs.com/).
-- Deploy your application to AWS with the help of [NestJS Mau](https://mau.nestjs.com) in just a few clicks.
-- Visualize your application graph and interact with the NestJS application in real-time using [NestJS Devtools](https://devtools.nestjs.com).
-- Need help with your project (part-time to full-time)? Check out our official [enterprise support](https://enterprise.nestjs.com).
-- To stay in the loop and get updates, follow us on [X](https://x.com/nestframework) and [LinkedIn](https://linkedin.com/company/nestjs).
-- Looking for a job, or have a job to offer? Check out our official [Jobs board](https://jobs.nestjs.com).
+### 3. Deploy to Production
 
-## Support
+After verifying staging (and confirming you are ready to promote a new version to receive 100% of production traffic), deploy to the production project:
 
-Nest is an MIT-licensed open source project. It can grow thanks to the sponsors and support by the amazing backers. If you'd like to join them, please [read more here](https://docs.nestjs.com/support).
+```bash
+gcloud app deploy app.yaml --project=checklists-486418 --promote --quiet
+```
 
-## Stay in touch
+Verify the production deployment:
 
-- Author - [Kamil Myśliwiec](https://twitter.com/kammysliwiec)
-- Website - [https://nestjs.com](https://nestjs.com/)
-- Twitter - [@nestframework](https://twitter.com/nestframework)
+```bash
+# Confirm traffic split assigns 1.0 to the new version
+gcloud app services describe default --project=checklists-486418 --format='yaml(id,split)'
 
-## License
+# Verify the live endpoint responds (returns HTTP 401 without credentials)
+curl --silent --show-error --max-time 60 --include https://checklists-486418.ew.r.appspot.com/
+```
 
-Nest is [MIT licensed](https://github.com/nestjs/nest/blob/master/LICENSE).
+### Troubleshooting Deployments
+
+If verification fails, inspect the logs for the deployed version:
+
+```bash
+gcloud app logs read --project=PROJECT_ID --service=default --version=VERSION_ID --limit=50
+```
+
+## Documentation
+
+- User stories: `docs/stories/`
+- Architecture documentation: `docs/architecture/`
+- Domain glossary: `docs/glossary/`
+- REST specification & profiles: `restspec/`
