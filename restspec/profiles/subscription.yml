@@ -1,4 +1,4 @@
-profile: https://checklists.keeoon.dev/profiles/subscription
+profile: https://api.checklists.keeoon.dev/profiles/subscription
 schema:
   application/json: ../schemas/json/subscription.json
 rels: {}

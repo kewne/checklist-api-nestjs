@@ -8,4 +8,4 @@ env:
   production:
     url: https://checklists-486418.ew.r.appspot.com/
     description: Production environment.
-rootProfile: https://checklists.keeoon.dev/profiles/root
+rootProfile: https://api.checklists.keeoon.dev/profiles/root
