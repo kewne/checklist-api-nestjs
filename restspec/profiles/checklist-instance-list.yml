@@ -1,0 +1,6 @@
+profile: https://api.checklists.keeoon.dev/profiles/checklist-instance-list
+schema:
+  application/json:
+    post:
+      request: ../schemas/json/checklist-instance.json
+rels: {}
