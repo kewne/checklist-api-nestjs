@@ -1,0 +1,20 @@
+profile: https://api.checklists.keeoon.dev/profiles/checklist-invitations
+schema:
+  application/json:
+    get:
+      response: ../schemas/json/list.json
+rels:
+  items:
+    - description: An invitation in this list, including expired invitations.
+      profile: https://api.checklists.keeoon.dev/profiles/invitation
+  create:
+    - description: Adds an invitation to this list.
+      profile: https://api.checklists.keeoon.dev/profiles/create-checklist-invitation
+  related:
+    - name: checklist
+      description: The checklist these invitations grant access to.
+      profile: https://api.checklists.keeoon.dev/profiles/checklist
+  up:
+    - name: checklist
+      description: The checklist this invitation list belongs to.
+      profile: https://api.checklists.keeoon.dev/profiles/checklist
