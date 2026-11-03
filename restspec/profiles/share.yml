@@ -1,0 +1,7 @@
+profile: https://api.checklists.keeoon.dev/profiles/share
+schema:
+  application/json:
+    get:
+      response: ../schemas/json/share.json
+    delete: {}
+rels: {}
