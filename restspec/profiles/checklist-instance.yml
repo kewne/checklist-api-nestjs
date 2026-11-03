@@ -3,27 +3,28 @@ schema:
   application/json:
     get:
       response: ../schemas/json/checklist-instance.json
+    put:
+      request: ../schemas/json/create-checklist-instance.json
+    delete: {}
 rels:
   related:
     - name: checklist
-      description: The source checklist.
+      description: The source checklist, when this instance was created from a checklist.
       profile: https://api.checklists.keeoon.dev/profiles/checklist
   update:
     - name: add-item
       description: Adds an item to this instance.
-      profile: https://api.checklists.keeoon.dev/profiles/checklist-instance
+      profile: https://api.checklists.keeoon.dev/profiles/add-checklist-instance-item
     - name: clear-completed-items
-      description: Removes all completed items from this instance.
-      profile: https://api.checklists.keeoon.dev/profiles/checklist-instance
+      description: Removes all completed items from this instance. Available when the instance has completed items.
+      profile: https://api.checklists.keeoon.dev/profiles/clear-completed-checklist-instance-items
   create-from:
     - name: checklist
       description: Creates a checklist from this instance.
-      profile: https://api.checklists.keeoon.dev/profiles/checklist
+      profile: https://api.checklists.keeoon.dev/profiles/create-checklist-from-instance
   complete-item:
-    - name: Item name
-      description: Completes the corresponding item. One link per incomplete item, named using the item's `name`.
-      profile: https://api.checklists.keeoon.dev/profiles/checklist-instance
+    - description: Completes the corresponding item. One link per incomplete item, named using the item's `name`.
+      profile: https://api.checklists.keeoon.dev/profiles/complete-checklist-instance-item
   mark-incomplete-item:
-    - name: Item name
-      description: Marks the corresponding item incomplete. One link per completed item, named using the item's `name`.
-      profile: https://api.checklists.keeoon.dev/profiles/checklist-instance
+    - description: Marks the corresponding item incomplete. One link per completed item, named using the item's `name`.
+      profile: https://api.checklists.keeoon.dev/profiles/mark-checklist-instance-item-incomplete
