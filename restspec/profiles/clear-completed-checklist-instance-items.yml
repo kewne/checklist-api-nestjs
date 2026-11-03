@@ -1,0 +1,6 @@
+profile: https://api.checklists.keeoon.dev/profiles/clear-completed-checklist-instance-items
+schema:
+  application/json:
+    post:
+      location_profile: https://api.checklists.keeoon.dev/profiles/checklist-instance
+rels: {}
