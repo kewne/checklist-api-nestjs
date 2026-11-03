@@ -17,7 +17,7 @@ rels:
   create:
     - name: checklists
       description: Creates a checklist for the current user.
-      profile: https://api.checklists.keeoon.dev/profiles/checklist-list
+      profile: https://api.checklists.keeoon.dev/profiles/create-checklist
     - name: checklist-instances
       description: Creates a checklist instance for the current user.
-      profile: https://api.checklists.keeoon.dev/profiles/checklist-instance-list
+      profile: https://api.checklists.keeoon.dev/profiles/create-checklist-instance
