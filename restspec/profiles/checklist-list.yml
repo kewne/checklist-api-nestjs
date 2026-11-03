@@ -1,6 +1,11 @@
 profile: https://api.checklists.keeoon.dev/profiles/checklist-list
 schema:
   application/json:
+    get:
+      response: ../schemas/json/list.json
     post:
       request: ../schemas/json/checklist.json
-rels: {}
+rels:
+  item:
+    - description: A checklist in this list.
+      profile: https://api.checklists.keeoon.dev/profiles/checklist
