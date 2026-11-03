@@ -1,0 +1,21 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "Replace checklist",
+  "type": "object",
+  "required": ["title"],
+  "properties": {
+    "title": { "type": "string", "minLength": 1 },
+    "items": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": ["title"],
+        "properties": {
+          "id": { "type": "string" },
+          "title": { "type": "string", "minLength": 1 },
+          "description": { "type": "string" }
+        }
+      }
+    }
+  }
+}

@@ -3,11 +3,15 @@ schema:
   application/json:
     get:
       response: ../schemas/json/checklist.json
+    put:
+      request: ../schemas/json/replace-checklist.json
+      response: ../schemas/json/checklist.json
+    delete: {}
 rels:
   create-from:
     - name: instance
       description: Creates an instance from this checklist.
-      profile: https://api.checklists.keeoon.dev/profiles/checklist-instance
+      profile: https://api.checklists.keeoon.dev/profiles/create-checklist-instance-from-checklist
   related:
     - name: shares
       description: Lists the shares for this checklist.
