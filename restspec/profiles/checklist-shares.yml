@@ -1,0 +1,20 @@
+profile: https://api.checklists.keeoon.dev/profiles/checklist-shares
+schema:
+  application/json:
+    get:
+      response: ../schemas/json/list.json
+rels:
+  items:
+    - description: A share in this list.
+      profile: https://api.checklists.keeoon.dev/profiles/share
+  related:
+    - name: invitations
+      description: Invitations to share this checklist.
+      profile: https://api.checklists.keeoon.dev/profiles/checklist-invitations
+    - name: checklist
+      description: The checklist these shares grant access to.
+      profile: https://api.checklists.keeoon.dev/profiles/checklist
+  up:
+    - name: checklist
+      description: The checklist this share list belongs to.
+      profile: https://api.checklists.keeoon.dev/profiles/checklist
