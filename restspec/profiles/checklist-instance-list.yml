@@ -1,6 +1,12 @@
 profile: https://api.checklists.keeoon.dev/profiles/checklist-instance-list
 schema:
   application/json:
-    post:
-      request: ../schemas/json/checklist-instance.json
-rels: {}
+    get:
+      response: ../schemas/json/list.json
+rels:
+  items:
+    - description: A checklist instance in this list.
+      profile: https://api.checklists.keeoon.dev/profiles/checklist-instance
+  create:
+    - description: Adds a checklist instance to this list.
+      profile: https://api.checklists.keeoon.dev/profiles/create-checklist-instance
