@@ -1,0 +1,9 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "Create checklist from instance",
+  "type": "object",
+  "properties": {
+    "title": { "$ref": "create-checklist.json#/properties/title" },
+    "items": { "$ref": "create-checklist.json#/properties/items" }
+  }
+}
