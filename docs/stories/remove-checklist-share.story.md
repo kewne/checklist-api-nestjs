@@ -15,8 +15,8 @@ As a checklist owner, I want to remove a share so that the checklist isn't acces
 
 ## Related Stories
 
-- [Create Share Invitation](create-share-invitation.md)
-- [Accept Share Invitation](accept-share-invitation.md)
-- [List Checklist Shares](list-checklist-shares.md)
-- [Delete Share Invitation](delete-share-invitation.md)
-- [Update Checklist Share](update-checklist-share.md)
+- [Create Share Invitation](create-share-invitation.story.md)
+- [Accept Share Invitation](accept-share-invitation.story.md)
+- [List Checklist Shares](list-checklist-shares.story.md)
+- [Delete Share Invitation](delete-share-invitation.story.md)
+- [Update Checklist Share](update-checklist-share.story.md)

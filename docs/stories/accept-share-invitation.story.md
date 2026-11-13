@@ -17,6 +17,6 @@ As a user, I want to accept a checklist share invitation so that I can access a 
 
 ## Related Stories
 
-- [Share Checklist](share-checklist.md)
-- [List Shared Checklists](list-shared-checklists.md)
-- [Create Checklist Instance from Template](create-instance-from-checklist.md)
+- [Share Checklist](share-checklist.story.md)
+- [List Shared Checklists](list-shared-checklists.story.md)
+- [Create Checklist Instance from Template](create-instance-from-checklist.story.md)

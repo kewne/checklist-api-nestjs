@@ -9,5 +9,5 @@ As a user, I want to list all of my checklist templates so that I can see and ma
 
 ## Related Stories
 
-- [Create Checklist](create-checklist.md)
-- [View Checklist](view-checklist.md)
+- [Create Checklist](create-checklist.story.md)
+- [View Checklist](view-checklist.story.md)

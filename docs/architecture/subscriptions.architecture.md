@@ -26,6 +26,6 @@ Deriving status from the end date avoids storing two values that could contradic
 
 ## Related Docs
 
-- [View My Subscription](../stories/view-my-subscription.md)
-- [Authorization](authorization.md)
-- [HATEOAS](hateoas.md)
+- [View My Subscription](../stories/view-my-subscription.story.md)
+- [Authorization](authorization.architecture.md)
+- [HATEOAS](hateoas.architecture.md)

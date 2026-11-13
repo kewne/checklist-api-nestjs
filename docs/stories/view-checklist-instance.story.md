@@ -15,9 +15,9 @@ As a user, I want to view a specific checklist instance so that I can see the cu
 
 ## Related Stories
 
-- [Create Checklist Instance from Template](create-instance-from-checklist.md)
-- [Create Checklist Instance from Scratch](create-instance-from-scratch.md)
-- [Update Checklist Instance](update-checklist-instance.md)
-- [Delete Checklist Instance](delete-checklist-instance.md)
-- [Complete a Checklist Item](complete-item.md)
-- [Add Item to Checklist Instance](add-item-to-instance.md)
+- [Create Checklist Instance from Template](create-instance-from-checklist.story.md)
+- [Create Checklist Instance from Scratch](create-instance-from-scratch.story.md)
+- [Update Checklist Instance](update-checklist-instance.story.md)
+- [Delete Checklist Instance](delete-checklist-instance.story.md)
+- [Complete a Checklist Item](complete-item.story.md)
+- [Add Item to Checklist Instance](add-item-to-instance.story.md)

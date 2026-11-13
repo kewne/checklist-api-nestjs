@@ -13,6 +13,6 @@ As a user, I want to create a checklist template so that I can reuse it to produ
 
 ## Related Stories
 
-- [List My Checklists](list-my-checklists.md)
-- [View Checklist](view-checklist.md)
-- [Share Checklist](share-checklist.md)
+- [List My Checklists](list-my-checklists.story.md)
+- [View Checklist](view-checklist.story.md)
+- [Share Checklist](share-checklist.story.md)

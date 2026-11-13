@@ -26,4 +26,4 @@ Alternatives considered:
 
 ## Related Docs
 
-- [HATEOAS](hateoas.md)
+- [HATEOAS](hateoas.architecture.md)

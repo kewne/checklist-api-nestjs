@@ -12,7 +12,7 @@ As a user, I want to view a specific checklist template so that I can inspect it
 
 ## Related Stories
 
-- [List My Checklists](list-my-checklists.md)
-- [Update Checklist](update-checklist.md)
-- [Delete Checklist](delete-checklist.md)
-- [Create Checklist Instance from Template](create-instance-from-checklist.md)
+- [List My Checklists](list-my-checklists.story.md)
+- [Update Checklist](update-checklist.story.md)
+- [Delete Checklist](delete-checklist.story.md)
+- [Create Checklist Instance from Template](create-instance-from-checklist.story.md)

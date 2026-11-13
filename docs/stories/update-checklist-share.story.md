@@ -17,7 +17,7 @@ As a user, I want to change the title of a checklist share so that I can give it
 
 ## Related Stories
 
-- [Create Share Invitation](create-share-invitation.md)
-- [Accept Share Invitation](accept-share-invitation.md)
-- [List Checklist Shares](list-checklist-shares.md)
-- [Remove Checklist Share](remove-checklist-share.md)
+- [Create Share Invitation](create-share-invitation.story.md)
+- [Accept Share Invitation](accept-share-invitation.story.md)
+- [List Checklist Shares](list-checklist-shares.story.md)
+- [Remove Checklist Share](remove-checklist-share.story.md)

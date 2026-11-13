@@ -40,7 +40,7 @@ Relations used across the API:
 | --------------- | ------------------------------------------------------------------------ |
 | `self`          | The canonical URL of the current resource                                |
 | `related`       | A resource that this resource was derived from or is linked to           |
-| `create`        | Create a new subordinate resource (see [rels/create.md](rels/create.md)) |
+| `create`        | Create a new subordinate resource (see [rels/create.architecture.md](rels/create.architecture.md)) |
 | `create-from`   | Create a new resource using the current resource as a template           |
 | `update`        | Modify the current resource or a part of it                              |
 | `delete`        | Delete the current resource                                              |
@@ -50,7 +50,7 @@ Relations used across the API:
 
 ## Related Docs
 
-- [The `create` relation](rels/create.md)
-- [Resource link enrichers](resource-link-enrichers.md)
-- [Authorization](authorization.md)
-- [View received invitation](../stories/view-received-invitation.md)
+- [The `create` relation](rels/create.architecture.md)
+- [Resource link enrichers](resource-link-enrichers.architecture.md)
+- [Authorization](authorization.architecture.md)
+- [View received invitation](../stories/view-received-invitation.story.md)

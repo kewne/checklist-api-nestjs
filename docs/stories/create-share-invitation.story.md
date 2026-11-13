@@ -13,7 +13,7 @@ As a user, I want to share my checklist with other users so that they can view a
 
 ## Related Stories
 
-- [List Checklist Shares](list-checklist-shares.md)
-- [Remove Checklist Share](remove-checklist-share.md)
-- [List Shared Checklists](list-shared-checklists.md)
-- [Create Checklist](create-checklist.md)
+- [List Checklist Shares](list-checklist-shares.story.md)
+- [Remove Checklist Share](remove-checklist-share.story.md)
+- [List Shared Checklists](list-shared-checklists.story.md)
+- [Create Checklist](create-checklist.story.md)

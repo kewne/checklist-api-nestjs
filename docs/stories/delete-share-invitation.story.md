@@ -15,8 +15,8 @@ As a checklist owner, I want to delete share invitations so that they can't be a
 
 ## Related Stories
 
-- [Create Share Invitation](create-share-invitation.md)
-- [List Checklist Share Invitations](list-checklist-share-invitations.md)
-- [Accept Share Invitation](accept-share-invitation.md)
-- [Get Share Invitation](get-share-invitation.md)
-- [List Checklist Shares](list-checklist-shares.md)
+- [Create Share Invitation](create-share-invitation.story.md)
+- [List Checklist Share Invitations](list-checklist-share-invitations.story.md)
+- [Accept Share Invitation](accept-share-invitation.story.md)
+- [Get Share Invitation](get-share-invitation.story.md)
+- [List Checklist Shares](list-checklist-shares.story.md)

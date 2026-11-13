@@ -20,6 +20,6 @@ As a user, I want to see the checklists that have been explicitly shared with me
 
 ## Related Stories
 
-- [Share Checklist](share-checklist.md)
-- [Create Checklist Instance from Template](create-instance-from-checklist.md)
-- [Create Checklist](create-checklist.md)
+- [Share Checklist](share-checklist.story.md)
+- [Create Checklist Instance from Template](create-instance-from-checklist.story.md)
+- [Create Checklist](create-checklist.story.md)

@@ -12,5 +12,5 @@ As a user, I want to replace a checklist template so that I can keep it up to da
 
 ## Related Stories
 
-- [View Checklist](view-checklist.md)
-- [Delete Checklist](delete-checklist.md)
+- [View Checklist](view-checklist.story.md)
+- [Delete Checklist](delete-checklist.story.md)

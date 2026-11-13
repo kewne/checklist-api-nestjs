@@ -13,5 +13,5 @@ As a user, I want to add a new item to an existing checklist instance so that I 
 
 ## Related Stories
 
-- [View Checklist Instance](view-checklist-instance.md)
-- [Complete a Checklist Item](complete-item.md)
+- [View Checklist Instance](view-checklist-instance.story.md)
+- [Complete a Checklist Item](complete-item.story.md)

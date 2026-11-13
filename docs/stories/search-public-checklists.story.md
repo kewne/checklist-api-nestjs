@@ -23,6 +23,6 @@ As a user, I want to search for public checklists so that I can discover useful 
 
 ## Related Stories
 
-- [Create Checklist](create-checklist.md)
-- [Create Checklist Instance from Template](create-instance-from-checklist.md)
-- [List Shared Checklists](list-shared-checklists.md)
+- [Create Checklist](create-checklist.story.md)
+- [Create Checklist Instance from Template](create-instance-from-checklist.story.md)
+- [List Shared Checklists](list-shared-checklists.story.md)

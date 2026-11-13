@@ -17,6 +17,6 @@ As a user, I want to see who has access to my checklist so that I can manage sha
 
 ## Related Stories
 
-- [Share Checklist](share-checklist.md)
-- [Remove Checklist Share](remove-checklist-share.md)
-- [View Checklist](view-checklist.md)
+- [Share Checklist](share-checklist.story.md)
+- [Remove Checklist Share](remove-checklist-share.story.md)
+- [View Checklist](view-checklist.story.md)

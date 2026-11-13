@@ -11,5 +11,5 @@ As a user, I want to replace a checklist instance so that I can correct its titl
 
 ## Related Stories
 
-- [View Checklist Instance](view-checklist-instance.md)
-- [Delete Checklist Instance](delete-checklist-instance.md)
+- [View Checklist Instance](view-checklist-instance.story.md)
+- [Delete Checklist Instance](delete-checklist-instance.story.md)

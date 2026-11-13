@@ -10,5 +10,5 @@ As a user, I want to delete a checklist template so that I can remove templates 
 
 ## Related Stories
 
-- [View Checklist](view-checklist.md)
-- [Update Checklist](update-checklist.md)
+- [View Checklist](view-checklist.story.md)
+- [Update Checklist](update-checklist.story.md)

@@ -21,8 +21,8 @@ As a user, I want to see the share invitations I've sent for my checklists so th
 
 ## Related Stories
 
-- [Create Share Invitation](create-share-invitation.md)
-- [Get Share Invitation](get-share-invitation.md)
-- [Accept Share Invitation](accept-share-invitation.md)
-- [List Checklist Shares](list-checklist-shares.md)
-- [View Checklist](view-checklist.md)
+- [Create Share Invitation](create-share-invitation.story.md)
+- [Get Share Invitation](get-share-invitation.story.md)
+- [Accept Share Invitation](accept-share-invitation.story.md)
+- [List Checklist Shares](list-checklist-shares.story.md)
+- [View Checklist](view-checklist.story.md)

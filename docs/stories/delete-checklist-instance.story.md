@@ -11,5 +11,5 @@ As a user, I want to delete a checklist instance so that I can remove instances 
 
 ## Related Stories
 
-- [View Checklist Instance](view-checklist-instance.md)
-- [Update Checklist Instance](update-checklist-instance.md)
+- [View Checklist Instance](view-checklist-instance.story.md)
+- [Update Checklist Instance](update-checklist-instance.story.md)

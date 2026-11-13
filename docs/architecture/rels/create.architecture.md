@@ -38,4 +38,4 @@ The response to following the link includes a `self` link for the newly created 
 }
 ```
 
-- [`create-from`](./create-from.md) - Creates a new resource based on an existing resource
+- [`create-from`](./create-from.architecture.md) - Creates a new resource based on an existing resource

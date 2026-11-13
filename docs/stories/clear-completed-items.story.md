@@ -15,6 +15,6 @@ As a user, I want to remove all completed items from a checklist instance in one
 
 ## Related Stories
 
-- [Complete a Checklist Item](complete-item.md)
-- [Reopen a Checklist Item](reopen-item.md)
-- [View Checklist Instance](view-checklist-instance.md)
+- [Complete a Checklist Item](complete-item.story.md)
+- [Reopen a Checklist Item](reopen-item.story.md)
+- [View Checklist Instance](view-checklist-instance.story.md)

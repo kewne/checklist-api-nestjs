@@ -11,5 +11,5 @@ As a user, I want to create a checklist instance without using a template so tha
 
 ## Related Stories
 
-- [List My Checklist Instances](list-my-instances.md)
-- [View Checklist Instance](view-checklist-instance.md)
+- [List My Checklist Instances](list-my-instances.story.md)
+- [View Checklist Instance](view-checklist-instance.story.md)

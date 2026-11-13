@@ -14,5 +14,5 @@ As a user, I want to mark a checklist item as complete so that I can record that
 
 ## Related Stories
 
-- [View Checklist Instance](view-checklist-instance.md)
-- [Reopen a Checklist Item](reopen-item.md)
+- [View Checklist Instance](view-checklist-instance.story.md)
+- [Reopen a Checklist Item](reopen-item.story.md)

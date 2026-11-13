@@ -17,7 +17,7 @@ As a user, I want to create a checklist instance from an existing checklist temp
 
 ## Related Stories
 
-- [View Checklist](view-checklist.md)
-- [View Checklist Instance](view-checklist-instance.md)
-- [Share Checklist](share-checklist.md)
-- [View Shared Checklists](list-shared-checklists.md)
+- [View Checklist](view-checklist.story.md)
+- [View Checklist Instance](view-checklist-instance.story.md)
+- [Share Checklist](share-checklist.story.md)
+- [View Shared Checklists](list-shared-checklists.story.md)

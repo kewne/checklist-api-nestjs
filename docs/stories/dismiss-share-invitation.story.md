@@ -12,7 +12,7 @@ As a user, I want to dismiss a checklist share invitation so that I can decline 
 
 ## Related Stories
 
-- [View Received Invitation](view-received-invitation.md)
-- [Accept Share Invitation](accept-share-invitation.md)
-- [Create Share Invitation](create-share-invitation.md)
-- [Delete Share Invitation](delete-share-invitation.md)
+- [View Received Invitation](view-received-invitation.story.md)
+- [Accept Share Invitation](accept-share-invitation.story.md)
+- [Create Share Invitation](create-share-invitation.story.md)
+- [Delete Share Invitation](delete-share-invitation.story.md)

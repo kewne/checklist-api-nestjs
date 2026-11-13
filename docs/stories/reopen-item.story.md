@@ -13,5 +13,5 @@ As a user, I want to mark a completed checklist item as incomplete so that I can
 
 ## Related Stories
 
-- [View Checklist Instance](view-checklist-instance.md)
-- [Complete a Checklist Item](complete-item.md)
+- [View Checklist Instance](view-checklist-instance.story.md)
+- [Complete a Checklist Item](complete-item.story.md)

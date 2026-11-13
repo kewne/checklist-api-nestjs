@@ -16,7 +16,7 @@ As a user, I want to get a checklist share invitation so that I can view its det
 
 ## Related Stories
 
-- [Create Share Invitation](create-share-invitation.md)
-- [Accept Share Invitation](accept-share-invitation.md)
-- [List Checklist Shares](list-checklist-shares.md)
-- [View Received Invitation](view-received-invitation.md)
+- [Create Share Invitation](create-share-invitation.story.md)
+- [Accept Share Invitation](accept-share-invitation.story.md)
+- [List Checklist Shares](list-checklist-shares.story.md)
+- [View Received Invitation](view-received-invitation.story.md)
