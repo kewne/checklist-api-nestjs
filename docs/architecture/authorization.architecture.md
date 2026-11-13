@@ -1,62 +1,51 @@
 # Authorization with CASL Abilities
 
+This document describes how the application authorizes requests using CASL abilities.
+
+## Context
+
+Protected operations depend on who the caller is and how they relate to the target resource, such as owning a checklist or holding a share. Scattering ad-hoc ownership checks across controllers and services duplicates rules and risks inconsistent enforcement. Centralizing permission rules in one factory keeps access control declarative, consistent, and easy to audit.
+
 ## Overview
 
-Authorization is implemented using CASL abilities. Each authenticated request receives an ability object representing what that user is permitted to do. Controllers check permissions using this ability and reject unauthorized requests before invoking service logic.
+When an authenticated request arrives, the authorization pipeline builds a request-scoped `AppAbility` from the authenticated user and attaches it to the request. Controllers and services check this ability against domain subjects before completing restricted operations. Failed checks throw `ForbiddenError`, which a global exception filter converts into an HTTP `403 Forbidden` response.
 
-## Rationale
+```mermaid
+flowchart LR
+    Req[HTTP Request] --> Guard[AuthGuard]
+    Guard -->|Attaches AuthUser| Interceptor[CaslInterceptor]
+    Interceptor -->|Builds AppAbility| Factory[AbilityFactory]
+    Factory -->|Attaches AppAbility| Decorator["@Ability() Decorator"]
+    Decorator --> Check[Controller or Service Check]
+    Check -->|ForbiddenError| Filter[CaslForbiddenErrorFilter]
+    Filter --> Resp403[403 Forbidden Response]
+    Check -->|Authorized| Handler[Domain Operation]
+```
 
-CASL abilities centralize authorization rules in a single place (`AbilityFactory`), avoiding scattered permission checks across multiple services and preventing inconsistent enforcement. Placing checks in controllers rather than services ensures:
+## Building Blocks
 
-1. **Visibility**: A reader can see at a glance which operations require which permissions by reading the controller
-2. **Consistency**: Authorization rules are the single responsibility of the controller; services trust that only authorized requests reach them
-3. **Decoupling**: Services need not know about authorization, access control, or resource ownership — they can focus purely on domain logic
+### Ability Definition
 
-Rejecting unauthorized requests early in the controller prevents services from executing operations they should not have attempted in the first place.
+[`AbilityFactory`](../../src/casl/ability.factory.ts) (tested in [`ability.factory.spec.ts`](../../src/casl/ability.factory.spec.ts)) defines all permission rules in `createForUser(user)`. It builds an `AppAbility` that maps actions (`create`, `read`, `update`, `delete`) to subject types and attribute conditions—for example, restricting [checklist share invitation](../glossary/checklist-share-invitation.glossary.md) management to the checklist creator.
 
-## Behaviour and Invariants
+### Request Attachment and Extraction
 
-- Every authenticated HTTP request receives an ability object derived from the authenticated user
-- Controllers must check the ability before passing control to a service
-- If an ability check fails, the controller returns an error response; the service is never invoked
-- A service method should assume that any request reaching it has already been authorized
-- Ability objects are immutable and scoped to a single request; they cannot be shared or reused across requests
+[`AuthGuard`](../../src/auth/auth.guard.ts) verifies the bearer token and attaches an `AuthUser` to the request. [`CaslInterceptor`](../../src/casl/casl.interceptor.ts) (tested in [`casl.interceptor.spec.ts`](../../src/casl/casl.interceptor.spec.ts)) runs on each request; when an `AuthUser` is present, it creates an `AppAbility` via [`AbilityFactory`](../../src/casl/ability.factory.ts) and attaches it under `ABILITY_KEY`.
 
-## Authorization Patterns
+Controller handlers retrieve the ability using the [`@Ability()`](../../src/casl/ability.decorator.ts) parameter decorator (tested in [`ability.decorator.spec.ts`](../../src/casl/ability.decorator.spec.ts)). If no ability is attached to the request, [`@Ability()`](../../src/casl/ability.decorator.ts) throws `UnauthorizedException`.
 
-### Pattern 1: Controller-Based Authorization
+### Permission Enforcement
 
-For simple read operations where authorization depends only on user role or resource ownership:
+Callers wrap domain data with CASL's `subject()` helper and enforce permissions with `ForbiddenError.from(ability).throwUnlessCan(action, subjectInstance)`. Checks happen in one of two places depending on when the target resource is available:
 
-1. Controller checks ability using `ForbiddenError.from(ability).throwUnlessCan()`
-2. If check passes, controller invokes service method without passing ability
-3. Service assumes authorization has already been verified
+- **Controller check**: The controller constructs or fetches the subject and checks the ability directly before returning data or mutating state (for example, [`SubscriptionController.findOne`](../../src/subscription/subscription.controller.ts) and [`ChecklistInstanceController.findOne`](../../src/checklist/instance/checklist-instance.controller.ts)).
+- **Service check**: When a service must load the resource first to verify existence or state, the controller either passes `AppAbility` to the service (for example, [`ShareService.listShares`](../../src/checklist/share.service.ts) and [`InstanceService.completeItem`](../../src/checklist/instance/instance.service.ts)) or passes an authorization callback that the service runs after loading the resource (for example, [`InvitationService.createInvitation`](../../src/checklist/invitation/invitation.service.ts) and [`InstanceService.addItem`](../../src/checklist/instance/instance.service.ts)).
 
-**When to use**: Simple resource queries where all authenticated users can read if they own the resource.
+### Error Handling
 
-### Pattern 2: Service-Based Authorization
-
-For operations where authorization is tightly coupled with business logic or depends on resource state:
-
-1. Controller passes `AppAbility` to service method
-2. Service fetches resource and performs authorization check using `ForbiddenError.from(ability).throwUnlessCan()`
-3. Service proceeds with business logic only after authorization succeeds
-
-**When to use**:
-
-- Delete operations where resource state affects permissions
-- Operations that need to fetch the resource anyway for validation
-- Multi-step operations where authorization applies to each step
-
-**Examples in codebase**:
-
-- `InvitationService.listInvitations(checklistId, ability)` — checks 'read' permission on invitation resource
-- `ShareService.listShares(checklistId, ability)` — checks 'read' permission on share resource
-- `ShareService.getShare(checklistId, shareId, ability)` — checks 'read' permission before returning share
-- `InvitationService.deleteInvitation(checklistId, invitationId, ability)` — checks 'delete' permission before deleting
-
-**Rationale**: Keeps authorization logic co-located with business logic, reduces repeated resource fetches, and makes complex authorization requirements explicit and testable.
+[`CaslForbiddenErrorFilter`](../../src/casl/casl-forbidden-error.filter.ts), registered globally in [`CaslModule`](../../src/casl/casl.module.ts), catches any unhandled `ForbiddenError` and responds with HTTP `403 Forbidden`.
 
 ## Related Docs
 
 - [HATEOAS](hateoas.architecture.md): successful representations are independent of the caller except for invitation-preview acceptance-link visibility; authorization is enforced when linked destinations are requested
+- [Subscription State](subscriptions.architecture.md): current-user navigation redirects to the canonical subscription resource, which enforces authorization independently

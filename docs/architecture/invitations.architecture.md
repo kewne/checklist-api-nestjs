@@ -18,3 +18,8 @@ A token-based approach avoids all of this: the invitation ID itself is the secre
 - Successful acceptance atomically creates a share for the accepting user and deletes the invitation — there is no intermediate "accepted but pending" state
 - A user may hold at most one active share per checklist at a time
 - Only the checklist owner can create or revoke invitations and shares
+
+## Related Docs
+
+- [Authorization](authorization.architecture.md)
+- [Checklist Share Invitation](../glossary/checklist-share-invitation.glossary.md)
