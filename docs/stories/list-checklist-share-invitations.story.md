@@ -26,3 +26,5 @@ As a user, I want to see the share invitations I've sent for my checklists so th
 - [Accept Share Invitation](accept-share-invitation.story.md)
 - [List Checklist Shares](list-checklist-shares.story.md)
 - [View Checklist](view-checklist.story.md)
+- [Checklist Sharing: Invitation Flow](../architecture/invitations.architecture.md)
+- [Checklist Share Invitation](../glossary/checklist-share-invitation.glossary.md)

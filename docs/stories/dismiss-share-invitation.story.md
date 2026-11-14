@@ -16,3 +16,5 @@ As a user, I want to dismiss a checklist share invitation so that I can decline 
 - [Accept Share Invitation](accept-share-invitation.story.md)
 - [Create Share Invitation](create-share-invitation.story.md)
 - [Delete Share Invitation](delete-share-invitation.story.md)
+- [Checklist Sharing: Invitation Flow](../architecture/invitations.architecture.md)
+- [Checklist Share Invitation](../glossary/checklist-share-invitation.glossary.md)

@@ -20,3 +20,5 @@ As a user, I want to get a checklist share invitation so that I can view its det
 - [Accept Share Invitation](accept-share-invitation.story.md)
 - [List Checklist Shares](list-checklist-shares.story.md)
 - [View Received Invitation](view-received-invitation.story.md)
+- [Checklist Sharing: Invitation Flow](../architecture/invitations.architecture.md)
+- [Checklist Share Invitation](../glossary/checklist-share-invitation.glossary.md)

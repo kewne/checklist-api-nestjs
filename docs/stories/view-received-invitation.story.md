@@ -15,6 +15,10 @@ As a user, I want to view details of a share invitation I received so that I can
 - The acceptance link is only present when the invitation has not expired
 - The acceptance link is not shown when the user already has read access to the checklist (as owner or existing share recipient)
 
+## Related Stories
+
 - [Get Share Invitation](get-share-invitation.story.md)
 - [Create Share Invitation](create-share-invitation.story.md)
 - [Accept Share Invitation](accept-share-invitation.story.md)
+- [Checklist Sharing: Invitation Flow](../architecture/invitations.architecture.md)
+- [Checklist Share Invitation](../glossary/checklist-share-invitation.glossary.md)

@@ -20,3 +20,5 @@ As a checklist owner, I want to delete share invitations so that they can't be a
 - [Accept Share Invitation](accept-share-invitation.story.md)
 - [Get Share Invitation](get-share-invitation.story.md)
 - [List Checklist Shares](list-checklist-shares.story.md)
+- [Checklist Sharing: Invitation Flow](../architecture/invitations.architecture.md)
+- [Checklist Share Invitation](../glossary/checklist-share-invitation.glossary.md)

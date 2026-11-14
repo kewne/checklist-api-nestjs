@@ -17,3 +17,5 @@ As a user, I want to share my checklist with other users so that they can view a
 - [Remove Checklist Share](remove-checklist-share.story.md)
 - [List Shared Checklists](list-shared-checklists.story.md)
 - [Create Checklist](create-checklist.story.md)
+- [Checklist Sharing: Invitation Flow](../architecture/invitations.architecture.md)
+- [Checklist Share Invitation](../glossary/checklist-share-invitation.glossary.md)
