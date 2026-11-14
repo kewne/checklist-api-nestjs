@@ -1,23 +1,31 @@
 # Checklist Sharing: Invitation Flow
 
+This document describes how the application shares checklists across users through token-based invitations.
+
+## Context
+
+Email-based invitations require the owner to know the recipient's registered email, tie acceptance to identity lookup, and force the application to send messages. Token-based invitations avoid these constraints. The invitation ID acts as a bearer token that the owner shares through any external channel, and any authenticated user can accept it.
+
 ## Overview
 
-Sharing a checklist uses a token-based invitation: the owner creates an invitation and shares the resulting link through any channel; any authenticated user who follows that link can accept it. No email addresses are involved.
+A checklist owner creates an invitation with a label (`title`) to track who the link is for. The system stores the invitation with a 24-hour expiration timestamp and returns a location for the new invitation resource. Recipients inspect the invitation preview and accept or dismiss it. Accepting a valid invitation creates a read-only share for the caller and deletes the invitation.
 
-## Rationale
+## Building Blocks
 
-An email-based invitation would require the owner to know the recipient's exact registered email, would couple acceptance to identity resolution, and would silently break if the recipient is not yet registered. It also forces the system to act as a messaging layer.
+### Bearer-Token Invitations
 
-A token-based approach avoids all of this: the invitation ID itself is the secret. The owner distributes the link however they choose (messaging, email client, etc.), and the system only needs to verify that the accepting user is authenticated. The `title` field exists purely as a human-readable label for the owner to track what the invitation is for.
+Each invitation is a short-lived capability scoped to a single checklist. Its generated ID is the secret token, and its `title` is a private label for the owner. Invitations expire after 24 hours so unused links do not remain valid indefinitely.
 
-## Behaviour and Invariants
+### Owner and Recipient Views
 
-- An invitation is created with a title (owner's label) and produces an opaque invitation ID
-- Any authenticated user who presents a valid invitation ID can accept it — there is no recipient restriction
-- An invitation expires 24 hours after creation; acceptance after expiry is rejected
-- Successful acceptance atomically creates a share for the accepting user and deletes the invitation — there is no intermediate "accepted but pending" state
-- A user may hold at most one active share per checklist at a time
-- Only the checklist owner can create or revoke invitations and shares
+The invitation resource separates owner management from recipient onboarding:
+
+- **Owner view**: Exposes the private `title` and creation timestamp so the owner can track outstanding links, and links to the recipient preview while the invitation is active.
+- **Recipient preview**: Exposes only the checklist title and expiration time, and surfaces the `accept` link only when the invitation is unexpired and the caller does not already have read access.
+
+### Single-Use Exchange
+
+Accepting an invitation exchanges the temporary token for a permanent share carrying the invitation's `title` and deletes the invitation. Because the invitation is deleted on acceptance, dismissal, or owner revocation, no separate status field is stored—any stored invitation is still pending.
 
 ## Related Docs
 
