@@ -6,6 +6,7 @@ As a checklist owner, I want to delete share invitations so that they can't be a
 
 ## Acceptance Criteria
 
+- The user must have an active subscription
 - A checklist owner can delete a share invitation they have created
 - Once deleted, an invitation can no longer be accepted by recipients
 - A deleted invitation cannot be reactivated
@@ -15,6 +16,7 @@ As a checklist owner, I want to delete share invitations so that they can't be a
 
 ## Related Stories
 
+- [Create Subscription](create-subscription.story.md)
 - [Create Share Invitation](create-share-invitation.story.md)
 - [List Checklist Share Invitations](list-checklist-share-invitations.story.md)
 - [Accept Share Invitation](accept-share-invitation.story.md)

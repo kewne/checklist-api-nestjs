@@ -4,6 +4,7 @@ As a user, I want to mark a checklist item as complete so that I can record that
 
 ## Acceptance Criteria
 
+- The user must have an active subscription
 - An item can be marked complete by referencing its instance ID and item ID
 - An optional note (up to 500 characters) can be supplied when completing the item
 - Completing an item records the completion timestamp and the provided note
@@ -14,5 +15,6 @@ As a user, I want to mark a checklist item as complete so that I can record that
 
 ## Related Stories
 
+- [Create Subscription](create-subscription.story.md)
 - [View Checklist Instance](view-checklist-instance.story.md)
 - [Reopen a Checklist Item](reopen-item.story.md)

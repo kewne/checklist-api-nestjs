@@ -6,6 +6,7 @@ As a checklist owner, I want to remove a share so that the checklist isn't acces
 
 ## Acceptance Criteria
 
+- The user must have an active subscription
 - A checklist owner can remove an active share they have granted
 - Once removed, the recipient can no longer access the shared checklist
 - The checklist itself remains intact for the owner
@@ -15,6 +16,7 @@ As a checklist owner, I want to remove a share so that the checklist isn't acces
 
 ## Related Stories
 
+- [Create Subscription](create-subscription.story.md)
 - [Create Share Invitation](create-share-invitation.story.md)
 - [Accept Share Invitation](accept-share-invitation.story.md)
 - [List Checklist Shares](list-checklist-shares.story.md)

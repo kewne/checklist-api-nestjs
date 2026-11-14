@@ -6,6 +6,7 @@ As a user, I want to accept a checklist share invitation so that I can access a 
 
 ## Acceptance Criteria
 
+- The user must have an active subscription
 - A user can accept a pending invitation by calling an endpoint.
 - The invitation must have been created within the last 24 hours
 - A successful acceptance replaces the invitation with a share granting the user read-only access to the checklist
@@ -17,6 +18,7 @@ As a user, I want to accept a checklist share invitation so that I can access a 
 
 ## Related Stories
 
+- [Create Subscription](create-subscription.story.md)
 - [Create Share Invitation](create-share-invitation.story.md)
 - [List Shared Checklists](list-shared-checklists.story.md)
 - [Create Checklist Instance from Template](create-instance-from-checklist.story.md)

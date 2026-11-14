@@ -6,6 +6,7 @@ As a user, I want to share my checklist with other users so that they can view a
 
 ## Acceptance Criteria
 
+- The user must have an active subscription
 - Only the checklist owner can share the checklist
 - Sharing creates an **invitation** with an unguessable link or token that can be used to identify the invitation
 - Attempting to share a non-existent checklist results in a not found error
@@ -13,6 +14,7 @@ As a user, I want to share my checklist with other users so that they can view a
 
 ## Related Stories
 
+- [Create Subscription](create-subscription.story.md)
 - [List Checklist Shares](list-checklist-shares.story.md)
 - [Remove Checklist Share](remove-checklist-share.story.md)
 - [List Shared Checklists](list-shared-checklists.story.md)

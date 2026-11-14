@@ -6,12 +6,14 @@ As a user, I want to dismiss a checklist share invitation so that I can decline 
 
 ## Acceptance Criteria
 
+- The user must have an active subscription
 - Any logged-in user can dismiss a share invitation by its ID
 - Once dismissed, the invitation no longer exists and cannot be accepted by anyone
 - Dismissing a non-existent invitation succeeds silently
 
 ## Related Stories
 
+- [Create Subscription](create-subscription.story.md)
 - [View Received Invitation](view-received-invitation.story.md)
 - [Accept Share Invitation](accept-share-invitation.story.md)
 - [Create Share Invitation](create-share-invitation.story.md)

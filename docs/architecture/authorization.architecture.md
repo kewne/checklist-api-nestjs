@@ -46,4 +46,5 @@ Checks run in one of two places depending on when the resource is loaded:
 
 ## Related Docs
 
+- [Subscription State](subscriptions.architecture.md): write and mutating operations require an active subscription, while read operations remain permitted without one
 - [HATEOAS](hateoas.architecture.md): resource links describe navigation possibilities rather than permissions; the server enforces authorization when a client requests the linked destination

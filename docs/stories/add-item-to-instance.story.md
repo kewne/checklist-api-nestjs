@@ -6,6 +6,7 @@ As a user, I want to add a new item to an existing checklist instance so that I 
 
 ## Acceptance Criteria
 
+- The user must have an active subscription
 - An item can be added to an existing instance by providing a title (up to 500 characters) and an optional description (up to 500 characters)
 - The new item starts as incomplete
 - Adding an item to a non-existent instance returns HTTP 404
@@ -13,5 +14,6 @@ As a user, I want to add a new item to an existing checklist instance so that I 
 
 ## Related Stories
 
+- [Create Subscription](create-subscription.story.md)
 - [View Checklist Instance](view-checklist-instance.story.md)
 - [Complete a Checklist Item](complete-item.story.md)

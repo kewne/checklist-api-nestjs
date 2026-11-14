@@ -6,6 +6,7 @@ As a user, I want to change the title of a checklist share so that I can give it
 
 ## Acceptance Criteria
 
+- The user must have an active subscription
 - Only the checklist owner can update a share's title
 - A share's title can be updated successfully with a new, non-empty value
 - The recipient user ID and creation timestamp are not affected by the update
@@ -17,6 +18,7 @@ As a user, I want to change the title of a checklist share so that I can give it
 
 ## Related Stories
 
+- [Create Subscription](create-subscription.story.md)
 - [Create Share Invitation](create-share-invitation.story.md)
 - [Accept Share Invitation](accept-share-invitation.story.md)
 - [List Checklist Shares](list-checklist-shares.story.md)

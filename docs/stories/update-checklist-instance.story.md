@@ -4,6 +4,7 @@ As a user, I want to replace a checklist instance so that I can correct its titl
 
 ## Acceptance Criteria
 
+- The user must have an active subscription
 - A checklist instance can be fully replaced by providing a new title and items
 - A successful update returns HTTP 204 with no response body
 - Updating a non-existent instance returns HTTP 404
@@ -11,5 +12,6 @@ As a user, I want to replace a checklist instance so that I can correct its titl
 
 ## Related Stories
 
+- [Create Subscription](create-subscription.story.md)
 - [View Checklist Instance](view-checklist-instance.story.md)
 - [Delete Checklist Instance](delete-checklist-instance.story.md)

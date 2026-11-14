@@ -6,6 +6,7 @@ As a user, I want to create a checklist instance from an existing checklist temp
 
 ## Acceptance Criteria
 
+- The user must have an active subscription
 - A checklist instance can be created by referencing a checklist template's ID via the `checklist_id` query parameter
 - The instance can be created from checklists the user owns, checklists explicitly shared with them, or public checklists
 - The instance is pre-populated with all items from the referenced template, each starting as incomplete
@@ -17,6 +18,7 @@ As a user, I want to create a checklist instance from an existing checklist temp
 
 ## Related Stories
 
+- [Create Subscription](create-subscription.story.md)
 - [View Checklist](view-checklist.story.md)
 - [View Checklist Instance](view-checklist-instance.story.md)
 - [Share Checklist](share-checklist.story.md)

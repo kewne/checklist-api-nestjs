@@ -4,6 +4,7 @@ As a user, I want to create a checklist instance without using a template so tha
 
 ## Acceptance Criteria
 
+- The user must have an active subscription
 - A checklist instance can be created by providing a title and a list of items directly
 - Each item has a required title and an optional description
 - All items start as incomplete
@@ -11,5 +12,6 @@ As a user, I want to create a checklist instance without using a template so tha
 
 ## Related Stories
 
+- [Create Subscription](create-subscription.story.md)
 - [List My Checklist Instances](list-my-instances.story.md)
 - [View Checklist Instance](view-checklist-instance.story.md)

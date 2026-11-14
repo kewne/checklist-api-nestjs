@@ -4,6 +4,7 @@ As a user, I want to mark a completed checklist item as incomplete so that I can
 
 ## Acceptance Criteria
 
+- The user must have an active subscription
 - A completed item can be marked incomplete by referencing its instance ID and item ID
 - Reopening an item clears its completion timestamp and note
 - A successful reopening returns HTTP 303 redirecting to the parent checklist instance
@@ -13,5 +14,6 @@ As a user, I want to mark a completed checklist item as incomplete so that I can
 
 ## Related Stories
 
+- [Create Subscription](create-subscription.story.md)
 - [View Checklist Instance](view-checklist-instance.story.md)
 - [Complete a Checklist Item](complete-item.story.md)

@@ -4,6 +4,7 @@ As a user, I want to replace a checklist template so that I can keep it up to da
 
 ## Acceptance Criteria
 
+- The user must have an active subscription
 - A checklist can be fully replaced by providing a new title and items
 - Should be able to distinguish between items that are new and ones that existed previously
 - Items omitted from the payload are removed from the checklist
@@ -12,5 +13,6 @@ As a user, I want to replace a checklist template so that I can keep it up to da
 
 ## Related Stories
 
+- [Create Subscription](create-subscription.story.md)
 - [View Checklist](view-checklist.story.md)
 - [Delete Checklist](delete-checklist.story.md)
