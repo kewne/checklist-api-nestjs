@@ -10,6 +10,41 @@ Email-based invitations require the owner to know the recipient's registered ema
 
 A checklist owner creates an invitation with a label (`title`) to track who the link is for. The system stores the invitation with a 24-hour expiration timestamp and returns a location for the new invitation resource. Recipients inspect the invitation preview and accept or dismiss it. Accepting a valid invitation creates a read-only share for the caller and deletes the invitation.
 
+_Creating an invitation and retrieving its shareable link:_
+
+```mermaid
+sequenceDiagram
+    actor Owner as Checklist Owner
+    participant API as Checklist API
+
+    Owner->>API: Create invitation (title)
+    API-->>Owner: Invitation location
+    Owner->>API: Get invitation
+    API-->>Owner: Invitation details + preview link
+```
+
+_Sharing the link and accepting or rejecting the invitation:_
+
+```mermaid
+sequenceDiagram
+    actor Owner as Checklist Owner
+    actor Recipient
+    participant API as Checklist API
+
+    Owner--)Recipient: Share preview link out-of-band
+    Recipient->>API: Get preview
+    API-->>Recipient: Checklist title, expiry + accept link
+    alt Recipient accepts
+        Recipient->>API: Accept invitation
+        API->>API: Create share & delete invitation
+        API-->>Recipient: 204 No Content
+    else Recipient dismisses or Owner revokes
+        Recipient->>API: Dismiss or delete invitation
+        API->>API: Delete invitation
+        API-->>Recipient: 204 No Content
+    end
+```
+
 ## Building Blocks
 
 ### Bearer-Token Invitations
