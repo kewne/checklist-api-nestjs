@@ -25,12 +25,6 @@ flowchart TD
 
 ## Building Blocks
 
-[`CaslModule`](../../src/casl/casl.module.ts) wires the authorization building blocks into the application and exports [`AbilityFactory`](../../src/casl/ability.factory.ts).
-
-### Ability Definition
-
-[`AbilityFactory`](../../src/casl/ability.factory.ts) defines the permission policy in `createForUser(user)`. Using `AbilityBuilder` and `createMongoAbility` from `@casl/ability`, it builds an `AppAbility` that grants actions on domain subjects based on resource ownership or share membership.
-
 ### Request Attachment and Extraction
 
 [`AuthGuard`](../../src/auth/auth.guard.ts) verifies the bearer token and stores the `AuthUser` on the request. [`CaslInterceptor`](../../src/casl/casl.interceptor.ts) runs globally on each request. When an `AuthUser` is present, the interceptor creates an `AppAbility` with [`AbilityFactory`](../../src/casl/ability.factory.ts) and attaches it to the request.
@@ -48,9 +42,8 @@ Checks run in one of two places depending on when the resource is loaded:
 
 ### Error Handling
 
-[`CaslForbiddenErrorFilter`](../../src/casl/casl-forbidden-error.filter.ts), registered globally in [`CaslModule`](../../src/casl/casl.module.ts), catches any unhandled `ForbiddenError` from `@casl/ability` and returns an HTTP `403 Forbidden` JSON response.
+[`CaslForbiddenErrorFilter`](../../src/casl/casl-forbidden-error.filter.ts) catches any unhandled `ForbiddenError` and returns an HTTP `403 Forbidden` JSON response instead of the default `500 Internal Server Error`.
 
 ## Related Docs
 
 - [HATEOAS](hateoas.architecture.md): resource links describe navigation possibilities rather than permissions; the server enforces authorization when a client requests the linked destination
-
