@@ -4,10 +4,12 @@ import { ApplicationConfig, ModuleRef, Reflector } from '@nestjs/core';
 import { RoutePathFactory } from '@nestjs/core/router/route-path-factory';
 import { Request, Response } from 'express';
 import {
+  BaseUrlNestedResourceBuilder,
   BaseUrlResourceBuilder,
   LinkObject,
   LinkOptions,
   PlainResource,
+  PlainResourceWithNested,
 } from './hateoas';
 import { MODULE_KEY, REFLECTOR_KEY } from './hateoas/hateoas.interceptor';
 
@@ -54,6 +56,16 @@ export class NestLinkFactory<M extends ResourceMap = never> {
       this.routePathFactory,
       resourceKey,
       this.enrichers,
+    );
+  }
+
+  public buildNestedResource<
+    W extends object = object,
+  >(): NestNestedResourceBuilder<W> {
+    return new NestNestedResourceBuilder<W>(
+      this.baseUrl,
+      this.reflector,
+      this.routePathFactory,
     );
   }
 
@@ -147,6 +159,66 @@ export type EnricherRegistry<M extends ResourceMap = ResourceMap> = {
   [K in keyof M]?: ResourceLinkEnricher<M, K>[];
 };
 
+export class NestNestedResourceBuilder<
+  W extends object = object,
+> extends BaseUrlNestedResourceBuilder {
+  constructor(
+    baseUrl: string,
+    private reflector: Reflector,
+    private routePathFactory: RoutePathFactory,
+  ) {
+    super(baseUrl);
+  }
+
+  private addLinkToHandler(rel: string, options: HandlerLink): this {
+    const { controller, handler, params, query, ...linkProps } = options;
+    const [href] = this.routePathFactory.create({
+      ctrlPath: this.reflector.get<string | undefined>(
+        PATH_METADATA,
+        controller,
+      ),
+      methodPath: this.reflector.get<string | undefined>(
+        PATH_METADATA,
+        // eslint-disable-next-line @typescript-eslint/no-unsafe-argument, @typescript-eslint/no-unsafe-member-access
+        controller.prototype[handler],
+      ),
+    });
+
+    // Replace route parameters in the href
+    let finalHref = href;
+    if (params) {
+      Object.entries(params).forEach(([key, value]) => {
+        finalHref = finalHref.replace(`:${key}`, String(value));
+      });
+    }
+
+    if (query) {
+      const queryStr = new URLSearchParams(query).toString();
+      finalHref = finalHref + (queryStr ? '?' + queryStr : '');
+    }
+
+    const linkObj: LinkObject = {
+      ...linkProps,
+      href: finalHref,
+    };
+    return this.addLink(rel, linkObj);
+  }
+
+  withRel(rel: string, ...links: (LinkObject | HandlerLink)[]): this {
+    links.forEach((link) => {
+      if ('href' in link) {
+        return super.addLink(rel, link);
+      }
+      return this.addLinkToHandler(rel, link);
+    });
+    return this;
+  }
+
+  override toResource(wrapped?: W): PlainResource {
+    return super.toResource(wrapped);
+  }
+}
+
 export class NestResourceBuilder<
   W extends object = object,
 > extends BaseUrlResourceBuilder {
@@ -205,7 +277,7 @@ export class NestResourceBuilder<
     return this;
   }
 
-  override toResource(wrapped: W | undefined): PlainResource {
+  override toResource(wrapped: W | undefined): PlainResourceWithNested {
     if (this.resourceKey && wrapped !== undefined) {
       const enrichers = this.enrichers?.[this.resourceKey] as
         | AnyResourceLinkEnricher[]

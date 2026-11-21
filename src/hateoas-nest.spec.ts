@@ -5,7 +5,7 @@ import { RoutePathFactory } from '@nestjs/core/router/route-path-factory';
 import { NestExpressApplication } from '@nestjs/platform-express';
 import type { Response } from 'express';
 import { testRequest as createTestRequest } from '../test/http-request';
-import { PlainResource, LinkObject } from './hateoas';
+import { PlainResourceWithNested, LinkObject } from './hateoas';
 import {
   EnricherRegistry,
   Hateoas,
@@ -163,6 +163,24 @@ describe('HATEOAS (HTTP)', () => {
     findOne(@Hateoas() linkFactory: NestLinkFactory<TestMap>) {
       return linkFactory.buildResource('test-resource').toResource({ id: '1' });
     }
+
+    @Get(':id/with-nested')
+    findOneWithNested(@Hateoas() linkFactory: NestLinkFactory<TestMap>) {
+      const nestedItem = linkFactory
+        .buildNestedResource()
+        .withRel(
+          'related',
+          toHandlerCall({ controller: TestResourceController }).findOne({
+            params: { id: 'nested-1' },
+          }),
+        )
+        .toResource({ id: 'nested-1' });
+
+      return linkFactory
+        .buildResource('test-resource')
+        .withNested('items', nestedItem)
+        .toResource({ id: '1' });
+    }
   }
 
   let app: NestExpressApplication;
@@ -196,7 +214,7 @@ describe('HATEOAS (HTTP)', () => {
   it('enriches the response with links registered for the resource key', async () => {
     const response = await testRequest.get('/test-resources/1').expect(200);
 
-    const resource = response.body as PlainResource;
+    const resource = response.body as PlainResourceWithNested;
     const docs = resource._links.docs as LinkObject;
 
     expect(docs).toEqual({
@@ -233,5 +251,25 @@ describe('HATEOAS (HTTP)', () => {
     expect(response.headers.location).toBe(
       'http://api.example.test/test-resources/abc?base=a%2Bb%2Fc%3D&search=milk+%26+bread',
     );
+  });
+
+  it('builds nested resources without self links and attaches them under _nested', async () => {
+    const response = await testRequest
+      .get('/test-resources/1/with-nested')
+      .expect(200);
+
+    const resource = response.body as PlainResourceWithNested;
+    expect(resource._nested).toEqual({
+      items: [
+        {
+          id: 'nested-1',
+          _links: {
+            related: {
+              href: 'http://api.example.test/test-resources/nested-1',
+            },
+          },
+        },
+      ],
+    });
   });
 });

@@ -73,6 +73,32 @@ export class InstanceResource {
       );
     }
 
+    const nestedItems = instance.items.map((item) => {
+      const itemResource = linkFactory.buildNestedResource();
+      if (item.completed) {
+        itemResource.withRel(
+          'mark-incomplete-item',
+          toHandlerCall({
+            controller: ChecklistInstanceController,
+          }).markItemIncomplete({
+            params: { instanceId: instance.id, itemId: item.id },
+          }),
+        );
+      } else {
+        itemResource.withRel(
+          'complete-item',
+          toHandlerCall({
+            controller: ChecklistInstanceController,
+          }).completeItem({
+            params: { instanceId: instance.id, itemId: item.id },
+          }),
+        );
+      }
+      return itemResource.toResource(item);
+    });
+
+    resource.withNested('items', ...nestedItems);
+
     const transformedInstance = {
       ...instance,
       items: instance.items.map(({ id, ...rest }) => ({
