@@ -1,5 +1,5 @@
 import { ConflictException, NotFoundException } from '@nestjs/common';
-import { PlainResource } from '@app/hateoas';
+import { PlainResource, PlainResourceWithNested } from '@app/hateoas';
 import { ForbiddenError, subject } from '@casl/ability';
 import { APP_GUARD } from '@nestjs/core';
 import { NestExpressApplication } from '@nestjs/platform-express';
@@ -192,6 +192,31 @@ describe('ChecklistInstanceController', () => {
         name: 'item-2',
         title: 'Completed Item',
         href: 'http://api.example.test/checklist-instances/456/items/item-2/incomplete',
+      });
+      expect((response.body as PlainResourceWithNested)._nested).toEqual({
+        items: [
+          {
+            id: 'item-1',
+            title: 'Incomplete Item',
+            description: 'desc',
+            _links: {
+              'complete-item': {
+                href: 'http://api.example.test/checklist-instances/456/items/item-1/complete',
+              },
+            },
+          },
+          {
+            id: 'item-2',
+            title: 'Completed Item',
+            description: 'desc',
+            completed: { completed_at: '2026-04-20T10:00:00.000Z' },
+            _links: {
+              'mark-incomplete-item': {
+                href: 'http://api.example.test/checklist-instances/456/items/item-2/incomplete',
+              },
+            },
+          },
+        ],
       });
     });
 

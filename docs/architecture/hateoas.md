@@ -23,7 +23,8 @@ The alternative, a static API reference that clients implement against, embeds r
 ## Behaviour and Invariants
 
 - Every resource response includes a `_links` object
-- A `self` link is always present, pointing to the canonical URL of the resource
+- A top-level resource always includes a `self` link pointing to the canonical URL of the resource
+- A resource may include a `_nested` object whose properties are non-empty arrays of nested HAL resources supporting per-item operations; each nested resource includes its own `_links` without a `self` link, and empty nested arrays (or an empty `_nested` object) are omitted
 - For the same resource state, a successful response's content and links are independent of the authenticated user, except for invitation-preview acceptance-link visibility
 - Links may reflect resource state, but are not added, removed, or rewritten according to the caller's identity or permissions outside that exception
 - An invitation preview exposes an acceptance link only while the invitation is unexpired and the caller does not already have read access as the checklist owner or an existing share recipient; its data and `self` link remain independent of the caller
