@@ -60,6 +60,7 @@ export interface ChecklistInstanceResourceItem {
   completed: ItemCompleted | null;
   title: string;
   description?: string;
+  note?: string;
 }
 
 export interface ChecklistInstanceResource {

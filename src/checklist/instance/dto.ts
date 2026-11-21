@@ -8,11 +8,11 @@ import {
 } from 'class-validator';
 import { Type } from 'class-transformer';
 
-export class CompleteItemDto {
-  @IsOptional()
+export class SetItemNoteDto {
+  @IsNotEmpty()
   @IsString()
   @MaxLength(500)
-  note?: string;
+  note!: string;
 }
 
 export class CreateChecklistInstanceDto {

@@ -184,21 +184,7 @@ describe('InstanceService', () => {
       return { instance, itemId: instance.items[0].id };
     }
 
-    it('should mark item as completed with a note', async () => {
-      const { instance, itemId } = await seedInstanceWithItem();
-
-      await service.completeItem(instance.id, itemId, 'Great job');
-
-      const updated = await service.findOne(instance.id);
-      const item = updated.items.find((i) => i.id === itemId)!;
-      expect(item.completed).not.toBeNull();
-      expect(item.completed!.completed_at).toMatch(
-        /^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}\.\d{3}Z$/,
-      );
-      expect(item.completed!.note).toBe('Great job');
-    });
-
-    it('should mark item as completed without a note', async () => {
+    it('should mark item as completed', async () => {
       const { instance, itemId } = await seedInstanceWithItem();
 
       await service.completeItem(instance.id, itemId);
@@ -206,7 +192,9 @@ describe('InstanceService', () => {
       const updated = await service.findOne(instance.id);
       const item = updated.items.find((i) => i.id === itemId)!;
       expect(item.completed).not.toBeNull();
-      expect(item.completed).not.toHaveProperty('note');
+      expect(item.completed!.completed_at).toMatch(
+        /^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}\.\d{3}Z$/,
+      );
     });
 
     it('should throw NotFoundException for unknown instance', async () => {
@@ -306,7 +294,7 @@ describe('InstanceService', () => {
       );
       const instance = (await instanceRepository.findById(instanceId))!;
       await service.completeItem(instanceId, instance.items[0].id);
-      await service.completeItem(instanceId, instance.items[2].id, 'done');
+      await service.completeItem(instanceId, instance.items[2].id);
       return { instance, userId };
     }
 
@@ -396,7 +384,8 @@ describe('InstanceService', () => {
       const {
         items: [item1, item2],
       } = (await instanceRepository.findById(instanceId))!;
-      await service.completeItem(instanceId, item1.id, 'done');
+      await service.completeItem(instanceId, item1.id);
+      await service.setItemNote(instanceId, item2.id, 'Important note');
 
       await service.replace(instanceId, {
         title: 'New Title',
@@ -423,6 +412,7 @@ describe('InstanceService', () => {
           {
             id: item2.id,
             title: 'Renamed Task 2',
+            note: 'Important note',
             completed: null,
           },
         ],
@@ -570,6 +560,159 @@ describe('InstanceService', () => {
 
       const instance = await service.findOne(instanceId);
       expect(instance.items).toHaveLength(0);
+    });
+  });
+
+  describe('setItemNote', () => {
+    async function seedInstanceWithItem() {
+      const userId = randomUUID();
+      const checklist = await checklistRepository.create(
+        { title: 'CL', items: [{ title: 'Task 1', description: 'Do it' }] },
+        userId,
+      );
+      const instanceId = await instanceRepository.create(
+        checklist.id,
+        userId,
+        'Test Instance',
+        checklist.items,
+      );
+      const instance = await service.findOne(instanceId);
+      return { instance, itemId: instance.items[0].id };
+    }
+
+    it('should set a note on an item', async () => {
+      const { instance, itemId } = await seedInstanceWithItem();
+
+      await service.setItemNote(instance.id, itemId, 'My item note');
+
+      const updated = await service.findOne(instance.id);
+      const item = updated.items.find((i) => i.id === itemId)!;
+      expect(item.note).toBe('My item note');
+    });
+
+    it('should overwrite an existing note on an item', async () => {
+      const { instance, itemId } = await seedInstanceWithItem();
+      await service.setItemNote(instance.id, itemId, 'First note');
+
+      await service.setItemNote(instance.id, itemId, 'Updated note');
+
+      const updated = await service.findOne(instance.id);
+      const item = updated.items.find((i) => i.id === itemId)!;
+      expect(item.note).toBe('Updated note');
+    });
+
+    it('should preserve the note when completing and reopening the item', async () => {
+      const { instance, itemId } = await seedInstanceWithItem();
+      await service.setItemNote(instance.id, itemId, 'Persistent note');
+
+      await service.completeItem(instance.id, itemId);
+      await service.markItemIncomplete(instance.id, itemId);
+
+      const updated = await service.findOne(instance.id);
+      const item = updated.items.find((i) => i.id === itemId)!;
+      expect(item.note).toBe('Persistent note');
+      expect(item.completed).toBeNull();
+    });
+
+    it('should throw NotFoundException for unknown instance', async () => {
+      await expect(
+        service.setItemNote('non-existent-instance', 'item-1', 'note'),
+      ).rejects.toThrow(
+        new NotFoundException(
+          'Checklist instance with id non-existent-instance not found',
+        ),
+      );
+    });
+
+    it('should throw NotFoundException for unknown item', async () => {
+      const { instance } = await seedInstanceWithItem();
+
+      await expect(
+        service.setItemNote(instance.id, 'non-existent-item', 'note'),
+      ).rejects.toThrow(
+        new NotFoundException('Item with id non-existent-item not found'),
+      );
+    });
+
+    it('should throw ForbiddenError when the user lacks write access', async () => {
+      const { instance, itemId } = await seedInstanceWithItem();
+      const ability = new AbilityFactory().createForUser({
+        uid: 'other-user',
+      });
+
+      await expect(
+        service.setItemNote(instance.id, itemId, 'note', ability),
+      ).rejects.toThrow('Cannot execute "update" on "ChecklistInstance"');
+    });
+  });
+
+  describe('removeItemNote', () => {
+    async function seedInstanceWithItem() {
+      const userId = randomUUID();
+      const checklist = await checklistRepository.create(
+        { title: 'CL', items: [{ title: 'Task 1', description: 'Do it' }] },
+        userId,
+      );
+      const instanceId = await instanceRepository.create(
+        checklist.id,
+        userId,
+        'Test Instance',
+        checklist.items,
+      );
+      const instance = await service.findOne(instanceId);
+      return { instance, itemId: instance.items[0].id };
+    }
+
+    it('should remove an existing note from an item', async () => {
+      const { instance, itemId } = await seedInstanceWithItem();
+      await service.setItemNote(instance.id, itemId, 'Note to remove');
+
+      await service.removeItemNote(instance.id, itemId);
+
+      const updated = await service.findOne(instance.id);
+      const item = updated.items.find((i) => i.id === itemId)!;
+      expect(item).not.toHaveProperty('note');
+    });
+
+    it('should succeed as a no-op when the item has no note', async () => {
+      const { instance, itemId } = await seedInstanceWithItem();
+
+      await service.removeItemNote(instance.id, itemId);
+
+      const updated = await service.findOne(instance.id);
+      const item = updated.items.find((i) => i.id === itemId)!;
+      expect(item).not.toHaveProperty('note');
+    });
+
+    it('should throw NotFoundException for unknown instance', async () => {
+      await expect(
+        service.removeItemNote('non-existent-instance', 'item-1'),
+      ).rejects.toThrow(
+        new NotFoundException(
+          'Checklist instance with id non-existent-instance not found',
+        ),
+      );
+    });
+
+    it('should throw NotFoundException for unknown item', async () => {
+      const { instance } = await seedInstanceWithItem();
+
+      await expect(
+        service.removeItemNote(instance.id, 'non-existent-item'),
+      ).rejects.toThrow(
+        new NotFoundException('Item with id non-existent-item not found'),
+      );
+    });
+
+    it('should throw ForbiddenError when the user lacks write access', async () => {
+      const { instance, itemId } = await seedInstanceWithItem();
+      const ability = new AbilityFactory().createForUser({
+        uid: 'other-user',
+      });
+
+      await expect(
+        service.removeItemNote(instance.id, itemId, ability),
+      ).rejects.toThrow('Cannot execute "update" on "ChecklistInstance"');
     });
   });
 });

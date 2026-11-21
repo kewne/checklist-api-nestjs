@@ -11,6 +11,7 @@ import { CreateItemDto } from '../dto/create-item.dto';
 
 export interface InstanceItem extends Item {
   completed: ItemCompleted | null;
+  note?: string;
 }
 
 export interface ChecklistInstanceDocument {
@@ -151,6 +152,9 @@ export class InstanceRepository {
           ...(itemDto.description !== undefined && {
             description: itemDto.description,
           }),
+          ...(existingItem?.note !== undefined && {
+            note: existingItem.note,
+          }),
           completed: existingItem?.completed ?? null,
         };
       });
@@ -168,7 +172,6 @@ export class InstanceRepository {
     instanceId: string,
     itemId: string,
     completedAt: string,
-    note?: string | null,
   ): Promise<void> {
     const docRef = this.firestore.collection(this.collection).doc(instanceId);
     const doc = await docRef.get();
@@ -193,8 +196,59 @@ export class InstanceRepository {
     }
     item.completed = {
       completed_at: completedAt,
-      ...(note != null && { note }),
     };
+
+    await docRef.update({ items: data.items });
+  }
+
+  async setItemNote(
+    instanceId: string,
+    itemId: string,
+    note: string,
+  ): Promise<void> {
+    const docRef = this.firestore.collection(this.collection).doc(instanceId);
+    const doc = await docRef.get();
+
+    if (!doc.exists) {
+      throw new NotFoundException(
+        `Checklist instance with id ${instanceId} not found`,
+      );
+    }
+
+    const data = doc.data() as { items: InstanceItem[] };
+    const item = data.items.find((item) => item.id === itemId);
+
+    if (item === undefined) {
+      throw new NotFoundException(`Item with id ${itemId} not found`);
+    }
+
+    item.note = note;
+
+    await docRef.update({ items: data.items });
+  }
+
+  async removeItemNote(instanceId: string, itemId: string): Promise<void> {
+    const docRef = this.firestore.collection(this.collection).doc(instanceId);
+    const doc = await docRef.get();
+
+    if (!doc.exists) {
+      throw new NotFoundException(
+        `Checklist instance with id ${instanceId} not found`,
+      );
+    }
+
+    const data = doc.data() as { items: InstanceItem[] };
+    const item = data.items.find((item) => item.id === itemId);
+
+    if (item === undefined) {
+      throw new NotFoundException(`Item with id ${itemId} not found`);
+    }
+
+    if (item.note === undefined) {
+      return;
+    }
+
+    delete item.note;
 
     await docRef.update({ items: data.items });
   }

@@ -94,6 +94,15 @@ export class InstanceResource {
           }),
         );
       }
+      itemResource.withRel(
+        'update',
+        toHandlerCall({
+          controller: ChecklistInstanceController,
+          name: 'note',
+        }).setItemNote({
+          params: { instanceId: instance.id, itemId: item.id },
+        }),
+      );
       return itemResource.toResource(item);
     });
 

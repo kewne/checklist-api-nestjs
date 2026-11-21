@@ -16,7 +16,7 @@ import {
 } from '@nestjs/common';
 import { ForbiddenError, subject } from '@casl/ability';
 import type { Response } from 'express';
-import { CompleteItemDto, ReplaceChecklistInstanceDto } from './dto';
+import { SetItemNoteDto, ReplaceChecklistInstanceDto } from './dto';
 import { CreateItemDto } from '../dto/create-item.dto';
 import { InstanceService } from './instance.service';
 import { InstanceResource } from './instance.resource';
@@ -40,27 +40,47 @@ export class ChecklistInstanceController {
   }
 
   @Post(':instanceId/items/:itemId/complete')
-  @UsePipes(new ValidationPipe({ transform: true }))
   async completeItem(
     @Param('instanceId') instanceId: string,
     @Param('itemId') itemId: string,
-    @Body() dto: CompleteItemDto,
     @Ability() ability: AppAbility,
     @Res({ passthrough: true }) res: Response,
     @Hateoas() linkFactory: NestLinkFactory,
   ) {
-    await this.instanceService.completeItem(
-      instanceId,
-      itemId,
-      dto.note,
-      ability,
-    );
+    await this.instanceService.completeItem(instanceId, itemId, ability);
     res.statusCode = 303;
     linkFactory.setLocation(
       toHandlerCall({ controller: ChecklistInstanceController }).findOne({
         params: { instanceId },
       }),
     );
+  }
+
+  @Put(':instanceId/items/:itemId/note')
+  @HttpCode(204)
+  @UsePipes(new ValidationPipe({ transform: true }))
+  async setItemNote(
+    @Param('instanceId') instanceId: string,
+    @Param('itemId') itemId: string,
+    @Body() dto: SetItemNoteDto,
+    @Ability() ability: AppAbility,
+  ): Promise<void> {
+    await this.instanceService.setItemNote(
+      instanceId,
+      itemId,
+      dto.note,
+      ability,
+    );
+  }
+
+  @Delete(':instanceId/items/:itemId/note')
+  @HttpCode(204)
+  async removeItemNote(
+    @Param('instanceId') instanceId: string,
+    @Param('itemId') itemId: string,
+    @Ability() ability: AppAbility,
+  ): Promise<void> {
+    await this.instanceService.removeItemNote(instanceId, itemId, ability);
   }
 
   @Post(':instanceId/items/:itemId/incomplete')

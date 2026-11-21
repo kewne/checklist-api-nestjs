@@ -1,0 +1,7 @@
+profile: https://api.checklists.keeoon.dev/profiles/checklist-instance-item-note
+schema:
+  application/json:
+    put:
+      request: ../schemas/json/checklist-instance-item-note.json
+    delete: {}
+rels: {}

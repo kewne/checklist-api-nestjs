@@ -6,7 +6,6 @@ import { ReplaceChecklistDto } from './dto/update-checklist.dto';
 
 export interface ItemCompleted {
   completed_at: string;
-  note?: string | null;
 }
 
 export interface Item {

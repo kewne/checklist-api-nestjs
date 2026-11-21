@@ -63,7 +63,6 @@ export class InstanceService {
   async completeItem(
     instanceId: string,
     itemId: string,
-    note?: string,
     ability?: AppAbility,
   ): Promise<void> {
     const instance = await this.findOne(instanceId);
@@ -77,8 +76,38 @@ export class InstanceService {
       instanceId,
       itemId,
       new Date().toISOString(),
-      note,
     );
+  }
+
+  async setItemNote(
+    instanceId: string,
+    itemId: string,
+    note: string,
+    ability?: AppAbility,
+  ): Promise<void> {
+    const instance = await this.findOne(instanceId);
+    if (ability) {
+      ForbiddenError.from(ability).throwUnlessCan(
+        'update',
+        subject('ChecklistInstance', instance),
+      );
+    }
+    await this.instanceRepository.setItemNote(instanceId, itemId, note);
+  }
+
+  async removeItemNote(
+    instanceId: string,
+    itemId: string,
+    ability?: AppAbility,
+  ): Promise<void> {
+    const instance = await this.findOne(instanceId);
+    if (ability) {
+      ForbiddenError.from(ability).throwUnlessCan(
+        'update',
+        subject('ChecklistInstance', instance),
+      );
+    }
+    await this.instanceRepository.removeItemNote(instanceId, itemId);
   }
 
   async markItemIncomplete(

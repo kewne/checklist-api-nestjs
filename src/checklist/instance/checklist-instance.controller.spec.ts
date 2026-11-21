@@ -25,6 +25,8 @@ describe('ChecklistInstanceController', () => {
     completeItem: jest.fn(),
     markItemIncomplete: jest.fn(),
     clearCompletedItems: jest.fn(),
+    setItemNote: jest.fn(),
+    removeItemNote: jest.fn(),
     remove: jest.fn(),
     replace: jest.fn(),
     addItem: jest.fn(),
@@ -203,6 +205,10 @@ describe('ChecklistInstanceController', () => {
               'complete-item': {
                 href: 'http://api.example.test/checklist-instances/456/items/item-1/complete',
               },
+              update: {
+                name: 'note',
+                href: 'http://api.example.test/checklist-instances/456/items/item-1/note',
+              },
             },
           },
           {
@@ -213,6 +219,10 @@ describe('ChecklistInstanceController', () => {
             _links: {
               'mark-incomplete-item': {
                 href: 'http://api.example.test/checklist-instances/456/items/item-2/incomplete',
+              },
+              update: {
+                name: 'note',
+                href: 'http://api.example.test/checklist-instances/456/items/item-2/note',
               },
             },
           },
@@ -318,7 +328,6 @@ describe('ChecklistInstanceController', () => {
       expect(service.completeItem).toHaveBeenCalledWith(
         '456',
         'item-1',
-        undefined,
         expect.any(Object),
       );
       expect(response.headers.location).toBe(
@@ -326,25 +335,9 @@ describe('ChecklistInstanceController', () => {
       );
     });
 
-    it('should pass note to service when provided', async () => {
-      service.completeItem.mockResolvedValue(undefined);
-
-      await testRequest
-        .post('/checklist-instances/456/items/item-1/complete')
-        .send({ note: 'Well done' })
-        .expect(303);
-
-      expect(service.completeItem).toHaveBeenCalledWith(
-        '456',
-        'item-1',
-        'Well done',
-        expect.any(Object),
-      );
-    });
-
     it('should return 403 when instance belongs to another user', async () => {
       service.completeItem.mockImplementation(
-        (_id: string, _itemId: string, _note: unknown, ability: AppAbility) => {
+        (_id: string, _itemId: string, ability: AppAbility) => {
           ForbiddenError.from(ability).throwUnlessCan(
             'update',
             subject('ChecklistInstance', { createdBy: 'other-user' }),
@@ -379,14 +372,163 @@ describe('ChecklistInstanceController', () => {
         .send({})
         .expect(404);
     });
+  });
+
+  describe('PUT /checklist-instances/:instanceId/items/:itemId/note', () => {
+    it('should return 204 with no response body on success', async () => {
+      service.setItemNote.mockResolvedValue(undefined);
+
+      const response = await testRequest
+        .put('/checklist-instances/456/items/item-1/note')
+        .send({ note: 'Remember to double check' })
+        .expect(204);
+
+      expect(service.setItemNote).toHaveBeenCalledWith(
+        '456',
+        'item-1',
+        'Remember to double check',
+        expect.any(Object),
+      );
+      expect(response.body).toEqual({});
+    });
+
+    it('should return 400 when note is missing', async () => {
+      const response = await testRequest
+        .put('/checklist-instances/456/items/item-1/note')
+        .send({})
+        .expect(400);
+
+      expect(response.body).toEqual(
+        expect.objectContaining({
+          message: expect.arrayContaining([
+            'note must be shorter than or equal to 500 characters',
+            'note must be a string',
+            'note should not be empty',
+          ]) as unknown,
+        }),
+      );
+      expect(service.setItemNote).not.toHaveBeenCalled();
+    });
+
+    it('should return 400 when note is empty', async () => {
+      const response = await testRequest
+        .put('/checklist-instances/456/items/item-1/note')
+        .send({ note: '' })
+        .expect(400);
+
+      expect(response.body).toEqual(
+        expect.objectContaining({
+          message: ['note should not be empty'],
+        }),
+      );
+      expect(service.setItemNote).not.toHaveBeenCalled();
+    });
 
     it('should return 400 when note exceeds 500 characters', async () => {
-      await testRequest
-        .post('/checklist-instances/456/items/item-1/complete')
+      const response = await testRequest
+        .put('/checklist-instances/456/items/item-1/note')
         .send({ note: 'a'.repeat(501) })
         .expect(400);
 
-      expect(service.completeItem).not.toHaveBeenCalled();
+      expect(response.body).toEqual(
+        expect.objectContaining({
+          message: ['note must be shorter than or equal to 500 characters'],
+        }),
+      );
+      expect(service.setItemNote).not.toHaveBeenCalled();
+    });
+
+    it('should return 403 when instance belongs to another user', async () => {
+      service.setItemNote.mockImplementation(
+        (_id: string, _itemId: string, _note: string, ability: AppAbility) => {
+          ForbiddenError.from(ability).throwUnlessCan(
+            'update',
+            subject('ChecklistInstance', { createdBy: 'other-user' }),
+          );
+        },
+      );
+
+      const response = await testRequest
+        .put('/checklist-instances/456/items/item-1/note')
+        .send({ note: 'Some note' })
+        .expect(403);
+
+      expect(response.body).toEqual(
+        expect.objectContaining({
+          message: 'Forbidden',
+        }),
+      );
+    });
+
+    it('should return 404 when instance or item is not found', async () => {
+      service.setItemNote.mockRejectedValue(
+        new NotFoundException('Instance or item not found'),
+      );
+
+      const response = await testRequest
+        .put('/checklist-instances/456/items/item-1/note')
+        .send({ note: 'Some note' })
+        .expect(404);
+
+      expect(response.body).toEqual(
+        expect.objectContaining({
+          message: 'Instance or item not found',
+        }),
+      );
+    });
+  });
+
+  describe('DELETE /checklist-instances/:instanceId/items/:itemId/note', () => {
+    it('should return 204 with no response body on success', async () => {
+      service.removeItemNote.mockResolvedValue(undefined);
+
+      const response = await testRequest
+        .delete('/checklist-instances/456/items/item-1/note')
+        .expect(204);
+
+      expect(service.removeItemNote).toHaveBeenCalledWith(
+        '456',
+        'item-1',
+        expect.any(Object),
+      );
+      expect(response.body).toEqual({});
+    });
+
+    it('should return 403 when instance belongs to another user', async () => {
+      service.removeItemNote.mockImplementation(
+        (_id: string, _itemId: string, ability: AppAbility) => {
+          ForbiddenError.from(ability).throwUnlessCan(
+            'update',
+            subject('ChecklistInstance', { createdBy: 'other-user' }),
+          );
+        },
+      );
+
+      const response = await testRequest
+        .delete('/checklist-instances/456/items/item-1/note')
+        .expect(403);
+
+      expect(response.body).toEqual(
+        expect.objectContaining({
+          message: 'Forbidden',
+        }),
+      );
+    });
+
+    it('should return 404 when instance or item is not found', async () => {
+      service.removeItemNote.mockRejectedValue(
+        new NotFoundException('Instance or item not found'),
+      );
+
+      const response = await testRequest
+        .delete('/checklist-instances/456/items/item-1/note')
+        .expect(404);
+
+      expect(response.body).toEqual(
+        expect.objectContaining({
+          message: 'Instance or item not found',
+        }),
+      );
     });
   });
 

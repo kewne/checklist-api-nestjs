@@ -6,9 +6,10 @@ As a user, I want to view a specific checklist instance so that I can see the cu
 
 - Requesting an instance by its ID returns HTTP 200 with the instance in the response body
 - The response includes the instance title and all of its items
-- Each item includes its ID, title, optional description, and completion status (completed timestamp and optional note, or null if incomplete)
+- Each item includes its ID, title, optional description, optional note, and completion status (completed timestamp, or null if incomplete)
 - The response includes a link to complete each incomplete item
 - The response includes a link to reopen each completed item
+- The response includes a link to update the note on each item
 - The response includes a link to add a new item to the instance
 - Requesting a non-existent instance returns HTTP 404
 - Requesting an instance that belongs to another user returns HTTP 403
@@ -21,3 +22,4 @@ As a user, I want to view a specific checklist instance so that I can see the cu
 - [Delete Checklist Instance](delete-checklist-instance.md)
 - [Complete a Checklist Item](complete-item.md)
 - [Add Item to Checklist Instance](add-item-to-instance.md)
+- [Add or Remove a Note on a Checklist Item](item-notes.md)
